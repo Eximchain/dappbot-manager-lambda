@@ -13,6 +13,7 @@ exports.handler = async (event) => {
 
     // TODO: Do Stuff
 
+    // TODO: Replace with something useful or remove
     let responseHeaders = {"x-custom-header" : "my custom header value"};
 
     let responseBody = {
