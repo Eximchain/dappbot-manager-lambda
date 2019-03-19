@@ -17,9 +17,7 @@ exports.handler = async (event) => {
 
     let responseBody = {
         path: path,
-        body: body,
-        headers: headers,
-        input: event
+        body: body
     };
     
     let response = {
