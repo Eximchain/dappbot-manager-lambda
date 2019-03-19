@@ -5,11 +5,13 @@ exports.handler = async (event) => {
     let responseCode = 200;
 
     let path = event.path;
+    let body = null;
+    let headers = null;
     if (event.body) {
-        let body = JSON.parse(event.body);
+        body = JSON.parse(event.body);
     }
     if (event.headers) {
-        let headers = JSON.parse(event.headers);
+        headers = JSON.parse(event.headers);
     }
 
     // TODO: Do Stuff
