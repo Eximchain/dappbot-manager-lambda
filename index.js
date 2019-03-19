@@ -4,7 +4,7 @@ exports.handler = async (event) => {
     console.log("request: " + JSON.stringify(event));
     let responseCode = 200;
 
-    let path = event.path;
+    let resource = event.pathParameters.proxy;
     let body = null;
     let headers = null;
     if (event.body) {
@@ -16,7 +16,7 @@ exports.handler = async (event) => {
     let responseHeaders = {"x-custom-header" : "my custom header value"};
 
     let responseBody = {
-        path: path,
+        resource: resource,
         body: body
     };
     
