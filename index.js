@@ -1,6 +1,61 @@
-exports.handler = function(event, context, callback) {
-    console.log('remaining time =', context.getRemainingTimeInMillis());
-    console.log('functionName =', context.functionName);
-    console.log('AWSrequestID =', context.awsRequestId);
-    callback(null, "Success!");
+'use strict';
+console.log('Loading hello world function');
+ 
+exports.handler = async (event) => {
+    let name = "you";
+    let city = 'World';
+    let time = 'day';
+    let day = '';
+    let responseCode = 200;
+    console.log("request: " + JSON.stringify(event));
+    
+    // This is a simple illustration of app-specific logic to return the response. 
+    // Although only 'event.queryStringParameters' are used here, other request data, 
+    // such as 'event.headers', 'event.pathParameters', 'event.body', 'event.stageVariables', 
+    // and 'event.requestContext' can be used to determine what response to return. 
+    //
+    if (event.queryStringParameters && event.queryStringParameters.name) {
+        console.log("Received name: " + event.queryStringParameters.name);
+        name = event.queryStringParameters.name;
+    }
+    
+    if (event.pathParameters && event.pathParameters.proxy) {
+        console.log("Received proxy: " + event.pathParameters.proxy);
+        city = event.pathParameters.proxy;
+    }
+    
+    if (event.headers && event.headers['day']) {
+        console.log("Received day: " + event.headers.day);
+        day = event.headers.day;
+    }
+    
+    if (event.body) {
+        let body = JSON.parse(event.body)
+        if (body.time) 
+            time = body.time;
+    }
+ 
+    let greeting = `Good ${time}, ${name} of ${city}. `;
+    if (day) greeting += `Happy ${day}!`;
+
+    let responseBody = {
+        message: greeting,
+        input: event
+    };
+    
+    // The output from a Lambda proxy integration must be 
+    // of the following JSON object. The 'headers' property 
+    // is for custom response headers in addition to standard 
+    // ones. The 'body' property  must be a JSON string. For 
+    // base64-encoded payload, you must also set the 'isBase64Encoded'
+    // property to 'true'.
+    let response = {
+        statusCode: responseCode,
+        headers: {
+            "x-custom-header" : "my custom header value"
+        },
+        body: JSON.stringify(responseBody)
+    };
+    console.log("response: " + JSON.stringify(response))
+    return response;
 };
