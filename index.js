@@ -10,9 +10,6 @@ exports.handler = async (event) => {
     if (event.body) {
         body = JSON.parse(event.body);
     }
-    if (event.headers) {
-        headers = JSON.parse(event.headers);
-    }
 
     // TODO: Do Stuff
 
