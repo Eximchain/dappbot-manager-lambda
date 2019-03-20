@@ -15,5 +15,8 @@
   "bugs": {
     "url": "https://github.com/Eximchain/abi-clerk-lambda/issues"
   },
-  "homepage": "https://github.com/Eximchain/abi-clerk-lambda#readme"
+  "homepage": "https://github.com/Eximchain/abi-clerk-lambda#readme",
+  "dependencies": {
+    "aws-sdk": "^2.424.0"
+  }
 }
