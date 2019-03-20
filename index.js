@@ -32,8 +32,7 @@ async function apiWrite(body) {
             function(result) {
                 console.log("Put Item Success", result);
                 let responseBody = {
-                    method: "write",
-                    body: body
+                    method: "write"
                 };
                 let response = {
                     statusCode: responseCode,
@@ -84,8 +83,7 @@ async function apiRead(body) {
                 console.log("Get Item Success", result);
                 let responseBody = {
                     method: "read",
-                    item: result.Item,
-                    body: body
+                    item: result.Item
                 };
                 let response = {
                     statusCode: responseCode,
@@ -132,8 +130,7 @@ async function apiDelete(body) {
             function(result) {
                 console.log("Delete Item Success", result);
                 let responseBody = {
-                    method: "delete",
-                    body: body
+                    method: "delete"
                 };
                 let response = {
                     statusCode: responseCode,
