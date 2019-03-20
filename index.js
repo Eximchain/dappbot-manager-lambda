@@ -7,11 +7,10 @@ AWS.config.update({region: process.env.AWS_REGION});
 var ddb = new AWS.DynamoDB({apiVersion: '2012-08-10'});
 var tableName = process.env.DDB_TABLE;
 
-async function apiCreate(body) {
+async function apiWrite(body) {
     return new Promise(function(resolve, reject) {
         try {
-            validateBodyCreate(body);
-            validateStateCreate(body);
+            validateBodyWrite(body);
         } catch(err) {
             reject(err);
         }
@@ -33,7 +32,7 @@ async function apiCreate(body) {
             function(result) {
                 console.log("Put Item Success", result);
                 let responseBody = {
-                    method: "create",
+                    method: "write",
                     body: body
                 };
                 let response = {
@@ -51,28 +50,13 @@ async function apiCreate(body) {
     });
 }
 
-function validateBodyCreate(body) {
+function validateBodyWrite(body) {
     if (!body.hasOwnProperty('key')) {
         throw new Error("create: required argument 'key' not found");
     }
     if (!body.hasOwnProperty('value')) {
         throw new Error("create: required argument 'value' not found");
     }
-}
-
-function validateStateCreate(body) {
-    let getItemParams = {
-        TableName: tableName,
-        Key: serializeDdbKey(body.key)
-    };
-    ddb.getItem(getItemParams, function(err, data) {
-        if (err) {
-          throw err;
-        }
-        if(data.Item) {
-            throw new Error("Item already exists");
-        }
-    });
 }
 
 async function apiRead(body) {
@@ -124,79 +108,10 @@ function validateBodyRead(body) {
     }
 }
 
-async function apiUpdate(body) {
-    return new Promise(function(resolve, reject) {
-        try {
-            validateBodyUpdate(body);
-            validateStateUpdate(body);
-        } catch(err) {
-            reject(err);
-        }
-        let key = body.key;
-        let value = body.value;
-
-        let putItemParams = {
-            TableName: tableName,
-            Item: serializeDdbItem(key, value)
-        };
-
-        let putItemPromise = ddb.putItem(putItemParams).promise();
-
-        let responseCode = 200;
-        // TODO: Replace with something useful or remove
-        let responseHeaders = {"x-custom-header" : "my custom header value"};
-
-        putItemPromise.then(
-            function(result) {
-                console.log("Put Item Success", result);
-                let responseBody = {
-                    method: "update",
-                    body: body
-                };
-                let response = {
-                    statusCode: responseCode,
-                    headers: responseHeaders,
-                    body: JSON.stringify(responseBody)
-                };
-                resolve(response);
-            },
-            function(err) {
-                console.log("Error", err);
-                reject(err);
-            }
-        );
-    });
-}
-
-function validateBodyUpdate(body) {
-    if (!body.hasOwnProperty('key')) {
-        throw new Error("update: required argument 'key' not found");
-    }
-    if (!body.hasOwnProperty('value')) {
-        throw new Error("update: required argument 'value' not found");
-    }
-}
-
-function validateStateUpdate(body) {
-    let getItemParams = {
-        TableName: tableName,
-        Key: serializeDdbKey(body.key)
-    };
-    ddb.getItem(getItemParams, function(err, data) {
-        if (err) {
-          throw err;
-        }
-        if(!data.Item) {
-            throw new Error("Item does not exist");
-        }
-    });
-}
-
 async function apiDelete(body) {
     return new Promise(function(resolve, reject) {
         try {
             validateBodyDelete(body);
-            validateStateDelete(body);
         } catch(err) {
             reject(err);
         }
@@ -240,10 +155,6 @@ function validateBodyDelete(body) {
         throw new Error("delete: required argument 'key' not found");
     }
 }
-
-function validateStateDelete(body) {
-    // TODO: Placeholder for possible validation
-}
  
 exports.handler = async (event) => {
     console.log("request: " + JSON.stringify(event));
@@ -257,12 +168,10 @@ exports.handler = async (event) => {
 
     let responsePromise = (function(method) {
         switch(method) {
-            case 'create':
-                return apiCreate(body);
             case 'read':
                 return apiRead(body);
-            case 'update':
-                return apiUpdate(body);
+            case 'write':
+                return apiWrite(body);
             case 'delete':
                 return apiDelete(body);
             default:
