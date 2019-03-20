@@ -11,6 +11,7 @@ async function apiCreate(body) {
     return new Promise(function(resolve, reject) {
         try {
             validateBodyCreate(body);
+            validateStateCreate(body);
         } catch(err) {
             reject(err);
         }
@@ -57,6 +58,21 @@ function validateBodyCreate(body) {
     if (!body.hasOwnProperty('value')) {
         throw new Error("create: required argument 'value' not found");
     }
+}
+
+function validateStateCreate(body) {
+    let getItemParams = {
+        TableName: tableName,
+        Key: serializeDdbKey(body.key)
+    };
+    ddb.getItem(getItemParams, function(err, data) {
+        if (err) {
+          throw err;
+        }
+        if(data.Item) {
+            throw new Error("Item already exists");
+        }
+    });
 }
 
 async function apiRead(body) {
@@ -112,6 +128,7 @@ async function apiUpdate(body) {
     return new Promise(function(resolve, reject) {
         try {
             validateBodyUpdate(body);
+            validateStateUpdate(body);
         } catch(err) {
             reject(err);
         }
@@ -160,10 +177,26 @@ function validateBodyUpdate(body) {
     }
 }
 
+function validateStateUpdate(body) {
+    let getItemParams = {
+        TableName: tableName,
+        Key: serializeDdbKey(body.key)
+    };
+    ddb.getItem(getItemParams, function(err, data) {
+        if (err) {
+          throw err;
+        }
+        if(!data.Item) {
+            throw new Error("Item does not exist");
+        }
+    });
+}
+
 async function apiDelete(body) {
     return new Promise(function(resolve, reject) {
         try {
             validateBodyDelete(body);
+            validateStateDelete(body);
         } catch(err) {
             reject(err);
         }
@@ -206,6 +239,10 @@ function validateBodyDelete(body) {
     if (!body.hasOwnProperty('key')) {
         throw new Error("delete: required argument 'key' not found");
     }
+}
+
+function validateStateDelete(body) {
+    // TODO: Placeholder for possible validation
 }
  
 exports.handler = async (event) => {
