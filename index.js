@@ -23,6 +23,10 @@ async function apiCreate(body) {
 
         promiseCreateS3Bucket(bucketName).then(function(result) {
             console.log("Create Bucket Success", result);
+            return promiseConfigureS3BucketStaticWebsite(bucketName);
+        })
+        .then(function(result) {
+            console.log("Configure Bucket Static Website Success", result);
             return promisePutDappItem(body, bucketName);
         })
         .then(function(result) {
@@ -106,9 +110,14 @@ async function apiDelete(body) {
             reject(err);
         }
 
+        let bucketName = null;
         promiseGetDappItem(body).then(function(result) {
             console.log("Get Item Success", result);
-            let bucketName = result.Item.S3BucketName.S;
+            bucketName = result.Item.S3BucketName.S;
+            return promiseEmptyS3Bucket(bucketName);
+        })
+        .then(function(result) {
+            console.log("S3 Bucket Empty Success", result);
             return promiseDeleteS3Bucket(bucketName);
         })
         .then(function(result) {
@@ -235,7 +244,8 @@ function promiseDeleteDappItem(body) {
 
 function promiseCreateS3Bucket(bucketName) {
     let params = {
-        Bucket: bucketName
+        Bucket: bucketName,
+        ACL: 'public-read'
     };
     return s3.createBucket(params).promise();
 }
@@ -245,4 +255,50 @@ function promiseDeleteS3Bucket(bucketName) {
         Bucket: bucketName
     };
     return s3.deleteBucket(params).promise();
+}
+
+function promiseListS3Objects(bucketName) {
+    let params = {
+        Bucket: bucketName
+    };
+    return s3.listObjects(params).promise();
+}
+
+function promiseEmptyS3Bucket(bucketName) {
+    return new Promise(function(resolve, reject) {
+        // TODO: Does this have issues with the limit of list objects?
+        promiseListS3Objects(bucketName).then(function(result) {
+            console.log("List S3 Objects Success", result);
+            let objects = result.Contents;
+            let deletePromises = [];
+            for (var i = 0; i < objects.length; i += 1) {
+                let deleteParams = {
+                    Bucket: bucketName,
+                    Key: objects[i].Key
+                };
+                deletePromises.push(s3.deleteObject(deleteParams).promise());
+            }
+            // TODO: I thought this would be a return but it seems to only work when I resolve here. Should probably double check.
+            resolve(Promise.all(deletePromises));
+        })
+        .catch(function(err) {
+            console.log("Error", err);
+            reject(err);
+        })
+    });
+}
+
+function promiseConfigureS3BucketStaticWebsite(bucketName) {
+    let params = {
+        Bucket: bucketName,
+        WebsiteConfiguration: {
+            ErrorDocument: {
+                Key: 'error.html'
+            },
+            IndexDocument: {
+                Suffix: 'index.html'
+            }
+        }
+    };
+    return s3.putBucketWebsite(params).promise();
 }
