@@ -7,19 +7,20 @@ AWS.config.update({region: process.env.AWS_REGION});
 var ddb = new AWS.DynamoDB({apiVersion: '2012-08-10'});
 var tableName = process.env.DDB_TABLE;
 
-async function apiWrite(body) {
+async function apiCreate(body) {
     return new Promise(function(resolve, reject) {
         try {
-            validateBodyWrite(body);
+            validateBodyCreate(body);
         } catch(err) {
             reject(err);
         }
-        let key = body.key;
-        let value = body.value;
+        let dappName = body.DappName;
+        let owner = body.OwnerEmail;
+        let abi = body.Abi;
 
         let putItemParams = {
             TableName: tableName,
-            Item: serializeDdbItem(key, value)
+            Item: serializeDdbItem(dappName, owner, abi)
         };
 
         let putItemPromise = ddb.putItem(putItemParams).promise();
@@ -32,7 +33,7 @@ async function apiWrite(body) {
             function(result) {
                 console.log("Put Item Success", result);
                 let responseBody = {
-                    method: "write"
+                    method: "create"
                 };
                 let response = {
                     statusCode: responseCode,
@@ -49,12 +50,15 @@ async function apiWrite(body) {
     });
 }
 
-function validateBodyWrite(body) {
-    if (!body.hasOwnProperty('key')) {
-        throw new Error("create: required argument 'key' not found");
+function validateBodyCreate(body) {
+    if (!body.hasOwnProperty('DappName')) {
+        throw new Error("create: required argument 'DappName' not found");
     }
-    if (!body.hasOwnProperty('value')) {
-        throw new Error("create: required argument 'value' not found");
+    if (!body.hasOwnProperty('OwnerEmail')) {
+        throw new Error("create: required argument 'OwnerEmail' not found");
+    }
+    if (!body.hasOwnProperty('Abi')) {
+        throw new Error("create: required argument 'Abi' not found");
     }
 }
 
@@ -65,11 +69,11 @@ async function apiRead(body) {
         } catch(err) {
             reject(err);
         }
-        let key = body.key;
+        let dappName = body.DappName;
 
         let getItemParams = {
             TableName: tableName,
-            Key: serializeDdbKey(key)
+            Key: serializeDdbKey(dappName)
         };
 
         let getItemPromise = ddb.getItem(getItemParams).promise();
@@ -101,8 +105,8 @@ async function apiRead(body) {
 }
 
 function validateBodyRead(body) {
-    if (!body.hasOwnProperty('key')) {
-        throw new Error("read: required argument 'key' not found");
+    if (!body.hasOwnProperty('DappName')) {
+        throw new Error("read: required argument 'DappName' not found");
     }
 }
 
@@ -113,11 +117,11 @@ async function apiDelete(body) {
         } catch(err) {
             reject(err);
         }
-        let key = body.key;
+        let dappName = body.DappName;
 
         let deleteItemParams = {
             TableName: tableName,
-            Key: serializeDdbKey(key)
+            Key: serializeDdbKey(dappName)
         };
 
         let deleteItemPromise = ddb.deleteItem(deleteItemParams).promise();
@@ -148,8 +152,8 @@ async function apiDelete(body) {
 }
 
 function validateBodyDelete(body) {
-    if (!body.hasOwnProperty('key')) {
-        throw new Error("delete: required argument 'key' not found");
+    if (!body.hasOwnProperty('DappName')) {
+        throw new Error("delete: required argument 'DappName' not found");
     }
 }
  
@@ -165,10 +169,10 @@ exports.handler = async (event) => {
 
     let responsePromise = (function(method) {
         switch(method) {
+            case 'create':
+                return apiCreate(body);
             case 'read':
                 return apiRead(body);
-            case 'write':
-                return apiWrite(body);
             case 'delete':
                 return apiDelete(body);
             default:
@@ -180,17 +184,26 @@ exports.handler = async (event) => {
     return response;
 };
 
-function serializeDdbItem(key, value) {
+function serializeDdbItem(dappName, ownerEmail, abi) {
+    let creationTime = new Date().toISOString();
+    let s3Bucket = "S3 placeholder";
+    let cloudfrontDistro = "Cloudfront placeholder";
+    let dnsName = "placeholder.fake.io";
     let item = {
-        'Key' : {S: key},
-        'Value' : {S: value}
+        'DappName' : {S: dappName},
+        'OwnerEmail' : {S: ownerEmail},
+        'CreationTime' : {S: creationTime},
+        'Abi' : {S: abi},
+        'S3BucketName' : {S: s3Bucket},
+        'CloudfrontDistributionId' : {S: cloudfrontDistro},
+        'DnsName' : {S: dnsName}
     };
     return item;
 }
 
-function serializeDdbKey(key) {
+function serializeDdbKey(dappName) {
     let keyItem = {
-        'Key': {S: key}
+        'DappName': {S: dappName}
     };
     return keyItem;
 }
