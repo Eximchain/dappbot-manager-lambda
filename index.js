@@ -2,7 +2,8 @@
 
 var AWS = require('aws-sdk');
 
-AWS.config.update({region: process.env.AWS_REGION});
+var awsRegion = process.env.AWS_REGION;
+AWS.config.update({region: awsRegion});
 
 var ddb = new AWS.DynamoDB({apiVersion: '2012-08-10'});
 var tableName = process.env.DDB_TABLE;
@@ -14,22 +15,14 @@ async function apiCreate(body) {
         } catch(err) {
             reject(err);
         }
-        let dappName = body.DappName;
-        let owner = body.OwnerEmail;
-        let abi = body.Abi;
 
-        let putItemParams = {
-            TableName: tableName,
-            Item: serializeDdbItem(dappName, owner, abi)
-        };
-
-        let putItemPromise = ddb.putItem(putItemParams).promise();
+        let putDappItemPromise = promisePutDappItem(body);
 
         let responseCode = 200;
         // TODO: Replace with something useful or remove
         let responseHeaders = {"x-custom-header" : "my custom header value"};
 
-        putItemPromise.then(
+        putDappItemPromise.then(
             function(result) {
                 console.log("Put Item Success", result);
                 let responseBody = {
@@ -69,14 +62,8 @@ async function apiRead(body) {
         } catch(err) {
             reject(err);
         }
-        let dappName = body.DappName;
 
-        let getItemParams = {
-            TableName: tableName,
-            Key: serializeDdbKey(dappName)
-        };
-
-        let getItemPromise = ddb.getItem(getItemParams).promise();
+        let getItemPromise = promiseGetDappItem(body);
 
         let responseCode = 200;
         // TODO: Replace with something useful or remove
@@ -117,14 +104,8 @@ async function apiDelete(body) {
         } catch(err) {
             reject(err);
         }
-        let dappName = body.DappName;
 
-        let deleteItemParams = {
-            TableName: tableName,
-            Key: serializeDdbKey(dappName)
-        };
-
-        let deleteItemPromise = ddb.deleteItem(deleteItemParams).promise();
+        let deleteItemPromise = promiseDeleteDappItem(body);
 
         let responseCode = 200;
         // TODO: Replace with something useful or remove
@@ -206,4 +187,39 @@ function serializeDdbKey(dappName) {
         'DappName': {S: dappName}
     };
     return keyItem;
+}
+
+function promisePutDappItem(body) {
+    let dappName = body.DappName;
+    let owner = body.OwnerEmail;
+    let abi = body.Abi;
+
+    let putItemParams = {
+        TableName: tableName,
+        Item: serializeDdbItem(dappName, owner, abi)
+    };
+
+    return ddb.putItem(putItemParams).promise();
+}
+
+function promiseGetDappItem(body) {
+    let dappName = body.DappName;
+
+    let getItemParams = {
+        TableName: tableName,
+        Key: serializeDdbKey(dappName)
+    };
+
+    return ddb.getItem(getItemParams).promise();
+}
+
+function promiseDeleteDappItem(body) {
+    let dappName = body.DappName;
+
+    let deleteItemParams = {
+        TableName: tableName,
+        Key: serializeDdbKey(dappName)
+    };
+
+    return ddb.deleteItem(deleteItemParams).promise();
 }
