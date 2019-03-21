@@ -1,12 +1,16 @@
 'use strict';
 
-var AWS = require('aws-sdk');
+const AWS = require('aws-sdk');
+const uuidv4 = require('uuid/v4');
 
-var awsRegion = process.env.AWS_REGION;
+const awsRegion = process.env.AWS_REGION;
+const tableName = process.env.DDB_TABLE;
+const s3BucketPrefix = "exim-abi-clerk-";
+
 AWS.config.update({region: awsRegion});
 
-var ddb = new AWS.DynamoDB({apiVersion: '2012-08-10'});
-var tableName = process.env.DDB_TABLE;
+const ddb = new AWS.DynamoDB({apiVersion: '2012-08-10'});
+const s3 = new AWS.S3({apiVersion: '2006-03-01'});
 
 async function apiCreate(body) {
     return new Promise(function(resolve, reject) {
@@ -15,28 +19,41 @@ async function apiCreate(body) {
         } catch(err) {
             reject(err);
         }
+        let bucketName = createBucketName();
 
-        let putDappItemPromise = promisePutDappItem(body);
+        let createS3BucketPromise = promiseCreateS3Bucket(bucketName);
 
-        let responseCode = 200;
-        // TODO: Replace with something useful or remove
-        let responseHeaders = {"x-custom-header" : "my custom header value"};
-
-        putDappItemPromise.then(
+        createS3BucketPromise.then(
             function(result) {
-                console.log("Put Item Success", result);
-                let responseBody = {
-                    method: "create"
-                };
-                let response = {
-                    statusCode: responseCode,
-                    headers: responseHeaders,
-                    body: JSON.stringify(responseBody)
-                };
-                resolve(response);
+                console.log("Create Bucket Success", result);
+                let putDappItemPromise = promisePutDappItem(body, bucketName);
+
+                let responseCode = 200;
+                // TODO: Replace with something useful or remove
+                let responseHeaders = {"x-custom-header" : "my custom header value"};
+
+                putDappItemPromise.then(
+                    function(result) {
+                        console.log("Put Item Success", result);
+                        let responseBody = {
+                            method: "create"
+                        };
+                        let response = {
+                            statusCode: responseCode,
+                            headers: responseHeaders,
+                            body: JSON.stringify(responseBody)
+                        };
+                        resolve(response);
+                    },
+                    function(err) {
+                        console.log("Error", err);
+                        reject(err);
+                    }
+                );
             },
             function(err) {
                 console.log("Error", err);
+                console.log("Failed to create bucket ".concat(bucketName));
                 reject(err);
             }
         );
@@ -105,24 +122,46 @@ async function apiDelete(body) {
             reject(err);
         }
 
-        let deleteItemPromise = promiseDeleteDappItem(body);
+        let getDappItemPromise = promiseGetDappItem(body);
 
-        let responseCode = 200;
-        // TODO: Replace with something useful or remove
-        let responseHeaders = {"x-custom-header" : "my custom header value"};
-
-        deleteItemPromise.then(
+        getDappItemPromise.then(
             function(result) {
-                console.log("Delete Item Success", result);
-                let responseBody = {
-                    method: "delete"
-                };
-                let response = {
-                    statusCode: responseCode,
-                    headers: responseHeaders,
-                    body: JSON.stringify(responseBody)
-                };
-                resolve(response);
+                console.log("Get Item Success", result);
+                let bucketName = result.Item.S3BucketName.S;
+                let deleteBucketPromise = promiseDeleteS3Bucket(bucketName);
+
+                deleteBucketPromise.then(
+                    function(result) {
+                        let deleteDappItemPromise = promiseDeleteDappItem(body);
+
+                        let responseCode = 200;
+                        // TODO: Replace with something useful or remove
+                        let responseHeaders = {"x-custom-header" : "my custom header value"};
+
+                        deleteDappItemPromise.then(
+                            function(result) {
+                                console.log("Delete Item Success", result);
+                                let responseBody = {
+                                    method: "delete"
+                                };
+                                let response = {
+                                    statusCode: responseCode,
+                                    headers: responseHeaders,
+                                    body: JSON.stringify(responseBody)
+                                };
+                                resolve(response);
+                            },
+                            function(err) {
+                                console.log("Error", err);
+                                reject(err);
+                            }
+                        );
+                    },
+                    function(err) {
+                        console.log("Error", err);
+                        reject(err);
+                    }
+                )
             },
             function(err) {
                 console.log("Error", err);
@@ -165,9 +204,8 @@ exports.handler = async (event) => {
     return response;
 };
 
-function serializeDdbItem(dappName, ownerEmail, abi) {
+function serializeDdbItem(dappName, ownerEmail, abi, bucketName) {
     let creationTime = new Date().toISOString();
-    let s3Bucket = "S3 placeholder";
     let cloudfrontDistro = "Cloudfront placeholder";
     let dnsName = "placeholder.fake.io";
     let item = {
@@ -175,7 +213,7 @@ function serializeDdbItem(dappName, ownerEmail, abi) {
         'OwnerEmail' : {S: ownerEmail},
         'CreationTime' : {S: creationTime},
         'Abi' : {S: abi},
-        'S3BucketName' : {S: s3Bucket},
+        'S3BucketName' : {S: bucketName},
         'CloudfrontDistributionId' : {S: cloudfrontDistro},
         'DnsName' : {S: dnsName}
     };
@@ -189,14 +227,18 @@ function serializeDdbKey(dappName) {
     return keyItem;
 }
 
-function promisePutDappItem(body) {
+function createBucketName() {
+    return s3BucketPrefix.concat(uuidv4());
+}
+
+function promisePutDappItem(body, bucketName) {
     let dappName = body.DappName;
     let owner = body.OwnerEmail;
     let abi = body.Abi;
 
     let putItemParams = {
         TableName: tableName,
-        Item: serializeDdbItem(dappName, owner, abi)
+        Item: serializeDdbItem(dappName, owner, abi, bucketName)
     };
 
     return ddb.putItem(putItemParams).promise();
@@ -222,4 +264,18 @@ function promiseDeleteDappItem(body) {
     };
 
     return ddb.deleteItem(deleteItemParams).promise();
+}
+
+function promiseCreateS3Bucket(bucketName) {
+    let params = {
+        Bucket: bucketName
+    };
+    return s3.createBucket(params).promise();
+}
+
+function promiseDeleteS3Bucket(bucketName) {
+    let params = {
+        Bucket: bucketName
+    };
+    return s3.deleteBucket(params).promise();
 }
