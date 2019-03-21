@@ -21,42 +21,30 @@ async function apiCreate(body) {
         }
         let bucketName = createBucketName();
 
-        let createS3BucketPromise = promiseCreateS3Bucket(bucketName);
+        promiseCreateS3Bucket(bucketName).then(function(result) {
+            console.log("Create Bucket Success", result);
+            return promisePutDappItem(body, bucketName);
+        })
+        .then(function(result) {
+            console.log("Put Item Success", result);
+            let responseCode = 200;
+            // TODO: Replace with something useful or remove
+            let responseHeaders = {"x-custom-header" : "my custom header value"};
 
-        createS3BucketPromise.then(
-            function(result) {
-                console.log("Create Bucket Success", result);
-                let putDappItemPromise = promisePutDappItem(body, bucketName);
-
-                let responseCode = 200;
-                // TODO: Replace with something useful or remove
-                let responseHeaders = {"x-custom-header" : "my custom header value"};
-
-                putDappItemPromise.then(
-                    function(result) {
-                        console.log("Put Item Success", result);
-                        let responseBody = {
-                            method: "create"
-                        };
-                        let response = {
-                            statusCode: responseCode,
-                            headers: responseHeaders,
-                            body: JSON.stringify(responseBody)
-                        };
-                        resolve(response);
-                    },
-                    function(err) {
-                        console.log("Error", err);
-                        reject(err);
-                    }
-                );
-            },
-            function(err) {
-                console.log("Error", err);
-                console.log("Failed to create bucket ".concat(bucketName));
-                reject(err);
-            }
-        );
+            let responseBody = {
+                method: "create"
+            };
+            let response = {
+                statusCode: responseCode,
+                headers: responseHeaders,
+                body: JSON.stringify(responseBody)
+            };
+            resolve(response);
+        })
+        .catch(function(err) {
+            console.log("Error", err);
+            reject(err);
+        })
     });
 }
 
@@ -80,31 +68,27 @@ async function apiRead(body) {
             reject(err);
         }
 
-        let getItemPromise = promiseGetDappItem(body);
+        promiseGetDappItem(body).then(function(result) {
+            console.log("Get Item Success", result);
+            let responseCode = 200;
+            // TODO: Replace with something useful or remove
+            let responseHeaders = {"x-custom-header" : "my custom header value"};
 
-        let responseCode = 200;
-        // TODO: Replace with something useful or remove
-        let responseHeaders = {"x-custom-header" : "my custom header value"};
-
-        getItemPromise.then(
-            function(result) {
-                console.log("Get Item Success", result);
-                let responseBody = {
-                    method: "read",
-                    item: result.Item
-                };
-                let response = {
-                    statusCode: responseCode,
-                    headers: responseHeaders,
-                    body: JSON.stringify(responseBody)
-                };
-                resolve(response);
-            },
-            function(err) {
-                console.log("Error", err);
-                reject(err);
-            }
-        );
+            let responseBody = {
+                method: "read",
+                item: result.Item
+            };
+            let response = {
+                statusCode: responseCode,
+                headers: responseHeaders,
+                body: JSON.stringify(responseBody)
+            };
+            resolve(response);
+        })
+        .catch(function(err) {
+            console.log("Error", err);
+            reject(err);
+        })   
     });
 }
 
@@ -122,52 +106,35 @@ async function apiDelete(body) {
             reject(err);
         }
 
-        let getDappItemPromise = promiseGetDappItem(body);
+        promiseGetDappItem(body).then(function(result) {
+            console.log("Get Item Success", result);
+            let bucketName = result.Item.S3BucketName.S;
+            return promiseDeleteS3Bucket(bucketName);
+        })
+        .then(function(result) {
+            console.log("S3 Bucket Delete Success", result);
+            return promiseDeleteDappItem(body);
+        })
+        .then(function(result){
+            console.log("Delete Item Success", result);
+            let responseCode = 200;
+            // TODO: Replace with something useful or remove
+            let responseHeaders = {"x-custom-header" : "my custom header value"};
 
-        getDappItemPromise.then(
-            function(result) {
-                console.log("Get Item Success", result);
-                let bucketName = result.Item.S3BucketName.S;
-                let deleteBucketPromise = promiseDeleteS3Bucket(bucketName);
-
-                deleteBucketPromise.then(
-                    function(result) {
-                        let deleteDappItemPromise = promiseDeleteDappItem(body);
-
-                        let responseCode = 200;
-                        // TODO: Replace with something useful or remove
-                        let responseHeaders = {"x-custom-header" : "my custom header value"};
-
-                        deleteDappItemPromise.then(
-                            function(result) {
-                                console.log("Delete Item Success", result);
-                                let responseBody = {
-                                    method: "delete"
-                                };
-                                let response = {
-                                    statusCode: responseCode,
-                                    headers: responseHeaders,
-                                    body: JSON.stringify(responseBody)
-                                };
-                                resolve(response);
-                            },
-                            function(err) {
-                                console.log("Error", err);
-                                reject(err);
-                            }
-                        );
-                    },
-                    function(err) {
-                        console.log("Error", err);
-                        reject(err);
-                    }
-                )
-            },
-            function(err) {
-                console.log("Error", err);
-                reject(err);
-            }
-        );
+            let responseBody = {
+                method: "delete"
+            };
+            let response = {
+                statusCode: responseCode,
+                headers: responseHeaders,
+                body: JSON.stringify(responseBody)
+            };
+            resolve(response);
+        })
+        .catch(function(err) {
+            console.log("Error", err);
+            reject(err);
+        })
     });
 }
 
