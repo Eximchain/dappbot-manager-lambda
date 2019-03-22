@@ -5,6 +5,8 @@ const uuidv4 = require('uuid/v4');
 
 const awsRegion = process.env.AWS_REGION;
 const tableName = process.env.DDB_TABLE;
+const r53HostedZoneId = process.env.R53_HOSTED_ZONE_ID;
+const dnsRoot = process.env.DNS_ROOT;
 const s3BucketPrefix = "exim-abi-clerk-";
 
 const sampleHtml = `<html>
@@ -19,6 +21,7 @@ AWS.config.update({region: awsRegion});
 const ddb = new AWS.DynamoDB({apiVersion: '2012-08-10'});
 const s3 = new AWS.S3({apiVersion: '2006-03-01'});
 const cloudfront = new AWS.CloudFront({apiVersion: '2018-11-05'});
+const route53 = new AWS.Route53({apiVersion: '2013-04-01'});
 
 async function apiCreate(body) {
     return new Promise(function(resolve, reject) {
@@ -27,6 +30,7 @@ async function apiCreate(body) {
         } catch(err) {
             reject(err);
         }
+        let dappName = body.DappName;
         let bucketName = createBucketName();
         let s3Dns = null;
         let cloudfrontDistroId = null;
@@ -43,13 +47,18 @@ async function apiCreate(body) {
         .then(function(result) {
             console.log("Put S3 Objects Success", result);
             s3Dns = getS3BucketEndpoint(bucketName);
-            return promiseCreateCloudfrontDistribution(body.DappName, s3Dns);
+            return promiseCreateCloudfrontDistribution(dappName, s3Dns);
         })
         .then(function(result) {
             console.log("Create Cloudfront Distribution Success", result);
             cloudfrontDistroId = result.Distribution.Id;
             cloudfrontDns = result.Distribution.DomainName;
-            return promisePutDappItem(body, bucketName, cloudfrontDns, cloudfrontDistroId);
+            return promiseCreateDnsRecord(dappName, cloudfrontDns);
+        })
+        .then(function(result) {
+            console.log("Create DNS Record Success", result);
+            // TODO: Put custom dns instead
+            return promisePutDappItem(body, bucketName, cloudfrontDistroId, cloudfrontDns);
         })
         .then(function(result) {
             console.log("Put Dapp Item Success", result);
@@ -124,6 +133,7 @@ function validateBodyRead(body) {
     }
 }
 
+// TODO: Make sure incomplete steps are cleaned up
 async function apiDelete(body) {
     return new Promise(function(resolve, reject) {
         try {
@@ -131,17 +141,25 @@ async function apiDelete(body) {
         } catch(err) {
             reject(err);
         }
+        let dappName = null;
         let bucketName = null;
         let cloudfrontDistroId = null;
+        let cloudfrontDns = null;
 
         promiseGetDappItem(body).then(function(result) {
             console.log("Get Dapp Item Success", result);
+            dappName = result.Item.DappName.S;
             bucketName = result.Item.S3BucketName.S;
             cloudfrontDistroId = result.Item.CloudfrontDistributionId.S;
+            cloudfrontDns = result.Item.CloudfrontDnsName.S;
             return promiseDisableCloudfrontDistribution(cloudfrontDistroId);
         })
         .then(function(result) {
             console.log("Cloudfront Disable Success", result);
+            return promiseDeleteDnsRecord(dappName, cloudfrontDns);
+        })
+        .then(function(result) {
+            console.log("Delete DNS Record Success", result);
             return promiseEmptyS3Bucket(bucketName);
         })
         .then(function(result) {
@@ -208,7 +226,7 @@ exports.handler = async (event) => {
     return response;
 };
 
-function serializeDdbItem(dappName, ownerEmail, abi, bucketName, s3Dns, cloudfrontDistroId) {
+function serializeDdbItem(dappName, ownerEmail, abi, bucketName, cloudfrontDns, cloudfrontDistroId) {
     let creationTime = new Date().toISOString();
     let item = {
         'DappName' : {S: dappName},
@@ -217,7 +235,8 @@ function serializeDdbItem(dappName, ownerEmail, abi, bucketName, s3Dns, cloudfro
         'Abi' : {S: abi},
         'S3BucketName' : {S: bucketName},
         'CloudfrontDistributionId' : {S: cloudfrontDistroId},
-        'DnsName' : {S: s3Dns}
+        'CloudfrontDnsName' : {S: cloudfrontDns},
+        'DnsName' : {S: dnsNameFromDappName(dappName)}
     };
     return item;
 }
@@ -237,14 +256,15 @@ function getS3BucketEndpoint(bucketName) {
     return bucketName.concat(".s3.").concat(awsRegion).concat(".amazonaws.com");
 }
 
-function promisePutDappItem(body, bucketName, dnsName, cloudfrontDistroId) {
+function promisePutDappItem(body, bucketName, cloudfrontDistroId, cloudfrontDns) {
     let dappName = body.DappName;
     let owner = body.OwnerEmail;
     let abi = body.Abi;
+    let dnsName = dnsNameFromDappName(dappName);
 
     let putItemParams = {
         TableName: tableName,
-        Item: serializeDdbItem(dappName, owner, abi, bucketName, dnsName, cloudfrontDistroId)
+        Item: serializeDdbItem(dappName, owner, abi, bucketName, cloudfrontDns, cloudfrontDistroId)
     };
 
     return ddb.putItem(putItemParams).promise();
@@ -354,6 +374,7 @@ function promisePutS3Objects(bucketName) {
 function promiseCreateCloudfrontDistribution(appName, s3Origin) {
     // TODO: Origin Access Identity
     // TODO: Verify that we want these args
+    // TODO: Set up SSL
     let params = {
         DistributionConfig: {
             CallerReference: uuidv4(),
@@ -424,4 +445,54 @@ function promiseDisableCloudfrontDistribution(distroId) {
             reject(err);
         })
     });
+}
+
+function promiseCreateDnsRecord(dappName, cloudfrontDns) {
+    // TODO: Sanitize for URL
+    let name = dnsNameFromDappName(dappName);
+    let params = {
+        HostedZoneId: r53HostedZoneId,
+        ChangeBatch: {
+            Changes: [{
+                Action: 'CREATE',
+                ResourceRecordSet: {
+                    AliasTarget: {
+                        DNSName: cloudfrontDns, 
+                        EvaluateTargetHealth: false, 
+                        HostedZoneId: "Z2FDTNDATAQYW2"
+                    },
+                    Name: name, 
+                    Type: "A"
+                }
+            }]
+        }
+    }
+    return route53.changeResourceRecordSets(params).promise();
+}
+
+function promiseDeleteDnsRecord(dappName, cloudfrontDns) {
+    // TODO: Sanitize for URL
+    let name = dnsNameFromDappName(dappName);
+    let params = {
+        HostedZoneId: r53HostedZoneId,
+        ChangeBatch: {
+            Changes: [{
+                Action: 'DELETE',
+                ResourceRecordSet: {
+                    AliasTarget: {
+                        DNSName: cloudfrontDns, 
+                        EvaluateTargetHealth: false, 
+                        HostedZoneId: "Z2FDTNDATAQYW2"
+                    }, 
+                    Name: name, 
+                    Type: "A"
+                }
+            }]
+        }
+    }
+    return route53.changeResourceRecordSets(params).promise();
+}
+
+function dnsNameFromDappName(dappName) {
+    return dappName.concat(dnsRoot);
 }
