@@ -18,6 +18,7 @@ AWS.config.update({region: awsRegion});
 
 const ddb = new AWS.DynamoDB({apiVersion: '2012-08-10'});
 const s3 = new AWS.S3({apiVersion: '2006-03-01'});
+const cloudfront = new AWS.CloudFront({apiVersion: '2018-11-05'});
 
 async function apiCreate(body) {
     return new Promise(function(resolve, reject) {
@@ -27,6 +28,9 @@ async function apiCreate(body) {
             reject(err);
         }
         let bucketName = createBucketName();
+        let s3Dns = null;
+        let cloudfrontDistroId = null;
+        let cloudfrontDns = null;
 
         promiseCreateS3Bucket(bucketName).then(function(result) {
             console.log("Create Bucket Success", result);
@@ -38,8 +42,14 @@ async function apiCreate(body) {
         })
         .then(function(result) {
             console.log("Put S3 Objects Success", result);
-            let s3Dns = getS3WebsiteEndpoint(bucketName);
-            return promisePutDappItem(body, bucketName, s3Dns);
+            s3Dns = getS3BucketEndpoint(bucketName);
+            return promiseCreateCloudfrontDistribution(body.DappName, s3Dns);
+        })
+        .then(function(result) {
+            console.log("Create Cloudfront Distribution Success", result);
+            cloudfrontDistroId = result.Distribution.Id;
+            cloudfrontDns = result.Distribution.DomainName;
+            return promisePutDappItem(body, bucketName, cloudfrontDns, cloudfrontDistroId);
         })
         .then(function(result) {
             console.log("Put Dapp Item Success", result);
@@ -121,11 +131,17 @@ async function apiDelete(body) {
         } catch(err) {
             reject(err);
         }
-
         let bucketName = null;
+        let cloudfrontDistroId = null;
+
         promiseGetDappItem(body).then(function(result) {
             console.log("Get Dapp Item Success", result);
             bucketName = result.Item.S3BucketName.S;
+            cloudfrontDistroId = result.Item.CloudfrontDistributionId.S;
+            return promiseDisableCloudfrontDistribution(cloudfrontDistroId);
+        })
+        .then(function(result) {
+            console.log("Cloudfront Disable Success", result);
             return promiseEmptyS3Bucket(bucketName);
         })
         .then(function(result) {
@@ -192,16 +208,15 @@ exports.handler = async (event) => {
     return response;
 };
 
-function serializeDdbItem(dappName, ownerEmail, abi, bucketName, s3Dns) {
+function serializeDdbItem(dappName, ownerEmail, abi, bucketName, s3Dns, cloudfrontDistroId) {
     let creationTime = new Date().toISOString();
-    let cloudfrontDistro = "Cloudfront placeholder";
     let item = {
         'DappName' : {S: dappName},
         'OwnerEmail' : {S: ownerEmail},
         'CreationTime' : {S: creationTime},
         'Abi' : {S: abi},
         'S3BucketName' : {S: bucketName},
-        'CloudfrontDistributionId' : {S: cloudfrontDistro},
+        'CloudfrontDistributionId' : {S: cloudfrontDistroId},
         'DnsName' : {S: s3Dns}
     };
     return item;
@@ -218,28 +233,18 @@ function createBucketName() {
     return s3BucketPrefix.concat(uuidv4());
 }
 
-function getS3WebsiteEndpoint(bucketName) {
-    return bucketName.concat('.').concat(getS3WebsiteDomain());
+function getS3BucketEndpoint(bucketName) {
+    return bucketName.concat(".s3.").concat(awsRegion).concat(".amazonaws.com");
 }
 
-function getS3WebsiteDomain() {
-    let oldRegions = ["ap-northeast-1", "ap-southeast-1", "ap-southeast-2", "eu-west-1",
-    "sa-east-1", "us-east-1",  "us-gov-west-1", "us-west-1", "us-west-2"];
-
-    if (oldRegions.includes(awsRegion)) {
-        return 's3-website-'.concat(awsRegion).concat('.amazonaws.com');
-    }
-    return 's3-website.'.concat(awsRegion).concat('.amazonaws.com');
-}
-
-function promisePutDappItem(body, bucketName, s3Dns) {
+function promisePutDappItem(body, bucketName, dnsName, cloudfrontDistroId) {
     let dappName = body.DappName;
     let owner = body.OwnerEmail;
     let abi = body.Abi;
 
     let putItemParams = {
         TableName: tableName,
-        Item: serializeDdbItem(dappName, owner, abi, bucketName, s3Dns)
+        Item: serializeDdbItem(dappName, owner, abi, bucketName, dnsName, cloudfrontDistroId)
     };
 
     return ddb.putItem(putItemParams).promise();
@@ -344,4 +349,79 @@ function promisePutS3Objects(bucketName) {
         Body: sampleHtml
     };
     return s3.putObject(params).promise();
+}
+
+function promiseCreateCloudfrontDistribution(appName, s3Origin) {
+    // TODO: Origin Access Identity
+    // TODO: Verify that we want these args
+    let params = {
+        DistributionConfig: {
+            CallerReference: uuidv4(),
+            DefaultRootObject: 'index.html',
+            Origins: {
+                Quantity: 1,
+                Items: [{
+                    Id: 's3-origin',
+                    DomainName: s3Origin,
+                    S3OriginConfig: {
+                        OriginAccessIdentity: ''
+                    }
+                }],
+            },
+            DefaultCacheBehavior: {
+                TargetOriginId: 's3-origin',
+                ForwardedValues: {
+                    QueryString: false,
+                    Cookies: {
+                        Forward: 'none'
+                    },
+                    Headers: {
+                        Quantity: 0
+                    }
+                },
+                TrustedSigners: {
+                    Quantity: 0,
+                    Enabled: false
+                },
+                ViewerProtocolPolicy: 'allow-all',
+                MinTTL: 0,
+                AllowedMethods: {
+                    Quantity: 7,
+                    Items: ['GET', 'HEAD', 'OPTIONS', 'PUT', 'PATCH', 'POST', 'DELETE']
+                }
+            },
+            Enabled: true,
+            Comment: "Cloudfront distribution for ".concat(appName)
+        }
+    };
+    return cloudfront.createDistribution(params).promise();
+}
+
+function promiseGetCloudfrontDistributionConfig(distroId) {
+    let params = {
+        Id: distroId
+    }
+    return cloudfront.getDistributionConfig(params).promise();
+}
+
+function promiseDisableCloudfrontDistribution(distroId) {
+    return new Promise(function(resolve, reject) {
+        promiseGetCloudfrontDistributionConfig(distroId).then(function(result) {
+            console.log("Get Cloudfront Distro Config Success", result);
+            let config = result.DistributionConfig;
+            config.Enabled = false;
+
+            let params = {
+                Id: distroId,
+                IfMatch: result.ETag,
+                DistributionConfig: config
+            };
+            // TODO: I thought this would be a return same as other issue about this.
+            resolve(cloudfront.updateDistribution(params).promise());
+        })
+        .catch(function(err) {
+            console.log("Error", err);
+            reject(err);
+        })
+    });
 }
