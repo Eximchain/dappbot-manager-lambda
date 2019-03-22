@@ -7,6 +7,13 @@ const awsRegion = process.env.AWS_REGION;
 const tableName = process.env.DDB_TABLE;
 const s3BucketPrefix = "exim-abi-clerk-";
 
+const sampleHtml = `<html>
+<header><title>This is title</title></header>
+<body>
+Hello world
+</body>
+</html>`;
+
 AWS.config.update({region: awsRegion});
 
 const ddb = new AWS.DynamoDB({apiVersion: '2012-08-10'});
@@ -27,10 +34,14 @@ async function apiCreate(body) {
         })
         .then(function(result) {
             console.log("Configure Bucket Static Website Success", result);
+            return promisePutS3Objects(bucketName);
+        })
+        .then(function(result) {
+            console.log("Put S3 Objects Success", result);
             return promisePutDappItem(body, bucketName);
         })
         .then(function(result) {
-            console.log("Put Item Success", result);
+            console.log("Put Dapp Item Success", result);
             let responseCode = 200;
             // TODO: Replace with something useful or remove
             let responseHeaders = {"x-custom-header" : "my custom header value"};
@@ -73,7 +84,7 @@ async function apiRead(body) {
         }
 
         promiseGetDappItem(body).then(function(result) {
-            console.log("Get Item Success", result);
+            console.log("Get Dapp Item Success", result);
             let responseCode = 200;
             // TODO: Replace with something useful or remove
             let responseHeaders = {"x-custom-header" : "my custom header value"};
@@ -112,7 +123,7 @@ async function apiDelete(body) {
 
         let bucketName = null;
         promiseGetDappItem(body).then(function(result) {
-            console.log("Get Item Success", result);
+            console.log("Get Dapp Item Success", result);
             bucketName = result.Item.S3BucketName.S;
             return promiseEmptyS3Bucket(bucketName);
         })
@@ -125,7 +136,7 @@ async function apiDelete(body) {
             return promiseDeleteDappItem(body);
         })
         .then(function(result){
-            console.log("Delete Item Success", result);
+            console.log("Delete Dapp Item Success", result);
             let responseCode = 200;
             // TODO: Replace with something useful or remove
             let responseHeaders = {"x-custom-header" : "my custom header value"};
@@ -301,4 +312,15 @@ function promiseConfigureS3BucketStaticWebsite(bucketName) {
         }
     };
     return s3.putBucketWebsite(params).promise();
+}
+
+function promisePutS3Objects(bucketName) {
+    let params = {
+        Bucket: bucketName,
+        ACL: 'public-read',
+        ContentType: 'text/html',
+        Key: 'index.html',
+        Body: sampleHtml
+    };
+    return s3.putObject(params).promise();
 }
