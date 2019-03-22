@@ -38,7 +38,8 @@ async function apiCreate(body) {
         })
         .then(function(result) {
             console.log("Put S3 Objects Success", result);
-            return promisePutDappItem(body, bucketName);
+            let s3Dns = getS3WebsiteEndpoint(bucketName);
+            return promisePutDappItem(body, bucketName, s3Dns);
         })
         .then(function(result) {
             console.log("Put Dapp Item Success", result);
@@ -191,10 +192,9 @@ exports.handler = async (event) => {
     return response;
 };
 
-function serializeDdbItem(dappName, ownerEmail, abi, bucketName) {
+function serializeDdbItem(dappName, ownerEmail, abi, bucketName, s3Dns) {
     let creationTime = new Date().toISOString();
     let cloudfrontDistro = "Cloudfront placeholder";
-    let dnsName = "placeholder.fake.io";
     let item = {
         'DappName' : {S: dappName},
         'OwnerEmail' : {S: ownerEmail},
@@ -202,7 +202,7 @@ function serializeDdbItem(dappName, ownerEmail, abi, bucketName) {
         'Abi' : {S: abi},
         'S3BucketName' : {S: bucketName},
         'CloudfrontDistributionId' : {S: cloudfrontDistro},
-        'DnsName' : {S: dnsName}
+        'DnsName' : {S: s3Dns}
     };
     return item;
 }
@@ -218,14 +218,28 @@ function createBucketName() {
     return s3BucketPrefix.concat(uuidv4());
 }
 
-function promisePutDappItem(body, bucketName) {
+function getS3WebsiteEndpoint(bucketName) {
+    return bucketName.concat('.').concat(getS3WebsiteDomain());
+}
+
+function getS3WebsiteDomain() {
+    let oldRegions = ["ap-northeast-1", "ap-southeast-1", "ap-southeast-2", "eu-west-1",
+    "sa-east-1", "us-east-1",  "us-gov-west-1", "us-west-1", "us-west-2"];
+
+    if (oldRegions.includes(awsRegion)) {
+        return 's3-website-'.concat(awsRegion).concat('.amazonaws.com');
+    }
+    return 's3-website.'.concat(awsRegion).concat('.amazonaws.com');
+}
+
+function promisePutDappItem(body, bucketName, s3Dns) {
     let dappName = body.DappName;
     let owner = body.OwnerEmail;
     let abi = body.Abi;
 
     let putItemParams = {
         TableName: tableName,
-        Item: serializeDdbItem(dappName, owner, abi, bucketName)
+        Item: serializeDdbItem(dappName, owner, abi, bucketName, s3Dns)
     };
 
     return ddb.putItem(putItemParams).promise();
@@ -312,6 +326,13 @@ function promiseConfigureS3BucketStaticWebsite(bucketName) {
         }
     };
     return s3.putBucketWebsite(params).promise();
+}
+
+function promiseGetS3BucketWebsiteConfig(bucketName) {
+    let params = {
+        Bucket: bucketName
+    };
+    return s3.getBucketWebsite(params).promise();
 }
 
 function promisePutS3Objects(bucketName) {
