@@ -315,26 +315,26 @@ function promiseListS3Objects(bucketName) {
 }
 
 function promiseEmptyS3Bucket(bucketName) {
-    return new Promise(function(resolve, reject) {
-        // TODO: Does this have issues with the limit of list objects?
-        promiseListS3Objects(bucketName).then(function(result) {
-            console.log("List S3 Objects Success", result);
-            let objects = result.Contents;
-            let deletePromises = [];
-            for (var i = 0; i < objects.length; i += 1) {
-                let deleteParams = {
-                    Bucket: bucketName,
-                    Key: objects[i].Key
-                };
-                deletePromises.push(s3.deleteObject(deleteParams).promise());
-            }
-            // TODO: I thought this would be a return but it seems to only work when I resolve here. Should probably double check.
-            resolve(Promise.all(deletePromises));
-        })
-        .catch(function(err) {
-            console.log("Error", err);
-            reject(err);
-        })
+    console.log("Emptying S3 bucket ", bucketName)
+    // TODO: Does this have issues with the limit of list objects?
+    return promiseListS3Objects(bucketName).then(function(result) {
+        console.log("List S3 Objects Success", result);
+        let objects = result.Contents;
+        let deletePromises = [];
+        for (var i = 0; i < objects.length; i += 1) {
+            let deleteParams = {
+                Bucket: bucketName,
+                Key: objects[i].Key
+            };
+            deletePromises.push(s3.deleteObject(deleteParams).promise());
+        }
+        let retPromise = Promise.all(deletePromises);
+        console.log("Returning promise", retPromise, "With deletePromises", deletePromises)
+        return retPromise;
+    })
+    .catch(function(err) {
+        console.log("Error", err);
+        return Promise.reject(err);
     });
 }
 
@@ -426,24 +426,21 @@ function promiseGetCloudfrontDistributionConfig(distroId) {
 }
 
 function promiseDisableCloudfrontDistribution(distroId) {
-    return new Promise(function(resolve, reject) {
-        promiseGetCloudfrontDistributionConfig(distroId).then(function(result) {
-            console.log("Get Cloudfront Distro Config Success", result);
-            let config = result.DistributionConfig;
-            config.Enabled = false;
+    return promiseGetCloudfrontDistributionConfig(distroId).then(function(result) {
+        console.log("Get Cloudfront Distro Config Success", result);
+        let config = result.DistributionConfig;
+        config.Enabled = false;
 
-            let params = {
-                Id: distroId,
-                IfMatch: result.ETag,
-                DistributionConfig: config
-            };
-            // TODO: I thought this would be a return same as other issue about this.
-            resolve(cloudfront.updateDistribution(params).promise());
-        })
-        .catch(function(err) {
-            console.log("Error", err);
-            reject(err);
-        })
+        let params = {
+            Id: distroId,
+            IfMatch: result.ETag,
+            DistributionConfig: config
+        };
+        return cloudfront.updateDistribution(params).promise();
+    })
+    .catch(function(err) {
+        console.log("Error", err);
+        return Promise.reject(err);
     });
 }
 
