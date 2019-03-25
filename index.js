@@ -31,6 +31,8 @@ async function apiCreate(body) {
             reject(err);
         }
         let dappName = body.DappName;
+        let owner = body.OwnerEmail;
+        let abi = body.Abi;
         let bucketName = createBucketName();
         let s3Dns = null;
         let cloudfrontDistroId = null;
@@ -58,7 +60,7 @@ async function apiCreate(body) {
         .then(function(result) {
             console.log("Create DNS Record Success", result);
             // TODO: Put custom dns instead
-            return promisePutDappItem(body, bucketName, cloudfrontDistroId, cloudfrontDns);
+            return promisePutDappItem(dappName, owner, abi, bucketName, cloudfrontDistroId, cloudfrontDns);
         })
         .then(function(result) {
             console.log("Put Dapp Item Success", result);
@@ -102,8 +104,9 @@ async function apiRead(body) {
         } catch(err) {
             reject(err);
         }
+        let dappName = body.DappName;
 
-        promiseGetDappItem(body).then(function(result) {
+        promiseGetDappItem(dappName).then(function(result) {
             console.log("Get Dapp Item Success", result);
             let responseCode = 200;
             // TODO: Replace with something useful or remove
@@ -141,14 +144,13 @@ async function apiDelete(body) {
         } catch(err) {
             reject(err);
         }
-        let dappName = null;
+        let dappName = body.dappName;
         let bucketName = null;
         let cloudfrontDistroId = null;
         let cloudfrontDns = null;
 
-        promiseGetDappItem(body).then(function(result) {
+        promiseGetDappItem(dappName).then(function(result) {
             console.log("Get Dapp Item Success", result);
-            dappName = result.Item.DappName.S;
             bucketName = result.Item.S3BucketName.S;
             cloudfrontDistroId = result.Item.CloudfrontDistributionId.S;
             cloudfrontDns = result.Item.CloudfrontDnsName.S;
@@ -256,12 +258,7 @@ function getS3BucketEndpoint(bucketName) {
     return bucketName.concat(".s3.").concat(awsRegion).concat(".amazonaws.com");
 }
 
-function promisePutDappItem(body, bucketName, cloudfrontDistroId, cloudfrontDns) {
-    let dappName = body.DappName;
-    let owner = body.OwnerEmail;
-    let abi = body.Abi;
-    let dnsName = dnsNameFromDappName(dappName);
-
+function promisePutDappItem(dappName, owner, abi, bucketName, cloudfrontDistroId, cloudfrontDns) {
     let putItemParams = {
         TableName: tableName,
         Item: serializeDdbItem(dappName, owner, abi, bucketName, cloudfrontDns, cloudfrontDistroId)
@@ -270,9 +267,7 @@ function promisePutDappItem(body, bucketName, cloudfrontDistroId, cloudfrontDns)
     return ddb.putItem(putItemParams).promise();
 }
 
-function promiseGetDappItem(body) {
-    let dappName = body.DappName;
-
+function promiseGetDappItem(dappName) {
     let getItemParams = {
         TableName: tableName,
         Key: serializeDdbKey(dappName)
