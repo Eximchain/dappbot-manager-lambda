@@ -144,7 +144,7 @@ async function apiDelete(body) {
         } catch(err) {
             reject(err);
         }
-        let dappName = body.dappName;
+        let dappName = body.DappName;
         let bucketName = null;
         let cloudfrontDistroId = null;
         let cloudfrontDns = null;
