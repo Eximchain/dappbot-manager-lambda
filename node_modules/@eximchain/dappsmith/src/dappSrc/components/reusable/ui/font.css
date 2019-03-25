@@ -1,0 +1,935 @@
+/** Inter UI **/
+
+@font-face {
+  font-family: "Inter UI";
+  font-style: normal;
+  font-weight: 400;
+  src: url("./fonts/Inter-UI/Inter-UI-Regular.woff2") format("woff2"),
+    url("./fonts/Inter-UI/Inter-UI-Regular.woff") format("woff");
+}
+@font-face {
+  font-family: "Inter UI";
+  font-style: italic;
+  font-weight: 400;
+  src: url("./fonts/Inter-UI/Inter-UI-Italic.woff2") format("woff2"),
+    url("./fonts/Inter-UI/Inter-UI-Italic.woff") format("woff");
+}
+
+@font-face {
+  font-family: "Inter UI";
+  font-style: normal;
+  font-weight: 500;
+  src: url("./fonts/Inter-UI/Inter-UI-Medium.woff2") format("woff2"),
+    url("./fonts/Inter-UI/Inter-UI-Medium.woff") format("woff");
+}
+@font-face {
+  font-family: "Inter UI";
+  font-style: italic;
+  font-weight: 500;
+  src: url("./fonts/Inter-UI/Inter-UI-MediumItalic.woff2") format("woff2"),
+    url("./fonts/Inter-UI/Inter-UI-MediumItalic.woff") format("woff");
+}
+
+@font-face {
+  font-family: "Inter UI";
+  font-style: normal;
+  font-weight: 600;
+  src: url("./fonts/Inter-UI/Inter-UI-SemiBold.woff2") format("woff2"),
+    url("./fonts/Inter-UI/Inter-UI-SemiBold.woff") format("woff");
+}
+@font-face {
+  font-family: "Inter UI";
+  font-style: italic;
+  font-weight: 600;
+  src: url("./fonts/Inter-UI/Inter-UI-SemiBoldItalic.woff2") format("woff2"),
+    url("./fonts/Inter-UI/Inter-UI-SemiBoldItalic.woff") format("woff");
+}
+
+@font-face {
+  font-family: "Inter UI";
+  font-style: normal;
+  font-weight: 700;
+  src: url("./fonts/Inter-UI/Inter-UI-Bold.woff2") format("woff2"),
+    url("./fonts/Inter-UI/Inter-UI-Bold.woff") format("woff");
+}
+@font-face {
+  font-family: "Inter UI";
+  font-style: italic;
+  font-weight: 700;
+  src: url("./fonts/Inter-UI/Inter-UI-BoldItalic.woff2") format("woff2"),
+    url("./fonts/Inter-UI/Inter-UI-BoldItalic.woff") format("woff");
+}
+
+@font-face {
+  font-family: "Inter UI";
+  font-style: normal;
+  font-weight: 800;
+  src: url("./fonts/Inter-UI/Inter-UI-ExtraBold.woff2") format("woff2"),
+    url("./fonts/Inter-UI/Inter-UI-ExtraBold.woff") format("woff");
+}
+@font-face {
+  font-family: "Inter UI";
+  font-style: italic;
+  font-weight: 800;
+  src: url("./fonts/Inter-UI/Inter-UI-ExtraBoldItalic.woff2") format("woff2"),
+    url("./fonts/Inter-UI/Inter-UI-ExtraBoldItalic.woff") format("woff");
+}
+
+@font-face {
+  font-family: "Inter UI";
+  font-style: normal;
+  font-weight: 900;
+  src: url("./fonts/Inter-UI/Inter-UI-Black.woff2") format("woff2"),
+    url("./fonts/Inter-UI/Inter-UI-Black.woff") format("woff");
+}
+@font-face {
+  font-family: "Inter UI";
+  font-style: italic;
+  font-weight: 900;
+  src: url("./fonts/Inter-UI/Inter-UI-BlackItalic.woff2") format("woff2"),
+    url("./fonts/Inter-UI/Inter-UI-BlackItalic.woff") format("woff");
+}
+
+/* --------------------------------------------------------------------------
+Single variable font.
+
+Note that you may want to do something like this to make sure you're serving
+constant fonts to older browsers:
+html {
+  font-family: 'Inter UI', sans-serif;
+}
+@supports (font-variation-settings: normal) {
+  html {
+    font-family: 'Inter UI var', sans-serif;
+  }
+}
+
+BUGS:
+- Safari 12.0 will default to italic instead of regular when font-weight
+  is provided in a @font-face declaration.
+  Workaround: Use "Inter UI var alt" for Safari, or explicitly set
+  `font-variation-settings:"slnt" DEGREE`.
+*/
+@font-face {
+  font-family: "Inter UI var";
+  font-weight: 400 900;
+  font-style: oblique 0deg 10deg;
+  src: url("./fonts/Inter-UI/Inter-UI.var.woff2") format("woff2-variations"),
+    url("./fonts/Inter-UI/Inter-UI.var.woff2") format("woff2");
+}
+
+/* --------------------------------------------------------------------------
+
+"Inter UI var alt" is recommended for Safari and Edge, for reliable italics.
+
+@supports (font-variation-settings: normal) {
+  html {
+    font-family: 'Inter UI var alt', sans-serif;
+  }
+}
+
+*/
+@font-face {
+  font-family: "Inter UI var alt";
+  font-weight: 400 900;
+  font-style: normal;
+  font-named-instance: "Regular";
+  src: url("./fonts/Inter-UI/Inter-UI-upright.var.woff2")
+      format("woff2 supports variations(gvar)"),
+    url("./fonts/Inter-UI/Inter-UI-upright.var.woff2")
+      format("woff2-variations"),
+    url("./fonts/Inter-UI/Inter-UI-upright.var.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Inter UI var alt";
+  font-weight: 400 900;
+  font-style: italic;
+  font-named-instance: "Italic";
+  src: url("./fonts/Inter-UI/Inter-UI-italic.var.woff2")
+      format("woff2 supports variations(gvar)"),
+    url("./fonts/Inter-UI/Inter-UI-italic.var.woff2")
+      format("woff2-variations"),
+    url("./fonts/Inter-UI/Inter-UI-italic.var.woff2") format("woff2");
+}
+
+/** Exim icon **/
+
+@font-face {
+  font-family: "exim-icon";
+  src: url("./fonts/exim-icon/exim-icon.ttf?tf5y0p") format("truetype"),
+    url("./fonts/exim-icon/exim-icon.woff?tf5y0p") format("woff"),
+    url("./fonts/exim-icon/exim-icon.svg?tf5y0p#exim-icon") format("svg");
+  font-weight: normal;
+  font-style: normal;
+}
+
+[class^="i-"],
+[class*=" i-"] {
+  /* use !important to prevent issues with browser extensions that change fonts */
+  font-family: "exim-icon" !important;
+  speak: none;
+  font-style: normal;
+  font-weight: normal;
+  font-variant: normal;
+  text-transform: none;
+  line-height: 1;
+
+  /* Better Font Rendering =========== */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.i-duo-activity .path1:before {
+  content: "\e900";
+  color: rgb(255, 227, 191);
+}
+.i-duo-activity .path2:before {
+  content: "\e901";
+  margin-left: -1em;
+  color: rgb(233, 164, 84);
+}
+.i-duo-governance .path1:before {
+  content: "\e902";
+  color: rgb(104, 125, 116);
+}
+.i-duo-governance .path2:before {
+  content: "\e903";
+  margin-left: -1em;
+  color: rgb(199, 217, 210);
+}
+.i-duo-identity .path1:before {
+  content: "\e904";
+  color: rgb(187, 221, 241);
+}
+.i-duo-identity .path2:before {
+  content: "\e905";
+  margin-left: -1em;
+  color: rgb(78, 131, 160);
+}
+.i-duo-members .path1:before {
+  content: "\e906";
+  color: rgb(244, 234, 214);
+}
+.i-duo-members .path2:before {
+  content: "\e907";
+  margin-left: -1em;
+  color: rgb(110, 100, 89);
+}
+.i-duo-members .path3:before {
+  content: "\e908";
+  margin-left: -1em;
+  color: rgb(217, 209, 200);
+}
+.i-duo-members .path4:before {
+  content: "\e909";
+  margin-left: -1em;
+  color: rgb(204, 192, 169);
+}
+.i-duo-members .path5:before {
+  content: "\e90a";
+  margin-left: -1em;
+  color: rgb(200, 181, 152);
+}
+.i-duo-not-tilted .path1:before {
+  content: "\e90b";
+  color: rgb(255, 227, 191);
+}
+.i-duo-not-tilted .path2:before {
+  content: "\e90c";
+  margin-left: -1em;
+  color: rgb(233, 164, 84);
+}
+.i-duo-wallet .path1:before {
+  content: "\e90d";
+  color: rgb(214, 195, 180);
+}
+.i-duo-wallet .path2:before {
+  content: "\e90e";
+  margin-left: -1em;
+  color: rgb(128, 108, 94);
+}
+.i-thin-fingerprint:before {
+  content: "\e964";
+  /* color: #888f9a; */
+}
+.i-thin-key:before {
+  content: "\e965";
+  /* color: #888f9a; */
+}
+.i-thin-lock:before {
+  content: "\e966";
+  /* color: #888f9a; */
+}
+.i-thin-passcode:before {
+  content: "\e967";
+  /* color: #888f9a; */
+}
+.i-thin-password-security:before {
+  content: "\e968";
+  /* color: #888f9a; */
+}
+.i-thin-shield .path1:before {
+  content: "\e969";
+  /* color: rgb(136, 143, 154); */
+}
+.i-thin-shield .path2:before {
+  content: "\e96a";
+  margin-left: -1em;
+  /* color: rgb(255, 255, 255); */
+}
+.i-thin-candidate:before {
+  content: "\e96b";
+  /* color: #888f9a; */
+}
+.i-thin-cycle:before {
+  content: "\e96c";
+  /* color: #888f9a; */
+}
+.i-thin-demotion:before {
+  content: "\e96d";
+  /* color: #888f9a; */
+}
+.i-thin-governance:before {
+  content: "\e96e";
+  /* color: #888f9a; */
+}
+.i-thin-kyc-validated:before {
+  content: "\e96f";
+  /* color: #888f9a; */
+}
+.i-thin-promotion:before {
+  content: "\e970";
+  /* color: #888f9a; */
+}
+.i-thin-token-claim .path1:before {
+  content: "\e971";
+  /* color: rgb(136, 143, 154); */
+}
+.i-thin-token-claim .path2:before {
+  content: "\e972";
+  margin-left: -1em;
+  /* color: rgb(255, 255, 255); */
+}
+.i-thin-vote:before {
+  content: "\e973";
+  /* color: #888f9a; */
+}
+.i-thin-blockmaker:before {
+  content: "\e974";
+  /* color: #888f9a; */
+}
+.i-thin-gas:before {
+  content: "\e975";
+  /* color: #888f9a; */
+}
+.i-thin-seed-phrase:before {
+  content: "\e976";
+  /* color: #888f9a; */
+}
+.i-thin-transfer:before {
+  content: "\e977";
+  /* color: #888f9a; */
+}
+.i-thin-tx-status .path1:before {
+  content: "\e978";
+  /* color: rgb(136, 143, 154); */
+}
+.i-thin-tx-status .path2:before {
+  content: "\e979";
+  margin-left: -1em;
+  /* color: rgb(255, 255, 255); */
+}
+.i-thin-wallet:before {
+  content: "\e97a";
+  /* color: #888f9a; */
+}
+.i-thin-avatar:before {
+  content: "\e97b";
+  /* color: #888f9a; */
+}
+.i-thin-book:before {
+  content: "\e97c";
+  /* color: #888f9a; */
+}
+.i-thin-broadcast:before {
+  content: "\e97d";
+  /* color: #888f9a; */
+}
+.i-thin-calendar:before {
+  content: "\e97e";
+  /* color: #888f9a; */
+}
+.i-thin-camera:before {
+  content: "\e97f";
+  /* color: #888f9a; */
+}
+.i-thin-check:before {
+  content: "\e980";
+  /* color: #888f9a; */
+}
+.i-thin-clipboard:before {
+  content: "\e981";
+  /* color: #888f9a; */
+}
+.i-thin-description:before {
+  content: "\e982";
+  /* color: #888f9a; */
+}
+.i-thin-email:before {
+  content: "\e983";
+  /* color: #888f9a; */
+}
+.i-thin-environment:before {
+  content: "\e984";
+  /* color: #888f9a; */
+}
+.i-thin-EXC-logo .path1:before {
+  content: "\e985";
+  /* color: rgb(136, 143, 154); */
+}
+.i-thin-EXC-logo .path2:before {
+  content: "\e986";
+  margin-left: -1em;
+  /* color: rgb(255, 255, 255); */
+}
+.i-thin-flag:before {
+  content: "\e987";
+  /* color: #888f9a; */
+}
+.i-thin-grid-view .path1:before {
+  content: "\e988";
+  /* color: rgb(136, 143, 154); */
+}
+.i-thin-grid-view .path2:before {
+  content: "\e989";
+  margin-left: -1em;
+  /* color: rgb(255, 255, 255); */
+}
+.i-thin-help:before {
+  content: "\e98a";
+  /* color: #888f9a; */
+}
+.i-thin-hidden .path1:before {
+  content: "\e98b";
+  /* color: rgb(136, 143, 154); */
+}
+.i-thin-hidden .path2:before {
+  content: "\e98c";
+  margin-left: -1em;
+  /* color: rgb(255, 255, 255); */
+}
+.i-thin-home:before {
+  content: "\e98d";
+  /* color: #888f9a; */
+}
+.i-thin-hourglass .path1:before {
+  content: "\e98e";
+  /* color: rgb(136, 143, 154); */
+}
+.i-thin-hourglass .path2:before {
+  content: "\e98f";
+  margin-left: -1em;
+  /* color: rgb(255, 255, 255); */
+}
+.i-thin-info .path1:before {
+  content: "\e990";
+  /* color: rgb(136, 143, 154); */
+}
+.i-thin-info .path2:before {
+  content: "\e991";
+  margin-left: -1em;
+  /* color: rgb(255, 255, 255); */
+}
+.i-thin-language:before {
+  content: "\e992";
+  /* color: #888f9a; */
+}
+.i-thin-list-view:before {
+  content: "\e993";
+  /* color: #888f9a; */
+}
+.i-thin-loading:before {
+  content: "\e994";
+  /* color: #888f9a; */
+}
+.i-thin-media:before {
+  content: "\e995";
+  /* color: #888f9a; */
+}
+.i-thin-members:before {
+  content: "\e996";
+  /* color: #888f9a; */
+}
+.i-thin-menu:before {
+  content: "\e997";
+  /* color: #888f9a; */
+}
+.i-thin-more .path1:before {
+  content: "\e998";
+  /* color: rgb(136, 143, 154); */
+}
+.i-thin-more .path2:before {
+  content: "\e999";
+  margin-left: -1em;
+  /* color: rgb(255, 255, 255); */
+}
+.i-thin-notification:before {
+  content: "\e99a";
+  /* color: #888f9a; */
+}
+.i-thin-organization:before {
+  content: "\e99b";
+  /* color: #888f9a; */
+}
+.i-thin-privacy-policy:before {
+  content: "\e99c";
+  /* color: #888f9a; */
+}
+.i-thin-qr-code .path1:before {
+  content: "\e99d";
+  /* color: rgb(136, 143, 154); */
+}
+.i-thin-qr-code .path2:before {
+  content: "\e99e";
+  margin-left: -1em;
+  /* color: rgb(255, 255, 255); */
+}
+.i-thin-receive .path1:before {
+  content: "\e99f";
+  /* color: rgb(136, 143, 154); */
+}
+.i-thin-receive .path2:before {
+  content: "\e9a0";
+  margin-left: -1em;
+  /* color: rgb(255, 255, 255); */
+}
+.i-thin-ruler:before {
+  content: "\e9a1";
+  /* color: #888f9a; */
+}
+.i-thin-send .path1:before {
+  content: "\e9a2";
+  /* color: rgb(136, 143, 154); */
+}
+.i-thin-send .path2:before {
+  content: "\e9a3";
+  margin-left: -1em;
+  /* color: rgb(255, 255, 255); */
+}
+.i-thin-settings:before {
+  content: "\e9a4";
+  /* color: #888f9a; */
+}
+.i-thin-signature .path1:before {
+  content: "\e9a5";
+  /* color: rgb(136, 143, 154); */
+}
+.i-thin-signature .path2:before {
+  content: "\e9a6";
+  margin-left: -1em;
+  /* color: rgb(255, 255, 255); */
+}
+.i-thin-stats:before {
+  content: "\e9a7";
+  /* color: #888f9a; */
+}
+.i-thin-tally:before {
+  content: "\e9a8";
+  /* color: #888f9a; */
+}
+.i-thin-terms-of-service:before {
+  content: "\e9a9";
+  /* color: #888f9a; */
+}
+.i-thin-time .path1:before {
+  content: "\e9aa";
+  /* color: rgb(136, 143, 154); */
+}
+.i-thin-time .path2:before {
+  content: "\e9ab";
+  margin-left: -1em;
+  /* color: rgb(255, 255, 255); */
+}
+.i-thin-user:before {
+  content: "\e9ac";
+  /* color: #888f9a; */
+}
+.i-thin-visible .path1:before {
+  content: "\e9ad";
+  /* color: rgb(136, 143, 154); */
+}
+.i-thin-visible .path2:before {
+  content: "\e9ae";
+  margin-left: -1em;
+  /* color: rgb(255, 255, 255); */
+}
+.i-thin-warning .path1:before {
+  content: "\e9af";
+  /* color: rgb(136, 143, 154); */
+}
+.i-thin-warning .path2:before {
+  content: "\e9b0";
+  margin-left: -1em;
+  /* color: rgb(255, 255, 255); */
+}
+.i-thin-work:before {
+  content: "\e9b1";
+  /* color: #888f9a; */
+}
+.i-thin-world:before {
+  content: "\e9b2";
+  /* color: #888f9a; */
+}
+.i-thin-back-ios:before {
+  content: "\e9b3";
+  /* color: #888f9a; */
+}
+.i-thin-downward .path1:before {
+  content: "\e9b4";
+  /* color: rgb(136, 143, 154); */
+}
+.i-thin-downward .path2:before {
+  content: "\e9b5";
+  margin-left: -1em;
+  /* color: rgb(255, 255, 255); */
+}
+.i-thin-drop-down:before {
+  content: "\e9b6";
+  /* color: #888f9a; */
+}
+.i-thin-drop-up:before {
+  content: "\e9b7";
+  /* color: #888f9a; */
+}
+.i-thin-forward-ios:before {
+  content: "\e9b8";
+  /* color: #888f9a; */
+}
+.i-thin-keyboard-down:before {
+  content: "\e9b9";
+  /* color: #888f9a; */
+}
+.i-thin-keyboard-left:before {
+  content: "\e9ba";
+  /* color: #888f9a; */
+}
+.i-thin-keyboard-right:before {
+  content: "\e9bb";
+  /* color: #888f9a; */
+}
+.i-thin-keyboard-up:before {
+  content: "\e9bc";
+  /* color: #888f9a; */
+}
+.i-thin-left:before {
+  content: "\e9bd";
+  /* color: #888f9a; */
+}
+.i-thin-right-alt:before {
+  content: "\e9be";
+  /* color: #888f9a; */
+}
+.i-thin-right:before {
+  content: "\e9bf";
+  /* color: #888f9a; */
+}
+.i-thin-upward .path1:before {
+  content: "\e9c0";
+  /* color: rgb(136, 143, 154); */
+}
+.i-thin-upward .path2:before {
+  content: "\e9c1";
+  margin-left: -1em;
+  /* color: rgb(255, 255, 255); */
+}
+.i-thin-add:before {
+  content: "\e9c2";
+  /* color: #888f9a; */
+}
+.i-thin-backspace:before {
+  content: "\e9c3";
+  /* color: #888f9a; */
+}
+.i-thin-close:before {
+  content: "\e9c4";
+  /* color: #888f9a; */
+}
+.i-thin-copy:before {
+  content: "\e9c5";
+  /* color: #888f9a; */
+}
+.i-thin-edit:before {
+  content: "\e9c6";
+  /* color: #888f9a; */
+}
+.i-thin-filter:before {
+  content: "\e9c7";
+  /* color: #888f9a; */
+}
+.i-thin-minus:before {
+  content: "\e9c8";
+  /* color: #888f9a; */
+}
+.i-thin-search:before {
+  content: "\e9c9";
+  /* color: #888f9a; */
+}
+.i-thin-trash:before {
+  content: "\e9ca";
+  /* color: #888f9a; */
+}
+.i-fingerprint:before {
+  content: "\e90f";
+}
+.i-key:before {
+  content: "\e910";
+}
+.i-lock:before {
+  content: "\e911";
+}
+.i-passcode:before {
+  content: "\e912";
+}
+.i-password-security:before {
+  content: "\e913";
+}
+.i-shield:before {
+  content: "\e914";
+}
+.i-candidate:before {
+  content: "\e915";
+}
+.i-cycle:before {
+  content: "\e916";
+}
+.i-demotion:before {
+  content: "\e917";
+}
+.i-governance:before {
+  content: "\e918";
+}
+.i-kyc-validated:before {
+  content: "\e919";
+}
+.i-promotion:before {
+  content: "\e91a";
+}
+.i-token-claim:before {
+  content: "\e91b";
+}
+.i-vote:before {
+  content: "\e91c";
+}
+.i-blockmaker:before {
+  content: "\e91d";
+}
+.i-gas:before {
+  content: "\e91e";
+}
+.i-seed-phrase:before {
+  content: "\e91f";
+}
+.i-transfer:before {
+  content: "\e920";
+}
+.i-tx-status:before {
+  content: "\e921";
+}
+.i-wallet:before {
+  content: "\e922";
+}
+.i-avatar:before {
+  content: "\e923";
+}
+.i-book:before {
+  content: "\e924";
+}
+.i-broadcast:before {
+  content: "\e925";
+}
+.i-calendar:before {
+  content: "\e926";
+}
+.i-camera:before {
+  content: "\e927";
+}
+.i-check:before {
+  content: "\e928";
+}
+.i-clipboard:before {
+  content: "\e929";
+}
+.i-description:before {
+  content: "\e92a";
+}
+.i-email:before {
+  content: "\e92b";
+}
+.i-environment:before {
+  content: "\e92c";
+}
+.i-EXC-logo:before {
+  content: "\e92d";
+}
+.i-flag:before {
+  content: "\e92e";
+}
+.i-grid-view:before {
+  content: "\e92f";
+}
+.i-help:before {
+  content: "\e930";
+}
+.i-hidden:before {
+  content: "\e931";
+}
+.i-home:before {
+  content: "\e932";
+}
+.i-hourglass:before {
+  content: "\e933";
+}
+.i-info:before {
+  content: "\e934";
+}
+.i-language:before {
+  content: "\e935";
+}
+.i-list-view:before {
+  content: "\e936";
+}
+.i-loading:before {
+  content: "\e937";
+}
+.i-media:before {
+  content: "\e938";
+}
+.i-members:before {
+  content: "\e939";
+}
+.i-menu:before {
+  content: "\e93a";
+}
+.i-more:before {
+  content: "\e93b";
+}
+.i-notification:before {
+  content: "\e93c";
+}
+.i-organization:before {
+  content: "\e93d";
+}
+.i-privacy-policy:before {
+  content: "\e93e";
+}
+.i-qr-code:before {
+  content: "\e93f";
+}
+.i-receive:before {
+  content: "\e940";
+}
+.i-ruler:before {
+  content: "\e941";
+}
+.i-send:before {
+  content: "\e942";
+}
+.i-settings:before {
+  content: "\e943";
+}
+.i-signature:before {
+  content: "\e944";
+}
+.i-stats:before {
+  content: "\e945";
+}
+.i-tally:before {
+  content: "\e946";
+}
+.i-terms-of-service:before {
+  content: "\e947";
+}
+.i-time:before {
+  content: "\e948";
+}
+.i-user:before {
+  content: "\e949";
+}
+.i-visible:before {
+  content: "\e94a";
+}
+.i-warning:before {
+  content: "\e94b";
+}
+.i-work:before {
+  content: "\e94c";
+}
+.i-world:before {
+  content: "\e94d";
+}
+.i-back-ios:before {
+  content: "\e94e";
+}
+.i-downward:before {
+  content: "\e94f";
+}
+.i-drop-down:before {
+  content: "\e950";
+}
+.i-drop-up:before {
+  content: "\e951";
+}
+.i-forward-ios:before {
+  content: "\e952";
+}
+.i-keyboard-down:before {
+  content: "\e953";
+}
+.i-keyboard-left:before {
+  content: "\e954";
+}
+.i-keyboard-right:before {
+  content: "\e955";
+}
+.i-keyboard-up:before {
+  content: "\e956";
+}
+.i-left:before {
+  content: "\e957";
+}
+.i-right-alt:before {
+  content: "\e958";
+}
+.i-right:before {
+  content: "\e959";
+}
+.i-upward:before {
+  content: "\e95a";
+}
+.i-add:before {
+  content: "\e95b";
+}
+.i-backspace:before {
+  content: "\e95c";
+}
+.i-close:before {
+  content: "\e95d";
+}
+.i-copy:before {
+  content: "\e95e";
+}
+.i-edit:before {
+  content: "\e95f";
+}
+.i-filter:before {
+  content: "\e960";
+}
+.i-minus:before {
+  content: "\e961";
+}
+.i-search:before {
+  content: "\e962";
+}
+.i-trash:before {
+  content: "\e963";
+}

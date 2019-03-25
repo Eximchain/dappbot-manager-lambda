@@ -1,0 +1,4 @@
+{{#each abi}}
+    export { default as {{pascalCase name}}Reducer } from "./{{camelCase name}}";
+{{/each}}
+

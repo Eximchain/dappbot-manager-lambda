@@ -1,0 +1,122 @@
+.label, .label-small {
+  display: inline-block;
+  font-family: 'DINRoundPro-Medi' ,sans-serif;
+  text-transform: uppercase;
+  font-size: 13px;
+  border-radius: 3px;
+  padding: 2px 7px; }
+
+.label-big {
+  padding: 8px 15px;
+  border-radius: 100px; }
+
+/********** Label Green **********/
+.label-green {
+  background: #34B47E;
+  color: #fff;
+  border: 2px solid #34B47E; }
+
+.label-green.label-outline {
+  background: #fff;
+  color: #34B47E;
+  border: 2px solid #34B47E; }
+
+/********** Label Purple **********/
+.label-purple {
+  background: #8D50AA;
+  color: #fff;
+  border: 2px solid #8D50AA; }
+
+.label-purple.label-outline {
+  background: #fff;
+  color: #8D50AA;
+  border: 2px solid #8D50AA; }
+
+/********** Label Yellow **********/
+.label-yellow {
+  background: #F6BE7D;
+  color: #fff;
+  border: 2px solid #F6BE7D; }
+
+.label-yellow.label-outline {
+  background: #fff;
+  color: #F6BE7D;
+  border: 2px solid #F6BE7D; }
+
+/********** Label Blue **********/
+.label-blue {
+  background: #0667D0;
+  color: #fff;
+  border: 2px solid #0667D0; }
+
+.label-blue.label-outline {
+  background: #fff;
+  color: #0667D0;
+  border: 2px solid #0667D0; }
+
+/********** Label Red **********/
+.label-red {
+  background: #CC4149;
+  color: #fff;
+  border: 2px solid #CC4149; }
+
+.label-red.label-outline {
+  background: #fff;
+  color: #CC4149;
+  border: 2px solid #CC4149; }
+
+/********** Label darkNeutral **********/
+.label-darkneutral {
+  background: #2B333F;
+  color: #fff;
+  border: 2px solid #2B333F; }
+
+.label-darkneutral.label-outline {
+  background: #fff;
+  color: #2B333F;
+  border: 2px solid #2B333F; }
+
+/********** Label Lightneutral **********/
+.label-lightneutral {
+  background: #B7BEC6;
+  color: #fff;
+  border: 2px solid #B7BEC6; }
+
+.label-lightneutral.label-outline {
+  background: #fff;
+  color: #B7BEC6;
+  border: 2px solid #B7BEC6; }
+
+/********** Label Sent, Pending, Received **********/
+.label-sent {
+  background: #FFF8EC;
+  color: #8C8781;
+  border-radius: 3px;
+  width: 90px;
+  text-align: center;
+  padding: 5px 0;
+  display: inline-block;
+  font-weight: bold;
+  border: 0; }
+
+.label-pending {
+  background: #F1F1F3;
+  color: #6B6B6E;
+  border-radius: 3px;
+  width: 90px;
+  text-align: center;
+  padding: 5px 0;
+  display: inline-block;
+  font-weight: bold;
+  border: 0; }
+
+.label-received {
+  background: #EAF4EE;
+  color: #6B7570;
+  border-radius: 3px;
+  width: 90px;
+  text-align: center;
+  padding: 5px 0;
+  display: inline-block;
+  font-weight: bold;
+  border: 0; }
