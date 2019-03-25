@@ -1,0 +1,90 @@
+.left-sidebar h1 {
+  color: #2B333F;
+  font-size: 96px;
+  font-family: 'ReplicaStd-Regular';
+  font-weight: 500; }
+
+.left-sidebar h2 {
+  color: #2B333F;
+  font-size: 60px;
+  font-family: 'ReplicaStd-Regular';
+  font-weight: 500; }
+
+.left-sidebar h3 {
+  color: #2B333F;
+  font-size: 48px;
+  font-family: 'ReplicaStd-Regular';
+  font-weight: 500; }
+
+.left-sidebar h4 {
+  color: #2B333F;
+  font-size: 34px;
+  font-family: 'ReplicaStd-Regular';
+  font-weight: 500; }
+
+.left-sidebar h5 {
+  color: #2B333F;
+  font-size: 26px;
+  font-family: 'ReplicaStd-Bold';
+  font-weight: 500; }
+
+.left-sidebar h6 {
+  color: #2B333F;
+  font-size: 20px;
+  font-family: 'DINRoundPro-Medi';
+  font-weight: 500; }
+
+.subtitle {
+  color: #2B333F;
+  font-size: 16px;
+  font-family: 'DINRoundPro-Medi'; }
+
+.subtitle-small {
+  color: #2B333F;
+  font-size: 14px;
+  font-family: 'DINRoundPro-Medi'; }
+
+.content {
+  color: #2B333F;
+  font-size: 16px;
+  font-family: 'DINRoundPro'; }
+
+.content-small {
+  color: #2B333F;
+  font-size: 14px;
+  font-family: 'DINRoundPro'; }
+
+.caption {
+  color: #2B333F;
+  font-size: 12px;
+  font-family: 'DINRoundPro'; }
+
+.button-text {
+  color: #2B333F;
+  font-size: 13px;
+  font-family: 'DINRoundPro-Medi'; }
+
+.button-small {
+  color: #2B333F;
+  font-size: 12px;
+  font-family: 'DINRoundPro-Medi'; }
+
+.plex-mono-reg {
+  color: #2B333F;
+  font-size: 13px;
+  font-family: 'IBMPlexMono'; }
+
+.plex-mono-med {
+  color: #2B333F;
+  font-size: 13px;
+  font-family: 'IBMPlexMono-Medium'; }
+
+.din_pro_reg_13 {
+  color: #2B333F;
+  font-size: 13px;
+  font-family: 'DINRoundPro'; }
+
+.din_pro_med_13 {
+  color: #2B333F;
+  font-size: 13px;
+  font-family: 'DINRoundPro-Medi'; }

@@ -1,0 +1,235 @@
+:root {
+  /*  ----- colors ----- */
+  /* neutral */
+  --color-neutral-1: #ffffff;
+  --color-neutral-2: #f7f8f9;
+  --color-neutral-3: #f0f2f4;
+  --color-neutral-4: #e3e5e8;
+  --color-neutral-5: #cfd2d7;
+  --color-neutral-6: #c3c8cf;
+  --color-neutral-7: #b7bec6;
+  --color-neutral-8: #9ca3ae;
+  --color-neutral-9: #888f9a;
+  --color-neutral-10: #686f78;
+  --color-neutral-11: #525762;
+  --color-neutral-12: #2d323b;
+  --color-neutral-13: #242a2f;
+  /* blue */
+  --color-blue-1: #f0f6fd;
+  --color-blue-2: #e8f2fe;
+  --color-blue-3: #cfe6ff;
+  --color-blue-4: #b1d4f8;
+  --color-blue-5: #79b4f2;
+  --color-blue-6: #529bea;
+  --color-blue-7: #267edc;
+  --color-blue-8: #256fc7;
+  --color-blue-9: #2665b0;
+  --color-blue-10: #1f4a8a;
+  --color-blue-11: #0f2952;
+  --color-blue-12: #162b4d;
+  --color-blue-13: #052244;
+  /* green */
+  --color-green-1: #f2fff9;
+  --color-green-2: #e7fff3;
+  --color-green-3: #d2fde8;
+  --color-green-4: #bbfcdc;
+  --color-green-5: #96f3c6;
+  --color-green-6: #60e1a3;
+  --color-green-7: #48cc8d;
+  --color-green-8: #34b477;
+  --color-green-9: #20a86f;
+  --color-green-10: #0f975e;
+  /* red */
+  --color-red-1: #fff2f2;
+  --color-red-2: #ffe9e9;
+  --color-red-3: #ffd4d4;
+  --color-red-4: #fcb0b0;
+  --color-red-5: #fb8686;
+  --color-red-6: #f37070;
+  --color-red-7: #e2535d;
+  --color-red-8: #cc4149;
+  --color-red-9: #bd242d;
+  --color-red-10: #b00c15;
+  /* yellow */
+  --color-yellow-1: #fffaf3;
+  --color-yellow-2: #fff5e8;
+  --color-yellow-3: #fff1e0;
+  --color-yellow-4: #ffecd4;
+  --color-yellow-5: #ffe3bf;
+  --color-yellow-6: #ffd9a8;
+  --color-yellow-7: #ffd196;
+  --color-yellow-8: #f6be7d;
+  --color-yellow-9: #f1b269;
+  --color-yellow-10: #e9a454;
+  /* purple */
+  --color-purple-1: #fbf4fe;
+  --color-purple-2: #f3e9f8;
+  --color-purple-3: #efdbf8;
+  --color-purple-4: #e1c5ee;
+  --color-purple-5: #d3ade5;
+  --color-purple-6: #bd90d2;
+  --color-purple-7: #a16dba;
+  --color-purple-8: #8d50aa;
+  --color-purple-9: #7e429b;
+  --color-purple-10: #602a7a;
+  /* opacity */
+  --color-opacity-1: rgba(255, 255, 255, 0.4);
+  --color-opacity-2: rgba(45, 50, 59, 0.25);
+  --color-opacity-3: rgba(45, 50, 59, 0.4);
+
+  /*  ----- overalys ----- */
+  --overlay-modal: rgba(45, 50, 59, 0.4);
+  --overlay-tooltip: rgba(45, 50, 59, 0.25);
+
+  /*  ----- shadow ----- */
+  --shadow-elevation-1: 0px 1px 8px rgba(43, 51, 63, 0.2);
+  --shadow-elevation-2: 0px 4px 12px rgba(43, 51, 63, 0.08);
+  --shadow-elevation-3: 0px 2px 28px rgba(43, 51, 63, 0.18);
+  --shadow-elevation-4: 0px 40px 60px rgba(43, 51, 63, 0.15);
+  --shadow-border-radius: 8px;
+
+  /*  ----- fonts ----- */
+  --font-InterUI: Inter UI;
+
+  /*  ----- typography ----- */
+  --typography-h1: normal 500 96px / normal var(--font-InterUI);
+  --typography-h2: normal 500 60px / normal var(--font-InterUI);
+  --typography-h2-bold: normal 600 60px / normal var(--font-InterUI);
+  --typography-h3: normal 500 48px / normal var(--font-InterUI);
+  /* --typography-h3-bold: normal 600 48px / normal var(--font-InterUI); */
+  --typography-h4: normal 500 34px / normal var(--font-InterUI);
+  /* --typography-h4-bold: normal 600 34px / normal var(--font-InterUI); */
+  --typography-h5: normal 500 28px / normal var(--font-InterUI);
+  --typography-h5-bold: normal 600 28px / normal var(--font-InterUI);
+  /* --typography-h6: normal 500 20px / normal var(--font-InterUI); */
+  --typography-h6-bold: normal 600 20px / normal var(--font-InterUI);
+  --typography-sh-1: normal 500 17px / normal var(--font-InterUI);
+  --typography-sh-2: normal 500 15px / normal var(--font-InterUI);
+  --typography-sh-2: normal 500 13px / normal var(--font-InterUI);
+  --typography-btn-small-primary: normal 500 15px / normal var(--font-InterUI);
+  --typography-btn-small-secondary: normal normal 15px / normal
+    var(--font-InterUI);
+  --typography-btn-large-primary: normal 500 17px / normal var(--font-InterUI);
+  --typography-btn-large-secondary: normal normal 17px / normal
+    var(--font-InterUI);
+}
+:root {
+  /*  ----- colors ----- */
+  /* neutral */
+  --color-neutral-1: #ffffff;
+  --color-neutral-2: #f7f8f9;
+  --color-neutral-3: #f0f2f4;
+  --color-neutral-4: #e3e5e8;
+  --color-neutral-5: #cfd2d7;
+  --color-neutral-6: #c3c8cf;
+  --color-neutral-7: #b7bec6;
+  --color-neutral-8: #9ca3ae;
+  --color-neutral-9: #888f9a;
+  --color-neutral-10: #686f78;
+  --color-neutral-11: #525762;
+  --color-neutral-12: #2d323b;
+  --color-neutral-13: #242a2f;
+  /* blue */
+  --color-blue-1: #f0f6fd;
+  --color-blue-2: #e8f2fe;
+  --color-blue-3: #cfe6ff;
+  --color-blue-4: #b1d4f8;
+  --color-blue-5: #79b4f2;
+  --color-blue-6: #529bea;
+  --color-blue-7: #267edc;
+  --color-blue-8: #256fc7;
+  --color-blue-9: #2665b0;
+  --color-blue-10: #1f4a8a;
+  --color-blue-11: #0f2952;
+  --color-blue-12: #162b4d;
+  --color-blue-13: #052244;
+  /* green */
+  --color-green-1: #f2fff9;
+  --color-green-2: #e7fff3;
+  --color-green-3: #d2fde8;
+  --color-green-4: #bbfcdc;
+  --color-green-5: #96f3c6;
+  --color-green-6: #60e1a3;
+  --color-green-7: #48cc8d;
+  --color-green-8: #34b477;
+  --color-green-9: #20a86f;
+  --color-green-10: #0f975e;
+  /* red */
+  --color-red-1: #fff2f2;
+  --color-red-2: #ffe9e9;
+  --color-red-3: #ffd4d4;
+  --color-red-4: #fcb0b0;
+  --color-red-5: #fb8686;
+  --color-red-6: #f37070;
+  --color-red-7: #e2535d;
+  --color-red-8: #cc4149;
+  --color-red-9: #bd242d;
+  --color-red-10: #b00c15;
+  /* yellow */
+  --color-yellow-1: #fffaf3;
+  --color-yellow-2: #fff5e8;
+  --color-yellow-3: #fff1e0;
+  --color-yellow-4: #ffecd4;
+  --color-yellow-5: #ffe3bf;
+  --color-yellow-6: #ffd9a8;
+  --color-yellow-7: #ffd196;
+  --color-yellow-8: #f6be7d;
+  --color-yellow-9: #f1b269;
+  --color-yellow-10: #e9a454;
+  /* purple */
+  --color-purple-1: #fbf4fe;
+  --color-purple-2: #f3e9f8;
+  --color-purple-3: #efdbf8;
+  --color-purple-4: #e1c5ee;
+  --color-purple-5: #d3ade5;
+  --color-purple-6: #bd90d2;
+  --color-purple-7: #a16dba;
+  --color-purple-8: #8d50aa;
+  --color-purple-9: #7e429b;
+  --color-purple-10: #602a7a;
+  /* opacity */
+  --color-opacity-1: rgba(255, 255, 255, 0.4);
+  --color-opacity-2: rgba(45, 50, 59, 0.25);
+  --color-opacity-3: rgba(45, 50, 59, 0.4);
+
+  /*  ----- overalys ----- */
+  --overlay-modal: rgba(45, 50, 59, 0.4);
+  --overlay-tooltip: rgba(45, 50, 59, 0.25);
+
+  /*  ----- shadow ----- */
+  --shadow-elevation-1: 0px 1px 8px rgba(43, 51, 63, 0.2);
+  --shadow-elevation-2: 0px 4px 12px rgba(43, 51, 63, 0.08);
+  --shadow-elevation-3: 0px 2px 28px rgba(43, 51, 63, 0.18);
+  --shadow-elevation-4: 0px 40px 60px rgba(43, 51, 63, 0.15);
+  --shadow-border-radius: 8px;
+
+  /*  ----- fonts ----- */
+  --font-InterUI: Inter UI;
+
+  /*  ----- typography ----- */
+  --typography-h1: normal 500 96px / normal var(--font-InterUI);
+  --typography-h2: normal 500 60px / normal var(--font-InterUI);
+  --typography-h2-bold: normal 600 60px / normal var(--font-InterUI);
+  --typography-h3: normal 500 48px / normal var(--font-InterUI);
+  /* --typography-h3-bold: normal 600 48px / normal var(--font-InterUI); */
+  --typography-h4: normal 500 34px / normal var(--font-InterUI);
+  /* --typography-h4-bold: normal 600 34px / normal var(--font-InterUI); */
+  --typography-h5: normal 500 28px / normal var(--font-InterUI);
+  --typography-h5-bold: normal 600 28px / normal var(--font-InterUI);
+  /* --typography-h6: normal 500 20px / normal var(--font-InterUI); */
+  --typography-h6-bold: normal 600 20px / normal var(--font-InterUI);
+  --typography-sh-1: normal 500 17px / normal var(--font-InterUI);
+  --typography-sh-2: normal 500 15px / normal var(--font-InterUI);
+  --typography-sh-2: normal 500 13px / normal var(--font-InterUI);
+  --typography-btn-small-primary: normal 500 15px / normal var(--font-InterUI);
+  --typography-btn-small-secondary: normal normal 15px / normal
+    var(--font-InterUI);
+  --typography-btn-large-primary: normal 500 17px / normal var(--font-InterUI);
+  --typography-btn-large-secondary: normal normal 17px / normal
+    var(--font-InterUI);
+}
+
+html, body, #root, #root>div {
+  height: 100%;
+  position: relative;
+}
