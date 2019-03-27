@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 import { AbiDefinition } from "ethereum-types";
-import ReducksGenerator from './ReducksGenerator';
+import { generate } from './ReducksGenerator';
 let fs = require("fs");
 let path = require("path");
 const program = require('commander');
@@ -14,8 +14,7 @@ program
     .usage('<contract_path> <contract_address> <web3URL>')
     .action((contract_path:string, contract_address:string, web3URL: string) => {
         const abiMethods = require(path.resolve(process.cwd(), contract_path)).filter((fxn:AbiDefinition) => fxn.type === 'function');
-        const reducks = new ReducksGenerator({abi: abiMethods, address: contract_address, web3URL: web3URL });
-        reducks.generate();
+        generate({abi: abiMethods, address: contract_address, web3URL: web3URL })
     })
 
 program.on('--help', () => {
@@ -31,6 +30,6 @@ if (require.main === module){
     } else {
         program.parse(process.argv);
     }
-} else {
-    module.exports.default = ReducksGenerator;
 }
+
+export default { generate }

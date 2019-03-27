@@ -17,7 +17,7 @@
   },
   "homepage": "https://github.com/Eximchain/abi-clerk-lambda#readme",
   "dependencies": {
-    "@eximchain/dappsmith": "^0.2.3",
+    "@eximchain/dappsmith": "^0.3.1",
     "aws-sdk": "^2.424.0",
     "shelljs": "^0.8.3",
     "uuid": "^3.3.2"

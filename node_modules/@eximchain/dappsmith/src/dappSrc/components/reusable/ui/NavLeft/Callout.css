@@ -1,0 +1,60 @@
+.callout-wrapper {
+    position: relative;
+    display: inline-block;
+    z-index: 1;
+    color: #2b333f;
+    font-family: 'DINRoundPro', sans-serif;
+    font-size: 16px;
+    cursor: help;
+}
+.callout-wrapper .callout {
+    position: absolute;
+    padding: 6px 10px;
+    font-family: 'DINRoundPro', sans-serif;
+    text-align: center;
+    background-color: #000;
+    color: #fff;
+    font-size: 13px;
+    border-radius: 4px;
+    cursor: auto;
+    top: -34px;
+    left: 0;
+    width: 100%;
+}
+.callout-wrapper .callout.callout-left:after {
+    position: absolute;
+    content: '';
+    width: 0;
+    height: 0;
+    border-color: transparent;
+    border-style: solid;
+    border-width: 7px 5px 0;
+    border-top-color: #000;
+    bottom: -7px;
+    left: 10px;
+}
+.callout-wrapper .callout.callout-middle:after {
+    position: absolute;
+    content: '';
+    width: 0;
+    height: 0;
+    border-color: transparent;
+    border-style: solid;
+    border-width: 7px 5px 0;
+    border-top-color: #000;
+    bottom: -7px;
+    left: 50%;
+    margin-left: -5px;
+}
+.callout-wrapper .callout.callout-right:after {
+    position: absolute;
+    content: '';
+    width: 0;
+    height: 0;
+    border-color: transparent;
+    border-style: solid;
+    border-width: 7px 5px 0;
+    border-top-color: #000;
+    bottom: -7px;
+    right: 10px;
+}

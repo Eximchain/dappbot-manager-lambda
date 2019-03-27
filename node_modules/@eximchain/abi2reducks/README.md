@@ -37,23 +37,14 @@ $ abi2reducks path/to/abi.json 0x00...002a https://gamma-tx-executor-us-east.exi
 ```
 
 ## Library Usage
-As a library, you import the class, create an instance with the two arguments, and then call `generate()`.  The generator class is the module's default export.
+Get the default import and call `generate()` with the appropriate inputs, easy as that.
 
 ```
-$ npm i @eximchain/abi2reducks
-
-...
-
-// Import with types
 import ReducksGenerator from '@eximchain/abi2reducks'
 
-// Create generator
-const duckGen = new ReducksGenerator({
+ReducksGenerator.generate({
     abi : [array of MethodAbi objects],
     address: [string Ethereum address],
     web3URL: [string HTTPProvider URL]
 })
-
-// Create /ducks/... in your cwd()
-duckGen.generate()
 ```
