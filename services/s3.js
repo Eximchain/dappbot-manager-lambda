@@ -1,5 +1,5 @@
 const uuidv4 = require('uuid/v4');
-const { AWS, awsRegion } = require('./env');
+const { AWS, awsRegion } = require('../env');
 const s3 = new AWS.S3({apiVersion: '2006-03-01'});
 
 const s3BucketPrefix = "exim-abi-clerk-";

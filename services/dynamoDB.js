@@ -1,6 +1,6 @@
-const { AWS, tableName } = require('./env');
+const { AWS, tableName } = require('../env');
 const ddb = new AWS.DynamoDB({apiVersion: '2012-08-10'});
-const { dnsNameFromDappName } = require('./dns');
+const { dnsNameFromDappName } = require('./route53');
 
 function serializeDdbKey(dappName) {
     let keyItem = {

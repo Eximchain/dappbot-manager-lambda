@@ -1,4 +1,4 @@
-const { AWS, r53HostedZoneId, dnsRoot } = require('./env');
+const { AWS, r53HostedZoneId, dnsRoot } = require('../env');
 const route53 = new AWS.Route53({apiVersion: '2013-04-01'});
 
 function promiseCreateDnsRecord(dappName, cloudfrontDns) {

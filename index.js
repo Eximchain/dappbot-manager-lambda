@@ -1,166 +1,6 @@
 'use strict';
+const api = require('./api');
 
-const { AWS, awsRegion, tableName, codebuildId } = require('./env');
-const validate = require('./validate');
-const db = require('./db');
-const dns = require('./dns');
-const cloudfront = require('./cloudfront');
-const s3 = require('./s3');
-
-async function apiCreate(body) {
-    return new Promise(function(resolve, reject) {
-        try {
-            validate.create(body);
-        } catch(err) {
-            reject(err);
-        }
-        let dappName = body.DappName;
-        let owner = body.OwnerEmail;
-        let abi = body.Abi;
-        let bucketName = s3.newBucketName();
-        let s3Dns = null;
-        let cloudfrontDistroId = null;
-        let cloudfrontDns = null;
-
-        s3.createBucket(bucketName)
-        .then(function(result){
-            console.log("Create Bucket Success", result);
-            return s3.configureBucketWebsite(bucketName);
-        })
-        .then(function(result) {
-            console.log("Configure Bucket Static Website Success", result);
-            return s3.putBucketWebsite(bucketName);
-        })
-        .then(function(result) {
-            console.log("Put S3 Objects Success", result);
-            s3Dns = s3.bucketEndpoint(bucketName);
-            return cloudfront.createDistro(dappName, s3Dns);
-        })
-        .then(function(result) {
-            console.log("Create Cloudfront Distribution Success", result);
-            cloudfrontDistroId = result.Distribution.Id;
-            cloudfrontDns = result.Distribution.DomainName;
-            return dns.createRecord(dappName, cloudfrontDns);
-        })
-        .then(function(result) {
-            console.log("Create DNS Record Success", result);
-            // TODO: Put custom dns instead
-            return db.putItem(dappName, owner, abi, bucketName, cloudfrontDistroId, cloudfrontDns);
-        })
-        .then(function(result) {
-            console.log("Put Dapp Item Success", result);
-            let responseCode = 200;
-            // TODO: Replace with something useful or remove
-            let responseHeaders = {"x-custom-header" : "my custom header value"};
-
-            let responseBody = {
-                method: "create"
-            };
-            let response = {
-                statusCode: responseCode,
-                headers: responseHeaders,
-                body: JSON.stringify(responseBody)
-            };
-            resolve(response);
-        })
-        .catch(function(err) {
-            console.log("Error", err);
-            reject(err);
-        })
-    });
-}
-
-async function apiRead(body) {
-    return new Promise(function(resolve, reject) {
-        try {
-            validate.read(body);
-        } catch(err) {
-            reject(err);
-        }
-        let dappName = body.DappName;
-        db.getItem(dappName).then(function(result){
-            console.log("Get Dapp Item Success", result);
-            let responseCode = 200;
-            // TODO: Replace with something useful or remove
-            let responseHeaders = {"x-custom-header" : "my custom header value"};
-
-            let responseBody = {
-                method: "read",
-                item: result.Item
-            };
-            let response = {
-                statusCode: responseCode,
-                headers: responseHeaders,
-                body: JSON.stringify(responseBody)
-            };
-            resolve(response);
-        })
-        .catch(function(err) {
-            console.log("Error", err);
-            reject(err);
-        })   
-    });
-}
-
-// TODO: Make sure incomplete steps are cleaned up
-async function apiDelete(body) {
-    return new Promise(function(resolve, reject) {
-        try {
-            validate.delete(body);
-        } catch(err) {
-            reject(err);
-        }
-        let dappName = body.DappName;
-        let bucketName = null;
-        let cloudfrontDistroId = null;
-        let cloudfrontDns = null;
-
-        db.getItem(dappName).then(function(result){
-            console.log("Get Dapp Item Success", result);
-            bucketName = result.Item.S3BucketName.S;
-            cloudfrontDistroId = result.Item.CloudfrontDistributionId.S;
-            cloudfrontDns = result.Item.CloudfrontDnsName.S;
-            return cloudfront.disableDistro(cloudfrontDistroId);
-        })
-        .then(function(result) {
-            console.log("Cloudfront Disable Success", result);
-            return dns.deleteRecord(dappName, cloudfrontDns);
-        })
-        .then(function(result) {
-            console.log("Delete DNS Record Success", result);
-            return s3.emptyBucket(bucketName);
-        })
-        .then(function(result) {
-            console.log("S3 Bucket Empty Success", result);
-            return s3.deleteBucket(bucketName);
-        })
-        .then(function(result) {
-            console.log("S3 Bucket Delete Success", result);
-            return db.deleteItem(body);
-        })
-        .then(function(result){
-            console.log("Delete Dapp Item Success", result);
-            let responseCode = 200;
-            // TODO: Replace with something useful or remove
-            let responseHeaders = {"x-custom-header" : "my custom header value"};
-
-            let responseBody = {
-                method: "delete"
-            };
-            let response = {
-                statusCode: responseCode,
-                headers: responseHeaders,
-                body: JSON.stringify(responseBody)
-            };
-            resolve(response);
-        })
-        .catch(function(err) {
-            console.log("Error", err);
-            reject(err);
-        })
-    });
-}
- 
 exports.handler = async (event) => {
     console.log("request: " + JSON.stringify(event));
     let responseCode = 200;
@@ -174,11 +14,11 @@ exports.handler = async (event) => {
     let responsePromise = (function(method) {
         switch(method) {
             case 'create':
-                return apiCreate(body);
+                return api.create(body);
             case 'read':
-                return apiRead(body);
+                return api.read(body);
             case 'delete':
-                return apiDelete(body);
+                return api.delete(body);
             default:
                 throw new Error("Unrecognized method name ".concat(method));
         }
