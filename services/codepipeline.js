@@ -21,7 +21,7 @@ function pipelineParams(dappName, srcKey, destBucket) {
             },
             stages: [
                 {
-                    "name": "DappseedSrc",
+                    "name": "FetchDappseed",
                     "actions": [
                         {
                             "inputArtifacts": [],
@@ -34,7 +34,7 @@ function pipelineParams(dappName, srcKey, destBucket) {
                             },
                             "outputArtifacts": [
                                 {
-                                    "name": dappName
+                                    "name": "dappseed"
                                 }
                             ],
                             "configuration": {
@@ -51,7 +51,7 @@ function pipelineParams(dappName, srcKey, destBucket) {
                         {
                             "inputArtifacts": [
                                 {
-                                    "name": dappName
+                                    "name": "dappseed"
                                 }
                             ],
                             "name": "Build",
@@ -79,7 +79,7 @@ function pipelineParams(dappName, srcKey, destBucket) {
                         {
                             "inputArtifacts": [
                                 {
-                                    "name": dappName
+                                    "name": "build"
                                 }
                             ],
                             "name": "Deploy",
@@ -92,7 +92,7 @@ function pipelineParams(dappName, srcKey, destBucket) {
                             "runOrder": 1,
                             "configuration": {
                                 "S3Bucket" : destBucket,
-                                "Extract": "true"
+                                "Extract": "false"
                             }
                         }
                     ]
