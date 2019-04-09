@@ -11,6 +11,9 @@ async function apiCreate(body) {
         let dappName = body.DappName;
         let owner = body.OwnerEmail;
         let abi = body.Abi;
+        let web3URL = body.Web3URL;
+        let guardianURL = body.GuardianURL;
+        let abiAddr = body.ContractAddr;
         let bucketName = s3.newBucketName();
         let s3Dns = null;
         let cloudfrontDistroId = null;

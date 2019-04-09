@@ -34,7 +34,7 @@ function pipelineParams(dappName, srcKey, destBucket) {
                             },
                             "outputArtifacts": [
                                 {
-                                    "name": "dappseed"
+                                    "name": "DAPPSEED"
                                 }
                             ],
                             "configuration": {
@@ -51,7 +51,7 @@ function pipelineParams(dappName, srcKey, destBucket) {
                         {
                             "inputArtifacts": [
                                 {
-                                    "name": "dappseed"
+                                    "name": "DAPPSEED"
                                 }
                             ],
                             "name": "Build",
@@ -103,19 +103,21 @@ function pipelineParams(dappName, srcKey, destBucket) {
 }
 
 function promiseCreatePipeline(dappName, srcKey, destBucket) {
-    return codepipeline.createPipeline(pipelineParams(dappName, srcKey, destBucket)).promise();
+    return codepipeline.createPipeline(
+        pipelineParams(dappName, srcKey, destBucket)
+    ).promise();
 }
 
 function promiseRunPipeline(pipelineId) {
     return codepipeline.startPipelineExecution({
         name: pipelineId
-    })
+    }).promise()
 }
 
 function promiseDeletePipeline(pipelineId) {
     return codepipeline.deletePipeline({
         name: pipelineId
-    })
+    }).promise()
 }
 
 module.exports = {
