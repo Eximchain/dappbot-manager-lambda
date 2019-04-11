@@ -63,7 +63,7 @@ function pipelineParams(dappName, destBucket) {
                             },
                             "outputArtifacts": [
                                 {
-                                    "name": "build"
+                                    "name": "BUILD"
                                 }
                             ],
                             "configuration": {
@@ -79,7 +79,7 @@ function pipelineParams(dappName, destBucket) {
                         {
                             "inputArtifacts": [
                                 {
-                                    "name": "build"
+                                    "name": "BUILD"
                                 }
                             ],
                             "name": "Deploy",
