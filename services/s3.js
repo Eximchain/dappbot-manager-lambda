@@ -1,5 +1,8 @@
 const uuidv4 = require('uuid/v4');
-const { AWS, awsRegion } = require('../env');
+const { AWS, awsRegion, dappseedBucket } = require('../env');
+const zip = require('jszip');
+const shell = require('shelljs');
+const fs = require('fs');
 const s3 = new AWS.S3({apiVersion: '2006-03-01'});
 
 const s3BucketPrefix = "exim-abi-clerk-";
@@ -75,6 +78,26 @@ function promiseGetS3BucketWebsiteConfig(bucketName) {
     return s3.getBucketWebsite(params).promise();
 }
 
+function promisePutDappseed({ dappName, web3URL, guardianURL, abi, addr }){
+    shell.cd('/tmp');
+    const dappseed = new zip();
+    dappseed.file('./Contract.json', abi);
+    dappseed.file('./config.json', JSON.stringify({
+        contract_name : dappName,
+        contract_addr : addr,
+        contract_path : './Contract.json',
+        web3URL, guardianURL
+    }, undefined, 2))
+    return dappseed.generateAsync({type : 'blob'}).then((dappseedFile)=>{
+        return s3.putObject({
+            Bucket : dappseedBucket,
+            ACL: 'private',
+            Key: `${dappName}/dappseed.zip`,
+            Body: dappseedFile
+        }).promise()
+    })
+}
+
 function promisePutS3Objects(bucketName) {
     let params = {
         Bucket: bucketName,
@@ -98,6 +121,7 @@ module.exports = {
     getBucketWebsite : promiseGetS3BucketWebsiteConfig,
     configureBucketWebsite : promiseConfigureS3BucketStaticWebsite,
     putBucketWebsite : promisePutS3Objects,
+    putDappseed : promisePutDappseed,
     createBucket : promiseCreateS3Bucket,
     deleteBucket : promiseDeleteS3Bucket,
     emptyBucket : promiseEmptyS3Bucket,

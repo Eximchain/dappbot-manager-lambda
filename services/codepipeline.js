@@ -6,7 +6,7 @@ function pipelineName(dappName) {
   return `${dappName}-dapp`
 }
 
-function pipelineParams(dappName, srcKey, destBucket) {
+function pipelineParams(dappName, destBucket) {
     return {
         pipeline: {
             name: pipelineName(dappName),
@@ -39,7 +39,7 @@ function pipelineParams(dappName, srcKey, destBucket) {
                             ],
                             "configuration": {
                                 "S3Bucket": dappseedBucket,
-                                "S3ObjectKey": `${srcKey}/dappseed.zip`
+                                "S3ObjectKey": `${dappName}/dappseed.zip`
                             },
                             "runOrder": 1
                         }
@@ -102,9 +102,9 @@ function pipelineParams(dappName, srcKey, destBucket) {
     }
 }
 
-function promiseCreatePipeline(dappName, srcKey, destBucket) {
+function promiseCreatePipeline(dappName, destBucket) {
     return codepipeline.createPipeline(
-        pipelineParams(dappName, srcKey, destBucket)
+        pipelineParams(dappName, destBucket)
     ).promise();
 }
 
