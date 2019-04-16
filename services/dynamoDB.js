@@ -1,6 +1,6 @@
 const { AWS, tableName } = require('../env');
 const ddb = new AWS.DynamoDB({apiVersion: '2012-08-10'});
-const { dnsNameFromDappName } = require('./route53');
+const { dappDNS } = require('./route53');
 
 function serializeDdbKey(dappName) {
     let keyItem = {
@@ -19,7 +19,7 @@ function serializeDdbItem(dappName, ownerEmail, abi, bucketName, cloudfrontDns, 
         'S3BucketName' : {S: bucketName},
         'CloudfrontDistributionId' : {S: cloudfrontDistroId},
         'CloudfrontDnsName' : {S: cloudfrontDns},
-        'DnsName' : {S: dnsNameFromDappName(dappName)}
+        'DnsName' : {S: dappDNS(dappName)}
     };
     return item;
 }

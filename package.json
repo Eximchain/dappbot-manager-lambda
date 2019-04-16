@@ -18,8 +18,8 @@
   },
   "homepage": "https://github.com/Eximchain/abi-clerk-lambda#readme",
   "dependencies": {
+    "adm-zip": "^0.4.13",
     "aws-sdk": "^2.424.0",
-    "jszip": "^3.2.1",
     "shelljs": "^0.8.3",
     "uuid": "^3.3.2"
   }

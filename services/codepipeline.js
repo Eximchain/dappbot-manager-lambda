@@ -11,13 +11,10 @@ function pipelineParams(dappName, destBucket) {
         pipeline: {
             name: pipelineName(dappName),
             roleArn: pipelineRoleArn,
+            version: 1,
             artifactStore: {
                 location: artifactBucket,
-                type: 'S3',
-                encryptionKey: {
-                    type: 'KMS',
-                    name: kmsKeyName
-                }
+                type: 'S3'
             },
             stages: [
                 {
@@ -91,8 +88,8 @@ function pipelineParams(dappName, destBucket) {
                             },
                             "runOrder": 1,
                             "configuration": {
-                                "S3Bucket" : destBucket,
-                                "Extract": "false"
+                                "BucketName" : destBucket,
+                                "Extract": "true"
                             }
                         }
                     ]

@@ -1,6 +1,6 @@
 const uuidv4 = require('uuid/v4');
 const { AWS, awsRegion, dappseedBucket } = require('../env');
-const zip = require('jszip');
+const zip = require('adm-zip');
 const shell = require('shelljs');
 const fs = require('fs');
 const s3 = new AWS.S3({apiVersion: '2006-03-01'});
@@ -81,21 +81,21 @@ function promiseGetS3BucketWebsiteConfig(bucketName) {
 function promisePutDappseed({ dappName, web3URL, guardianURL, abi, addr }){
     shell.cd('/tmp');
     const dappseed = new zip();
-    dappseed.file('./Contract.json', abi);
-    dappseed.file('./config.json', JSON.stringify({
+    const abiTxt = JSON.stringify(abi, undefined, 2);
+    dappseed.addFile('Contract.json', Buffer.alloc(abiTxt.length, abiTxt), "Smart contract ABI.");
+    const configTxt = JSON.stringify({
         contract_name : dappName,
         contract_addr : addr,
         contract_path : './Contract.json',
         web3URL, guardianURL
-    }, undefined, 2))
-    return dappseed.generateAsync({type : 'blob'}).then((dappseedFile)=>{
-        return s3.putObject({
-            Bucket : dappseedBucket,
-            ACL: 'private',
-            Key: `${dappName}/dappseed.zip`,
-            Body: dappseedFile
-        }).promise()
-    })
+    }, undefined, 2);
+    dappseed.addFile('config.json', Buffer.alloc(configTxt.length, configTxt), 'Dapp configuration file.')
+    return s3.putObject({
+        Bucket : dappseedBucket,
+        ACL: 'private',
+        Key: `${dappName}/dappseed.zip`,
+        Body: dappseed.toBuffer()
+    }).promise();
 }
 
 function promisePutS3Objects(bucketName) {
