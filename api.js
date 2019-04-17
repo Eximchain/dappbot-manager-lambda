@@ -139,6 +139,10 @@ async function apiDelete(body) {
         })
         .then(function(result){
             console.log("Delete Dapp Item Success", result);
+            return codepipeline.delete(dappName);
+        })
+        .then(function(result){
+            console.log("Delete CodePipeline Success", result);
             let responseCode = 200;
             // TODO: Replace with something useful or remove
             let responseHeaders = {"x-custom-header" : "my custom header value"};

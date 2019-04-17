@@ -3,7 +3,7 @@ const { AWS, codebuildId, pipelineRoleArn, kmsKeyName, artifactBucket, dappseedB
 const codepipeline = new AWS.CodePipeline();
 
 function pipelineName(dappName) {
-  return `${dappName}-dapp`
+  return `${dappName}-pipeline`
 }
 
 function pipelineParams(dappName, destBucket) {
@@ -105,15 +105,15 @@ function promiseCreatePipeline(dappName, destBucket) {
     ).promise();
 }
 
-function promiseRunPipeline(pipelineId) {
+function promiseRunPipeline(dappName) {
     return codepipeline.startPipelineExecution({
-        name: pipelineId
+        name: pipelineName(dappName)
     }).promise()
 }
 
-function promiseDeletePipeline(pipelineId) {
+function promiseDeletePipeline(dappName) {
     return codepipeline.deletePipeline({
-        name: pipelineId
+        name: pipelineName(dappName)
     }).promise()
 }
 
