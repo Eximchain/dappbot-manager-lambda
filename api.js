@@ -22,8 +22,12 @@ async function apiCreate(body) {
         s3.createBucket(bucketName)
         .then(function(result){
             console.log("Create Bucket Success", result);
+            return s3.configureBucketWebsite(bucketName);
+        })
+        .then(function(result){
+            console.log("Configure Bucket as Static Site success")
             return s3.putDappseed({
-              dappName, web3URL, guardianURL, abi, addr
+                dappName, web3URL, guardianURL, abi, addr
             });
         })
         .then(function(result) {

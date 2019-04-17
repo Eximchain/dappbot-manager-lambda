@@ -61,7 +61,7 @@ function promiseConfigureS3BucketStaticWebsite(bucketName) {
         Bucket: bucketName,
         WebsiteConfiguration: {
             ErrorDocument: {
-                Key: 'error.html'
+                Key: 'index.html'
             },
             IndexDocument: {
                 Suffix: 'index.html'
