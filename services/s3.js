@@ -81,7 +81,8 @@ function promiseGetS3BucketWebsiteConfig(bucketName) {
 function promisePutDappseed({ dappName, web3URL, guardianURL, abi, addr }){
     shell.cd('/tmp');
     const dappZip = new zip();
-    dappZip.file('Contract.json', JSON.stringify(abi, undefined, 2));
+    const abiObj = typeof abi === 'string' ? JSON.parse(abi) : abi;
+    dappZip.file('Contract.json', JSON.stringify(abiObj, undefined, 2));
     dappZip.file('config.json', JSON.stringify({
         contract_name : dappName,
         contract_addr : addr,
