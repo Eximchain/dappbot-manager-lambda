@@ -2,6 +2,7 @@ const uuidv4 = require('uuid/v4');
 const { AWS, awsRegion, dappseedBucket } = require('../env');
 const shell = require('shelljs');
 const fs = require('fs');
+const zip = require('node-zip');
 const s3 = new AWS.S3({apiVersion: '2006-03-01'});
 
 const s3BucketPrefix = "exim-abi-clerk-";
@@ -79,7 +80,7 @@ function promiseGetS3BucketWebsiteConfig(bucketName) {
 
 function promisePutDappseed({ dappName, web3URL, guardianURL, abi, addr }){
     shell.cd('/tmp');
-    const dappZip = new require('node-zip')();
+    const dappZip = new zip();
     dappZip.file('Contract.json', JSON.stringify(abi, undefined, 2));
     dappZip.file('config.json', JSON.stringify({
         contract_name : dappName,
