@@ -64,7 +64,8 @@ function pipelineParams(dappName, destBucket) {
                                 }
                             ],
                             "configuration": {
-                                "ProjectName": codebuildId
+                                "ProjectName": codebuildId,
+                                "PrimarySource": "DAPPSEED"
                             },
                             "runOrder": 1
                         }
