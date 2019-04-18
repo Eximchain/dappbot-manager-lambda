@@ -3,21 +3,18 @@ const { AWS, codebuildId, pipelineRoleArn, kmsKeyName, artifactBucket, dappseedB
 const codepipeline = new AWS.CodePipeline();
 
 function pipelineName(dappName) {
-  return `${dappName}-dapp`
+  return `${dappName}-pipeline`
 }
 
-function pipelineParams(dappName, srcKey, destBucket) {
+function pipelineParams(dappName, destBucket) {
     return {
         pipeline: {
             name: pipelineName(dappName),
             roleArn: pipelineRoleArn,
+            version: 1,
             artifactStore: {
                 location: artifactBucket,
-                type: 'S3',
-                encryptionKey: {
-                    type: 'KMS',
-                    name: kmsKeyName
-                }
+                type: 'S3'
             },
             stages: [
                 {
@@ -39,7 +36,7 @@ function pipelineParams(dappName, srcKey, destBucket) {
                             ],
                             "configuration": {
                                 "S3Bucket": dappseedBucket,
-                                "S3ObjectKey": `${srcKey}/dappseed.zip`
+                                "S3ObjectKey": `${dappName}/dappseed.zip`
                             },
                             "runOrder": 1
                         }
@@ -63,7 +60,7 @@ function pipelineParams(dappName, srcKey, destBucket) {
                             },
                             "outputArtifacts": [
                                 {
-                                    "name": "build"
+                                    "name": "BUILD"
                                 }
                             ],
                             "configuration": {
@@ -79,7 +76,7 @@ function pipelineParams(dappName, srcKey, destBucket) {
                         {
                             "inputArtifacts": [
                                 {
-                                    "name": "build"
+                                    "name": "BUILD"
                                 }
                             ],
                             "name": "Deploy",
@@ -91,8 +88,8 @@ function pipelineParams(dappName, srcKey, destBucket) {
                             },
                             "runOrder": 1,
                             "configuration": {
-                                "S3Bucket" : destBucket,
-                                "Extract": "false"
+                                "BucketName" : destBucket,
+                                "Extract": "true"
                             }
                         }
                     ]
@@ -102,21 +99,21 @@ function pipelineParams(dappName, srcKey, destBucket) {
     }
 }
 
-function promiseCreatePipeline(dappName, srcKey, destBucket) {
+function promiseCreatePipeline(dappName, destBucket) {
     return codepipeline.createPipeline(
-        pipelineParams(dappName, srcKey, destBucket)
+        pipelineParams(dappName, destBucket)
     ).promise();
 }
 
-function promiseRunPipeline(pipelineId) {
+function promiseRunPipeline(dappName) {
     return codepipeline.startPipelineExecution({
-        name: pipelineId
+        name: pipelineName(dappName)
     }).promise()
 }
 
-function promiseDeletePipeline(pipelineId) {
+function promiseDeletePipeline(dappName) {
     return codepipeline.deletePipeline({
-        name: pipelineId
+        name: pipelineName(dappName)
     }).promise()
 }
 

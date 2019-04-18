@@ -1,5 +1,8 @@
 const uuidv4 = require('uuid/v4');
-const { AWS, awsRegion } = require('../env');
+const { AWS, awsRegion, dappseedBucket } = require('../env');
+const shell = require('shelljs');
+const fs = require('fs');
+const zip = require('node-zip');
 const s3 = new AWS.S3({apiVersion: '2006-03-01'});
 
 const s3BucketPrefix = "exim-abi-clerk-";
@@ -53,12 +56,30 @@ function promiseEmptyS3Bucket(bucketName) {
     });
 }
 
+function promiseSetS3BucketPublicReadable(bucketName){
+    return s3.putBucketPolicy({
+        Bucket: bucketName,
+        Policy : JSON.stringify({
+            "Version":"2012-10-17",
+            "Statement":[{
+            "Sid":"PublicReadGetObject",
+                  "Effect":"Allow",
+              "Principal": "*",
+                "Action":["s3:GetObject"],
+                "Resource":[`arn:aws:s3:::${bucketName}/*`]
+              }
+            ]
+        })
+    }).promise();
+}
+
+
 function promiseConfigureS3BucketStaticWebsite(bucketName) {
     let params = {
         Bucket: bucketName,
         WebsiteConfiguration: {
             ErrorDocument: {
-                Key: 'error.html'
+                Key: 'index.html'
             },
             IndexDocument: {
                 Suffix: 'index.html'
@@ -73,6 +94,27 @@ function promiseGetS3BucketWebsiteConfig(bucketName) {
         Bucket: bucketName
     };
     return s3.getBucketWebsite(params).promise();
+}
+
+function promisePutDappseed({ dappName, web3URL, guardianURL, abi, addr }){
+    shell.cd('/tmp');
+    const dappZip = new zip();
+    const abiObj = typeof abi === 'string' ? JSON.parse(abi) : abi;
+    dappZip.file('Contract.json', JSON.stringify(abiObj, undefined, 2));
+    dappZip.file('config.json', JSON.stringify({
+        contract_name : dappName,
+        contract_addr : addr,
+        contract_path : './Contract.json',
+        web3URL, guardianURL
+    }, undefined, 2));
+    fs.writeFileSync('./dappseed.zip', dappZip.generate({base64:false,compression:'DEFLATE'}), 'binary')
+    const zipData = fs.readFileSync('./dappseed.zip');
+    return s3.putObject({
+        Bucket : dappseedBucket,
+        ACL: 'private',
+        Key: `${dappName}/dappseed.zip`,
+        Body: zipData
+    }).promise();
 }
 
 function promisePutS3Objects(bucketName) {
@@ -97,7 +139,9 @@ function getS3BucketEndpoint(bucketName) {
 module.exports = {
     getBucketWebsite : promiseGetS3BucketWebsiteConfig,
     configureBucketWebsite : promiseConfigureS3BucketStaticWebsite,
+    setBucketPublic : promiseSetS3BucketPublicReadable,
     putBucketWebsite : promisePutS3Objects,
+    putDappseed : promisePutDappseed,
     createBucket : promiseCreateS3Bucket,
     deleteBucket : promiseDeleteS3Bucket,
     emptyBucket : promiseEmptyS3Bucket,

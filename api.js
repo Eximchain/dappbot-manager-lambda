@@ -13,7 +13,7 @@ async function apiCreate(body) {
         let abi = body.Abi;
         let web3URL = body.Web3URL;
         let guardianURL = body.GuardianURL;
-        let abiAddr = body.ContractAddr;
+        let addr = body.ContractAddr;
         let bucketName = s3.newBucketName();
         let s3Dns = null;
         let cloudfrontDistroId = null;
@@ -22,14 +22,24 @@ async function apiCreate(body) {
         s3.createBucket(bucketName)
         .then(function(result){
             console.log("Create Bucket Success", result);
+            return s3.setBucketPublic(bucketName);
+        })
+        .then(function(result){
+            console.log("Set Bucket as public readable success")
             return s3.configureBucketWebsite(bucketName);
         })
-        .then(function(result) {
-            console.log("Configure Bucket Static Website Success", result);
-            return s3.putBucketWebsite(bucketName);
+        .then(function(result){
+            console.log("Configure Bucket as Static Site success")
+            return s3.putDappseed({
+                dappName, web3URL, guardianURL, abi, addr
+            });
         })
         .then(function(result) {
-            console.log("Put S3 Objects Success", result);
+            console.log("Put Dappseed success", result);
+            return codepipeline.create(dappName, bucketName)
+        })
+        .then(function(result) {
+            console.log("Create CodePipeline success", result);
             s3Dns = s3.bucketEndpoint(bucketName);
             return cloudfront.createDistro(dappName, s3Dns);
         })
@@ -45,7 +55,7 @@ async function apiCreate(body) {
             return dynamoDB.putItem(dappName, owner, abi, bucketName, cloudfrontDistroId, cloudfrontDns);
         })
         .then(function(result) {
-            console.log("Put Dapp Item Success", result);
+            console.log("Dapp generation successfully initialized!  Check your URL in about 20 minutes.", result);
             let responseCode = 200;
             // TODO: Replace with something useful or remove
             let responseHeaders = {"x-custom-header" : "my custom header value"};
@@ -137,6 +147,10 @@ async function apiDelete(body) {
         })
         .then(function(result){
             console.log("Delete Dapp Item Success", result);
+            return codepipeline.delete(dappName);
+        })
+        .then(function(result){
+            console.log("Delete CodePipeline Success", result);
             let responseCode = 200;
             // TODO: Replace with something useful or remove
             let responseHeaders = {"x-custom-header" : "my custom header value"};

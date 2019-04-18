@@ -54,5 +54,5 @@ function dnsNameFromDappName(dappName) {
 module.exports = {
     createRecord : promiseCreateDnsRecord,
     deleteRecord : promiseDeleteDnsRecord,
-    nameFromDappName : dnsNameFromDappName
+    dappDNS : dnsNameFromDappName
 }

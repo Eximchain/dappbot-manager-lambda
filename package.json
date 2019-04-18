@@ -4,7 +4,8 @@
   "description": "AWS Lambda function to run ABI Clerk",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "npm i; rm -f ./abi-clerk-lambda.zip; zip -r ./abi-clerk-lambda.zip . -x ./.git/**\\*"
   },
   "repository": {
     "type": "git",
@@ -17,8 +18,8 @@
   },
   "homepage": "https://github.com/Eximchain/abi-clerk-lambda#readme",
   "dependencies": {
-    "@eximchain/dappsmith": "^0.3.1",
     "aws-sdk": "^2.424.0",
+    "node-zip": "^1.1.1",
     "shelljs": "^0.8.3",
     "uuid": "^3.3.2"
   }
