@@ -11,34 +11,29 @@ function promiseCreateCloudfrontDistribution(appName, s3Origin) {
     let extraTags = [dappNameTag(appName)];
 
     let params = {
-        DistributionConfigWithTags: {
-            DistributionConfig: {
-                CallerReference: uuidv4(),
-                DefaultRootObject: 'index.html',
-                Origins: {
-                    Quantity: 1,
-                    Items: [{
-                        Id: 's3-origin',
-                        DomainName: s3Origin,
-                        S3OriginConfig: {
-                            OriginAccessIdentity: ''
-                        }
-                    }],
-                },
-                DefaultCacheBehavior: {
-                    TargetOriginId: 's3-origin',
-                    ForwardedValues: {
-                        QueryString: false,
-                        Cookies: {
-                            Forward: 'none'
-                        },
-                        Headers: {
-                            Quantity: 0
-                        }
-                    },
-                    TrustedSigners: {
-                        Quantity: 0,
-                        Enabled: false
+        DistributionConfig: {
+            CallerReference: uuidv4(),
+            DefaultRootObject: 'index.html',
+            Origins: {
+                Quantity: 1,
+                Items: [{
+                    Id: 's3-origin',
+                    DomainName: s3Origin,
+                    S3OriginConfig: {
+                        OriginAccessIdentity: ''
+                    }
+                }],
+            },
+            ViewerCertificate : {
+                ACMCertificateArn : certArn,
+                SSLSupportMethod : 'sni-only',
+            },
+            DefaultCacheBehavior: {
+                TargetOriginId: 's3-origin',
+                ForwardedValues: {
+                    QueryString: false,
+                    Cookies: {
+                        Forward: 'none'
                     },
                     ViewerProtocolPolicy: 'allow-all',
                     MinTTL: 0,
