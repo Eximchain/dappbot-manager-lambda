@@ -1,6 +1,7 @@
 const uuidv4 = require('uuid/v4');
 const { defaultTags, dappNameTag } = require('../common');
 const { AWS, certArn } = require('../env');
+const { dappDNS } = require('./route53');
 const cloudfront = new AWS.CloudFront({apiVersion: '2018-11-05'});
 
 function promiseCreateCloudfrontDistribution(appName, s3Origin) {
@@ -13,6 +14,10 @@ function promiseCreateCloudfrontDistribution(appName, s3Origin) {
     let params = {
         DistributionConfig: {
             CallerReference: uuidv4(),
+            Aliases: {
+                Quantity: 1,
+                Items: [dappDNS(appName)]
+            },
             DefaultRootObject: 'index.html',
             Origins: {
                 Quantity: 1,
@@ -43,7 +48,17 @@ function promiseCreateCloudfrontDistribution(appName, s3Origin) {
                     }
                 },
                 Enabled: true,
-                Comment: "Cloudfront distribution for ".concat(appName)
+                Comment: "Cloudfront distribution for ".concat(appName),
+                TrustedSigners: {
+                    Quantity: 0,
+                    Enabled: false
+                },
+                ViewerProtocolPolicy: 'redirect-to-https',
+                MinTTL: 0,
+                AllowedMethods: {
+                    Quantity: 7,
+                    Items: ['GET', 'HEAD', 'OPTIONS', 'PUT', 'PATCH', 'POST', 'DELETE']
+                }
             },
             Tags: {
                 Items: defaultTags.concat(extraTags)
