@@ -6,6 +6,7 @@ function promiseCreateCloudfrontDistribution(appName, s3Origin) {
     // TODO: Origin Access Identity
     // TODO: Verify that we want these args
     // TODO: Set up SSL
+    
     let params = {
         DistributionConfig: {
             CallerReference: uuidv4(),

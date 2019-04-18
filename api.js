@@ -22,6 +22,10 @@ async function apiCreate(body) {
         s3.createBucket(bucketName)
         .then(function(result){
             console.log("Create Bucket Success", result);
+            return s3.setBucketPublic(bucketName);
+        })
+        .then(function(result){
+            console.log("Set Bucket as public readable success")
             return s3.configureBucketWebsite(bucketName);
         })
         .then(function(result){

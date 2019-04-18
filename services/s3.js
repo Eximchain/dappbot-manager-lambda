@@ -56,6 +56,24 @@ function promiseEmptyS3Bucket(bucketName) {
     });
 }
 
+function promiseSetS3BucketPublicReadable(bucketName){
+    return s3.putBucketPolicy({
+        Bucket: bucketName,
+        Policy : JSON.stringify({
+            "Version":"2012-10-17",
+            "Statement":[{
+            "Sid":"PublicReadGetObject",
+                  "Effect":"Allow",
+              "Principal": "*",
+                "Action":["s3:GetObject"],
+                "Resource":[`arn:aws:s3:::${bucketName}/*`]
+              }
+            ]
+        })
+    }).promise();
+}
+
+
 function promiseConfigureS3BucketStaticWebsite(bucketName) {
     let params = {
         Bucket: bucketName,
@@ -121,6 +139,7 @@ function getS3BucketEndpoint(bucketName) {
 module.exports = {
     getBucketWebsite : promiseGetS3BucketWebsiteConfig,
     configureBucketWebsite : promiseConfigureS3BucketStaticWebsite,
+    setBucketPublic : promiseSetS3BucketPublicReadable,
     putBucketWebsite : promisePutS3Objects,
     putDappseed : promisePutDappseed,
     createBucket : promiseCreateS3Bucket,
