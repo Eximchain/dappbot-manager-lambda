@@ -12,35 +12,44 @@ function promiseCreateCloudfrontDistribution(appName, s3Origin) {
     let extraTags = [dappNameTag(appName)];
 
     let params = {
-        DistributionConfig: {
-            CallerReference: uuidv4(),
-            Aliases: {
-                Quantity: 1,
-                Items: [dappDNS(appName)]
-            },
-            DefaultRootObject: 'index.html',
-            Origins: {
-                Quantity: 1,
-                Items: [{
-                    Id: 's3-origin',
-                    DomainName: s3Origin,
-                    S3OriginConfig: {
-                        OriginAccessIdentity: ''
-                    }
-                }],
-            },
-            ViewerCertificate : {
-                ACMCertificateArn : certArn,
-                SSLSupportMethod : 'sni-only',
-            },
-            DefaultCacheBehavior: {
-                TargetOriginId: 's3-origin',
-                ForwardedValues: {
-                    QueryString: false,
-                    Cookies: {
-                        Forward: 'none'
+        DistributionConfigWithTags: {
+            DistributionConfig: {
+                CallerReference: uuidv4(),
+                DefaultRootObject: 'index.html',
+                Aliases: {
+                    Quantity: 1,
+                    Items: [dappDNS(appName)]
+                },
+                ViewerCertificate : {
+                    ACMCertificateArn : certArn,
+                    SSLSupportMethod : 'sni-only',
+                },
+                Origins: {
+                    Quantity: 1,
+                    Items: [{
+                        Id: 's3-origin',
+                        DomainName: s3Origin,
+                        S3OriginConfig: {
+                            OriginAccessIdentity: ''
+                        }
+                    }],
+                },
+                DefaultCacheBehavior: {
+                    TargetOriginId: 's3-origin',
+                    ForwardedValues: {
+                        QueryString: false,
+                        Cookies: {
+                            Forward: 'none'
+                        },
+                        Headers: {
+                            Quantity: 0
+                        }
                     },
-                    ViewerProtocolPolicy: 'allow-all',
+                    TrustedSigners: {
+                        Quantity: 0,
+                        Enabled: false
+                    },
+                    ViewerProtocolPolicy: 'redirect-to-https',
                     MinTTL: 0,
                     AllowedMethods: {
                         Quantity: 7,
@@ -48,17 +57,7 @@ function promiseCreateCloudfrontDistribution(appName, s3Origin) {
                     }
                 },
                 Enabled: true,
-                Comment: "Cloudfront distribution for ".concat(appName),
-                TrustedSigners: {
-                    Quantity: 0,
-                    Enabled: false
-                },
-                ViewerProtocolPolicy: 'redirect-to-https',
-                MinTTL: 0,
-                AllowedMethods: {
-                    Quantity: 7,
-                    Items: ['GET', 'HEAD', 'OPTIONS', 'PUT', 'PATCH', 'POST', 'DELETE']
-                }
+                Comment: "Cloudfront distribution for ".concat(appName)
             },
             Tags: {
                 Items: defaultTags.concat(extraTags)
