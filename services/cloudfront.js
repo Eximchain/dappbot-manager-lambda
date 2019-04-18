@@ -1,5 +1,6 @@
 const uuidv4 = require('uuid/v4');
 const { AWS } = require('../env');
+const { defaultTags, dappNameTag } = require('../common');
 const cloudfront = new AWS.CloudFront({apiVersion: '2018-11-05'});
 
 function promiseCreateCloudfrontDistribution(appName, s3Origin) {
@@ -7,47 +8,54 @@ function promiseCreateCloudfrontDistribution(appName, s3Origin) {
     // TODO: Verify that we want these args
     // TODO: Set up SSL
     
+    let extraTags = [dappNameTag(appName)];
+
     let params = {
-        DistributionConfig: {
-            CallerReference: uuidv4(),
-            DefaultRootObject: 'index.html',
-            Origins: {
-                Quantity: 1,
-                Items: [{
-                    Id: 's3-origin',
-                    DomainName: s3Origin,
-                    S3OriginConfig: {
-                        OriginAccessIdentity: ''
-                    }
-                }],
-            },
-            DefaultCacheBehavior: {
-                TargetOriginId: 's3-origin',
-                ForwardedValues: {
-                    QueryString: false,
-                    Cookies: {
-                        Forward: 'none'
+        DistributionConfigWithTags: {
+            DistributionConfig: {
+                CallerReference: uuidv4(),
+                DefaultRootObject: 'index.html',
+                Origins: {
+                    Quantity: 1,
+                    Items: [{
+                        Id: 's3-origin',
+                        DomainName: s3Origin,
+                        S3OriginConfig: {
+                            OriginAccessIdentity: ''
+                        }
+                    }],
+                },
+                DefaultCacheBehavior: {
+                    TargetOriginId: 's3-origin',
+                    ForwardedValues: {
+                        QueryString: false,
+                        Cookies: {
+                            Forward: 'none'
+                        },
+                        Headers: {
+                            Quantity: 0
+                        }
                     },
-                    Headers: {
-                        Quantity: 0
+                    TrustedSigners: {
+                        Quantity: 0,
+                        Enabled: false
+                    },
+                    ViewerProtocolPolicy: 'allow-all',
+                    MinTTL: 0,
+                    AllowedMethods: {
+                        Quantity: 7,
+                        Items: ['GET', 'HEAD', 'OPTIONS', 'PUT', 'PATCH', 'POST', 'DELETE']
                     }
                 },
-                TrustedSigners: {
-                    Quantity: 0,
-                    Enabled: false
-                },
-                ViewerProtocolPolicy: 'allow-all',
-                MinTTL: 0,
-                AllowedMethods: {
-                    Quantity: 7,
-                    Items: ['GET', 'HEAD', 'OPTIONS', 'PUT', 'PATCH', 'POST', 'DELETE']
-                }
+                Enabled: true,
+                Comment: "Cloudfront distribution for ".concat(appName)
             },
-            Enabled: true,
-            Comment: "Cloudfront distribution for ".concat(appName)
+            Tags: {
+                Items: defaultTags.concat(extraTags)
+            }
         }
     };
-    return cloudfront.createDistribution(params).promise();
+    return cloudfront.createDistributionWithTags(params).promise();
 }
 
 function promiseGetCloudfrontDistributionConfig(distroId) {

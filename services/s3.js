@@ -1,5 +1,6 @@
 const uuidv4 = require('uuid/v4');
 const { AWS, awsRegion, dappseedBucket } = require('../env');
+const { defaultTags, dappNameTag } = require('../common');
 const shell = require('shelljs');
 const fs = require('fs');
 const zip = require('node-zip');
@@ -128,6 +129,31 @@ function promisePutS3Objects(bucketName) {
     return s3.putObject(params).promise();
 }
 
+function promisePutBucketTags(bucketName, tags) {
+    let params = {
+        Bucket: bucketName,
+        Tagging: {
+            TagSet: tags
+        }
+    };
+    return s3.putBucketTagging(params).promise();
+}
+
+function promiseCreateS3BucketWithTags(bucketName, dappName) {
+    console.log("Creating S3 bucket ", bucketName)
+    return promiseCreateS3Bucket(bucketName).then(function(result) {
+        console.log("Create S3 Bucket Success", result);
+        let extraTags = [dappNameTag(dappName)];
+        let bucketTags = defaultTags.concat(extraTags);
+        console.log("Applying Default Bucket Tags", defaultTags)
+        return promisePutBucketTags(bucketName, bucketTags);
+    })
+    .catch(function(err) {
+        console.log("Error", err);
+        return Promise.reject(err);
+    });
+}
+
 function createBucketName() {
     return s3BucketPrefix.concat(uuidv4());
 }
@@ -142,7 +168,7 @@ module.exports = {
     setBucketPublic : promiseSetS3BucketPublicReadable,
     putBucketWebsite : promisePutS3Objects,
     putDappseed : promisePutDappseed,
-    createBucket : promiseCreateS3Bucket,
+    createBucketWithTags : promiseCreateS3BucketWithTags,
     deleteBucket : promiseDeleteS3Bucket,
     emptyBucket : promiseEmptyS3Bucket,
     listObjects : promiseListS3Objects,

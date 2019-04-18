@@ -19,7 +19,7 @@ async function apiCreate(body) {
         let cloudfrontDistroId = null;
         let cloudfrontDns = null;
 
-        s3.createBucket(bucketName)
+        s3.createBucketWithTags(bucketName, dappName)
         .then(function(result){
             console.log("Create Bucket Success", result);
             return s3.setBucketPublic(bucketName);
