@@ -129,8 +129,12 @@ async function apiDelete(body) {
             cloudfrontDns = result.Item.CloudfrontDnsName.S;
             return cloudfront.disableDistro(cloudfrontDistroId);
         })
-        .then(function(result) {
+        .then(function(result){
             console.log("Cloudfront Disable Success", result);
+            return cloudfront.deleteDistro(cloudfrontDistroId);
+        })
+        .then(function(result) {
+            console.log("Cloudfront Delete Success", result);
             return route53.deleteRecord(dappName, cloudfrontDns);
         })
         .then(function(result) {
