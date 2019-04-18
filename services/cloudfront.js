@@ -1,6 +1,6 @@
 const uuidv4 = require('uuid/v4');
-const { AWS } = require('../env');
 const { defaultTags, dappNameTag } = require('../common');
+const { AWS, certArn } = require('../env');
 const cloudfront = new AWS.CloudFront({apiVersion: '2018-11-05'});
 
 function promiseCreateCloudfrontDistribution(appName, s3Origin) {
