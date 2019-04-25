@@ -1,9 +1,9 @@
 'use strict';
 const api = require('./api');
+const validate = require('./validate');
 
 exports.handler = async (event) => {
     console.log("request: " + JSON.stringify(event));
-    let responseCode = 200;
 
     let method = event.pathParameters.proxy;
     let body = null;
