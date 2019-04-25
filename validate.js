@@ -31,8 +31,20 @@ function validateBodyCreate(body) {
     }
 }
 
+function validateCreate(body) {
+    validateBodyCreate(body);
+}
+
+function validateDelete(body) {
+    validateBodyDelete(body);
+}
+
+function validateRead(body) {
+    validateBodyRead(body);
+}
+
 module.exports = {
-    delete : validateBodyDelete,
-    create : validateBodyCreate,
-    read : validateBodyRead
+    delete : validateDelete,
+    create : validateCreate,
+    read : validateRead
 }
