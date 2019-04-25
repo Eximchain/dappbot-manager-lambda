@@ -12,16 +12,17 @@ exports.handler = async (event) => {
     }
     let authorizedUser = event.requestContext.authorizer.claims["cognito:username"];
 
-    let responsePromise = (function(method) {
+    let responsePromise = (async function(method) {
         switch(method) {
             case 'create':
-                validate.create(body, authorizedUser);
+                await validate.create(body, authorizedUser);
+                console.log("Create validation passed");
                 return api.create(body);
             case 'read':
-                validate.read(body);
+                await validate.read(body);
                 return api.read(body);
             case 'delete':
-                validate.delete(body);
+                await validate.delete(body);
                 return api.delete(body);
             default:
                 throw new Error("Unrecognized method name ".concat(method));

@@ -1,3 +1,5 @@
+const { cognito } = require('./services');
+
 function validateBodyDelete(body) {
     if (!body.hasOwnProperty('DappName')) {
         throw new Error("delete: required argument 'DappName' not found");
@@ -31,22 +33,35 @@ function validateBodyCreate(body) {
     }
 }
 
-function validateLimitsCreate(cognitoUsername) {
-    // TODO
-    console.log("Validating Limits for User: " + cognitoUsername)
+async function validateLimitsCreate(cognitoUsername) {
+    console.log("Validating Limits for User", cognitoUsername);
+    return cognito.getUser(cognitoUsername).then(function(result) {
+        console.log("Found Cognito User", result);
+        return result;
+    })
+    .catch(function(err) {
+        console.log("Error Validating Limit", err);
+        throw err;
+    })
 }
 
-function validateCreate(body, cognitoUsername) {
+async function validateCreate(body, cognitoUsername) {
     validateBodyCreate(body);
-    validateLimitsCreate(cognitoUsername);
+    try {
+        return await validateLimitsCreate(cognitoUsername);
+    } catch (err) {
+        throw err;
+    }
 }
 
-function validateDelete(body) {
+async function validateDelete(body) {
     validateBodyDelete(body);
+    return true;
 }
 
-function validateRead(body) {
+async function validateRead(body) {
     validateBodyRead(body);
+    return true;
 }
 
 module.exports = {
