@@ -31,8 +31,14 @@ function validateBodyCreate(body) {
     }
 }
 
-function validateCreate(body) {
+function validateLimitsCreate(cognitoUsername) {
+    // TODO
+    console.log("Validating Limits for User: " + cognitoUsername)
+}
+
+function validateCreate(body, cognitoUsername) {
     validateBodyCreate(body);
+    validateLimitsCreate(cognitoUsername);
 }
 
 function validateDelete(body) {
