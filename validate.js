@@ -1,4 +1,7 @@
-const { cognito } = require('./services');
+const { cognito, dynamoDB } = require('./services');
+const assert = require('assert');
+
+const dappLimitAttrName = 'dev:custom:num_dapps';
 
 function validateBodyDelete(body) {
     if (!body.hasOwnProperty('DappName')) {
@@ -33,11 +36,23 @@ function validateBodyCreate(body) {
     }
 }
 
-async function validateLimitsCreate(cognitoUsername) {
+async function validateLimitsCreate(cognitoUsername, ownerEmail) {
     console.log("Validating Limits for User", cognitoUsername);
+    let dappLimit = null;
     return cognito.getUser(cognitoUsername).then(function(result) {
         console.log("Found Cognito User", result);
-        return result;
+        let attrList = result.UserAttributes;
+        let dappLimitAttr = attrList.filter(attr => attr.Name === dappLimitAttrName);
+        assert(dappLimitAttr.length === 1);
+        dappLimit = dappLimitAttr[0].Value;
+
+        return dynamoDB.scanByOwner(ownerEmail);
+    })
+    .then(function(result) {
+        console.log("Scanned DynamoDB Table", result);
+        let numDappsOwned = result.Items.length;
+        assert(numDappsOwned + 1 <= dappLimit, "User " + ownerEmail + " already at dapp limit: " + dappLimit);
+        return true;
     })
     .catch(function(err) {
         console.log("Error Validating Limit", err);
@@ -48,7 +63,7 @@ async function validateLimitsCreate(cognitoUsername) {
 async function validateCreate(body, cognitoUsername) {
     validateBodyCreate(body);
     try {
-        return await validateLimitsCreate(cognitoUsername);
+        return await validateLimitsCreate(cognitoUsername, body.OwnerEmail);
     } catch (err) {
         throw err;
     }
