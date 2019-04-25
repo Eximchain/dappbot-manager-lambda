@@ -14,10 +14,13 @@ exports.handler = async (event) => {
     let responsePromise = (function(method) {
         switch(method) {
             case 'create':
+                validate.create(body);
                 return api.create(body);
             case 'read':
+                validate.read(body);
                 return api.read(body);
             case 'delete':
+                validate.delete(body);
                 return api.delete(body);
             default:
                 throw new Error("Unrecognized method name ".concat(method));
