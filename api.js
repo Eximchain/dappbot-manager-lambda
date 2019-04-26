@@ -131,7 +131,8 @@ async function apiDelete(body) {
         })
         .then(function(result){
             console.log("Cloudfront Disable Success", result);
-            return cloudfront.deleteDistro(cloudfrontDistroId);
+            return "TODO: Cloudfront's delete is turned off until we have a working strategy."
+            // return cloudfront.deleteDistro(cloudfrontDistroId);
         })
         .then(function(result) {
             console.log("Cloudfront Delete Success", result);
