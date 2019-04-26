@@ -1,6 +1,7 @@
 const uuidv4 = require('uuid/v4');
-const { AWS } = require('../env');
 const { defaultTags, dappNameTag } = require('../common');
+const { AWS, certArn } = require('../env');
+const { dappDNS } = require('./route53');
 const cloudfront = new AWS.CloudFront({apiVersion: '2018-11-05'});
 
 function promiseCreateCloudfrontDistribution(appName, s3Origin) {
@@ -15,6 +16,14 @@ function promiseCreateCloudfrontDistribution(appName, s3Origin) {
             DistributionConfig: {
                 CallerReference: uuidv4(),
                 DefaultRootObject: 'index.html',
+                Aliases: {
+                    Quantity: 1,
+                    Items: [dappDNS(appName)]
+                },
+                ViewerCertificate : {
+                    ACMCertificateArn : certArn,
+                    SSLSupportMethod : 'sni-only',
+                },
                 Origins: {
                     Quantity: 1,
                     Items: [{
@@ -40,7 +49,7 @@ function promiseCreateCloudfrontDistribution(appName, s3Origin) {
                         Quantity: 0,
                         Enabled: false
                     },
-                    ViewerProtocolPolicy: 'allow-all',
+                    ViewerProtocolPolicy: 'redirect-to-https',
                     MinTTL: 0,
                     AllowedMethods: {
                         Quantity: 7,
@@ -84,8 +93,16 @@ function promiseDisableCloudfrontDistribution(distroId) {
     });
 }
 
+function promiseDeleteCloudfrontDistribution(distroId) {
+    let params = {
+        Id: distroId
+    };
+    return cloudfront.deleteDistribution(params).promise();
+}
+
 module.exports = {
     createDistro : promiseCreateCloudfrontDistribution,
     getDistroConfig : promiseGetCloudfrontDistributionConfig,
-    disableDistro : promiseDisableCloudfrontDistribution
+    disableDistro : promiseDisableCloudfrontDistribution,
+    deleteDistro : promiseDeleteCloudfrontDistribution
 };

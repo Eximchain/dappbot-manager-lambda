@@ -1,9 +1,9 @@
-const { AWS, codebuildId, pipelineRoleArn, kmsKeyName, artifactBucket, dappseedBucket } = require('../env');
+const { AWS, codebuildId, pipelineRoleArn, dnsRoot, artifactBucket, dappseedBucket } = require('../env');
 
 const codepipeline = new AWS.CodePipeline();
 
 function pipelineName(dappName) {
-  return `${dappName}-pipeline`
+  return `${dappName}${dnsRoot}`
 }
 
 function pipelineParams(dappName, destBucket) {
