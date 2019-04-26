@@ -3,7 +3,7 @@ const { AWS, codebuildId, pipelineRoleArn, dnsRoot, artifactBucket, dappseedBuck
 const codepipeline = new AWS.CodePipeline();
 
 function pipelineName(dappName) {
-  return `${dappName}-pipeline-${dnsRoot}`
+  return `${dappName}${dnsRoot}`
 }
 
 function pipelineParams(dappName, destBucket) {
