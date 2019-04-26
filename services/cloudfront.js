@@ -93,7 +93,7 @@ function promiseDisableCloudfrontDistribution(distroId) {
     });
 }
 
-function promiseDeleteCloudfrontDistribution(distroId){
+function promiseDeleteCloudfrontDistribution(distroId) {
     return cloudfront.deleteDistribution({
         Id: distroId
     }).promise();

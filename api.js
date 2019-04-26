@@ -129,9 +129,9 @@ async function apiDelete(body) {
             cloudfrontDns = result.Item.CloudfrontDnsName.S;
             return cloudfront.disableDistro(cloudfrontDistroId);
         })
-        .then(function(result){
+        .then(function(result) {
             console.log("Cloudfront Disable Success", result);
-            return new Promise(resolve => resolve("TODO: Cloudfront's delete is turned off until we have a working strategy."))
+            return new Promise.resolve("TODO: Cloudfront's delete is turned off until we have a working strategy.");
             // return cloudfront.deleteDistro(cloudfrontDistroId);
         })
         .then(function(result) {
@@ -150,11 +150,11 @@ async function apiDelete(body) {
             console.log("S3 Bucket Delete Success", result);
             return dynamoDB.deleteItem(body);
         })
-        .then(function(result){
+        .then(function(result) {
             console.log("Delete Dapp Item Success", result);
             return codepipeline.delete(dappName);
         })
-        .then(function(result){
+        .then(function(result) {
             console.log("Delete CodePipeline Success", result);
             let responseCode = 200;
             // TODO: Replace with something useful or remove
