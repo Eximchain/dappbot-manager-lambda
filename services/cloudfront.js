@@ -94,9 +94,10 @@ function promiseDisableCloudfrontDistribution(distroId) {
 }
 
 function promiseDeleteCloudfrontDistribution(distroId) {
-    return cloudfront.deleteDistribution({
+    let params = {
         Id: distroId
-    }).promise();
+    };
+    return cloudfront.deleteDistribution(params).promise();
 }
 
 module.exports = {
