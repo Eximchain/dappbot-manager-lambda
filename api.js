@@ -2,7 +2,7 @@ const { dynamoDB, route53, cloudfront, s3, codepipeline } = require('./services'
 
 async function apiCreate(body) {
     return new Promise(function(resolve, reject) {
-        let dappName = body.DappName;
+        let dappName = validate.cleanName(body.DappName);
         let owner = body.OwnerEmail;
         let abi = body.Abi;
         let web3URL = body.Web3URL;
