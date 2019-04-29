@@ -27,3 +27,6 @@ This will produce an `abi-clerk-lambda.zip` at the package root directory.  The 
 - **`/delete`**
   - Accepts a body with key `DappName`.
   - Destroys all associated resources and returns a success.
+
+## Constraints
+- Dapp names will be lowercased and can only include letters, numbers, and hyphens.

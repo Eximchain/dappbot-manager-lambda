@@ -2,7 +2,7 @@ const { dynamoDB, route53, cloudfront, s3, codepipeline } = require('./services'
 
 async function apiCreate(body) {
     return new Promise(function(resolve, reject) {
-        let dappName = body.DappName;
+        let dappName = validate.cleanName(body.DappName);
         let owner = body.OwnerEmail;
         let abi = body.Abi;
         let web3URL = body.Web3URL;
@@ -73,7 +73,7 @@ async function apiCreate(body) {
 
 async function apiRead(body) {
     return new Promise(function(resolve, reject) {
-        let dappName = body.DappName;
+        let dappName = validate.cleanName(body.DappName);
         dynamoDB.getItem(dappName).then(function(result){
             console.log("Get Dapp Item Success", result);
             let responseCode = 200;
@@ -101,7 +101,7 @@ async function apiRead(body) {
 // TODO: Make sure incomplete steps are cleaned up
 async function apiDelete(body) {
     return new Promise(function(resolve, reject) {
-        let dappName = body.DappName;
+        let dappName = validate.cleanName(body.DappName);
         let bucketName = null;
         let cloudfrontDistroId = null;
         let cloudfrontDns = null;
@@ -132,7 +132,7 @@ async function apiDelete(body) {
         })
         .then(function(result) {
             console.log("S3 Bucket Delete Success", result);
-            return dynamoDB.deleteItem(body);
+            return dynamoDB.deleteItem(dappName);
         })
         .then(function(result) {
             console.log("Delete Dapp Item Success", result);

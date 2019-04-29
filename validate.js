@@ -63,8 +63,13 @@ async function validateRead(body) {
     return true;
 }
 
+function cleanDappName(name) {
+    return name.toLowerCase().replace(/\s/g, '-').replace(/[^A-Za-z0-9-]/g, '')
+}
+
 module.exports = {
     delete : validateDelete,
     create : validateCreate,
-    read : validateRead
+    read : validateRead,
+    cleanName: cleanDappName
 }
