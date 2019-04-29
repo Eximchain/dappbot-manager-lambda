@@ -42,9 +42,7 @@ function promiseGetDappItem(dappName) {
     return ddb.getItem(getItemParams).promise();
 }
 
-function promiseDeleteDappItem(body) {
-    let dappName = body.DappName;
-
+function promiseDeleteDappItem(dappName) {
     let deleteItemParams = {
         TableName: tableName,
         Key: serializeDdbKey(dappName)
