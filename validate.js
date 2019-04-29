@@ -30,7 +30,7 @@ async function validateLimitsCreate(cognitoUsername, ownerEmail) {
         assert(dappLimitAttr.length === 1);
         dappLimit = dappLimitAttr[0].Value;
 
-        return dynamoDB.scanByOwner(ownerEmail);
+        return dynamoDB.getByOwner(ownerEmail);
     })
     .then(function(result) {
         console.log("Scanned DynamoDB Table", result);
