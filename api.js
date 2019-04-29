@@ -1,13 +1,7 @@
-const validate = require('./validate');
 const { dynamoDB, route53, cloudfront, s3, codepipeline } = require('./services');
 
 async function apiCreate(body) {
     return new Promise(function(resolve, reject) {
-        try {
-            validate.create(body);
-        } catch(err) {
-            reject(err);
-        }
         let dappName = body.DappName;
         let owner = body.OwnerEmail;
         let abi = body.Abi;
@@ -79,11 +73,6 @@ async function apiCreate(body) {
 
 async function apiRead(body) {
     return new Promise(function(resolve, reject) {
-        try {
-            validate.read(body);
-        } catch(err) {
-            reject(err);
-        }
         let dappName = body.DappName;
         dynamoDB.getItem(dappName).then(function(result){
             console.log("Get Dapp Item Success", result);
@@ -112,11 +101,6 @@ async function apiRead(body) {
 // TODO: Make sure incomplete steps are cleaned up
 async function apiDelete(body) {
     return new Promise(function(resolve, reject) {
-        try {
-            validate.delete(body);
-        } catch(err) {
-            reject(err);
-        }
         let dappName = body.DappName;
         let bucketName = null;
         let cloudfrontDistroId = null;

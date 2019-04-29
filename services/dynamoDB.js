@@ -53,8 +53,28 @@ function promiseDeleteDappItem(body) {
     return ddb.deleteItem(deleteItemParams).promise();
 }
 
+function promiseScanItemsByOwner(ownerEmail) {
+    // TODO: Avoid scanning full table
+    let params = {
+        TableName: tableName,
+        ExpressionAttributeNames: {
+            "#DN": "DappName", 
+            "#OE": "OwnerEmail"
+        }, 
+        ExpressionAttributeValues: {
+            ":e": {
+                S: ownerEmail
+            }
+        }, 
+        FilterExpression: "#OE = :e", 
+        ProjectionExpression: "#DN, #OE"
+    };
+    return ddb.scan(params).promise();
+}
+
 module.exports = {
     putItem : promisePutDappItem,
     getItem : promiseGetDappItem,
-    deleteItem : promiseDeleteDappItem
+    deleteItem : promiseDeleteDappItem,
+    scanByOwner : promiseScanItemsByOwner
 }
