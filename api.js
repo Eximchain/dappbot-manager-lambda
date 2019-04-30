@@ -1,4 +1,5 @@
 const { dynamoDB, route53, cloudfront, s3, codepipeline } = require('./services');
+const validate = require('./validate');
 
 async function apiCreate(body) {
     return new Promise(function(resolve, reject) {
