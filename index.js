@@ -11,13 +11,14 @@ exports.handler = async (event) => {
         body = JSON.parse(event.body);
     }
     let authorizedUser = event.requestContext.authorizer.claims["cognito:username"];
+    let ownerEmail = event.requestContext.authorizer.claims.email;
 
     let responsePromise = (async function(method) {
         switch(method) {
             case 'create':
                 await validate.create(body, authorizedUser);
                 console.log("Create validation passed");
-                return api.create(body);
+                return api.create(body, ownerEmail);
             case 'read':
                 await validate.read(body);
                 return api.read(body);
