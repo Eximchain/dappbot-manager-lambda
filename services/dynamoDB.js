@@ -1,4 +1,4 @@
-const { retryPromise } = require('../common');
+const { addAwsPromiseRetries } = require('../common');
 const { AWS, tableName } = require('../env');
 const ddb = new AWS.DynamoDB({apiVersion: '2012-08-10'});
 const { dappDNS } = require('./route53');
@@ -32,7 +32,7 @@ function promisePutDappItem(dappName, owner, abi, bucketName, cloudfrontDistroId
         Item: serializeDdbItem(dappName, owner, abi, bucketName, cloudfrontDns, cloudfrontDistroId)
     };
 
-    return retryPromise(() => ddb.putItem(putItemParams).promise(), maxRetries);
+    return addAwsPromiseRetries(() => ddb.putItem(putItemParams).promise(), maxRetries);
 }
 
 function promiseGetDappItem(dappName) {
@@ -42,7 +42,7 @@ function promiseGetDappItem(dappName) {
         Key: serializeDdbKey(dappName)
     };
 
-    return retryPromise(() => ddb.getItem(getItemParams).promise(), maxRetries);
+    return addAwsPromiseRetries(() => ddb.getItem(getItemParams).promise(), maxRetries);
 }
 
 function promiseDeleteDappItem(dappName) {
@@ -52,7 +52,7 @@ function promiseDeleteDappItem(dappName) {
         Key: serializeDdbKey(dappName)
     };
 
-    return retryPromise(() => ddb.deleteItem(deleteItemParams).promise(), maxRetries);
+    return addAwsPromiseRetries(() => ddb.deleteItem(deleteItemParams).promise(), maxRetries);
 }
 
 function promiseGetItemsByOwner(ownerEmail) {
@@ -72,7 +72,7 @@ function promiseGetItemsByOwner(ownerEmail) {
         Select: 'ALL_PROJECTED_ATTRIBUTES'
     };
 
-    return retryPromise(() => ddb.query(getItemParams).promise(), maxRetries);
+    return addAwsPromiseRetries(() => ddb.query(getItemParams).promise(), maxRetries);
 }
 
 module.exports = {

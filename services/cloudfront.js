@@ -1,5 +1,5 @@
 const uuidv4 = require('uuid/v4');
-const { defaultTags, dappNameTag, retryPromise } = require('../common');
+const { defaultTags, dappNameTag, addAwsPromiseRetries } = require('../common');
 const { AWS, certArn } = require('../env');
 const { dappDNS } = require('./route53');
 const cloudfront = new AWS.CloudFront({apiVersion: '2018-11-05'});
@@ -65,7 +65,7 @@ function promiseCreateCloudfrontDistribution(appName, s3Origin) {
             }
         }
     };
-    return retryPromise(() => cloudfront.createDistributionWithTags(params).promise(), maxRetries);
+    return addAwsPromiseRetries(() => cloudfront.createDistributionWithTags(params).promise(), maxRetries);
 }
 
 function promiseGetCloudfrontDistributionConfig(distroId) {
@@ -73,7 +73,7 @@ function promiseGetCloudfrontDistributionConfig(distroId) {
     let params = {
         Id: distroId
     }
-    return retryPromise(() => cloudfront.getDistributionConfig(params).promise(), maxRetries);
+    return addAwsPromiseRetries(() => cloudfront.getDistributionConfig(params).promise(), maxRetries);
 }
 
 function promiseDisableCloudfrontDistribution(distroId) {
@@ -88,7 +88,7 @@ function promiseDisableCloudfrontDistribution(distroId) {
             IfMatch: result.ETag,
             DistributionConfig: config
         };
-        return retryPromise(() => cloudfront.updateDistribution(params).promise(), maxUpdateRetries);
+        return addAwsPromiseRetries(() => cloudfront.updateDistribution(params).promise(), maxUpdateRetries);
     })
     .catch(function(err) {
         console.log("Error", err);
@@ -101,7 +101,7 @@ function promiseDeleteCloudfrontDistribution(distroId) {
     let params = {
         Id: distroId
     };
-    return retryPromise(() => cloudfront.deleteDistribution(params).promise(), maxRetries);
+    return addAwsPromiseRetries(() => cloudfront.deleteDistribution(params).promise(), maxRetries);
 }
 
 module.exports = {

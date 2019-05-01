@@ -1,6 +1,6 @@
 const uuidv4 = require('uuid/v4');
 const { AWS, awsRegion, dappseedBucket } = require('../env');
-const { defaultTags, dappNameTag, retryPromise } = require('../common');
+const { defaultTags, dappNameTag, addAwsPromiseRetries } = require('../common');
 const shell = require('shelljs');
 const fs = require('fs');
 const zip = require('node-zip');
@@ -20,7 +20,7 @@ function promiseCreateS3Bucket(bucketName) {
         Bucket: bucketName,
         ACL: 'public-read'
     };
-    return retryPromise(() => s3.createBucket(params).promise(), maxRetries);
+    return addAwsPromiseRetries(() => s3.createBucket(params).promise(), maxRetries);
 }
 
 function promiseDeleteS3Bucket(bucketName) {
@@ -28,7 +28,7 @@ function promiseDeleteS3Bucket(bucketName) {
     let params = {
         Bucket: bucketName
     };
-    return retryPromise(() => s3.deleteBucket(params).promise(), maxRetries);
+    return addAwsPromiseRetries(() => s3.deleteBucket(params).promise(), maxRetries);
 }
 
 function promiseListS3Objects(bucketName) {
@@ -36,7 +36,7 @@ function promiseListS3Objects(bucketName) {
     let params = {
         Bucket: bucketName
     };
-    return retryPromise(() => s3.listObjects(params).promise(), maxRetries);
+    return addAwsPromiseRetries(() => s3.listObjects(params).promise(), maxRetries);
 }
 
 function promiseEmptyS3Bucket(bucketName) {
@@ -50,7 +50,7 @@ function promiseEmptyS3Bucket(bucketName) {
                 Bucket: bucketName,
                 Key: obj.Key
             };
-            return retryPromise(() => s3.deleteObject(params).promise(), maxDeleteRetries)
+            return addAwsPromiseRetries(() => s3.deleteObject(params).promise(), maxDeleteRetries)
         })
         let retPromise = Promise.all(deletePromises);
         console.log("Returning promise", retPromise, "With deletePromises", deletePromises)
@@ -78,7 +78,7 @@ function promiseSetS3BucketPublicReadable(bucketName){
             ]
         })
     };
-    return retryPromise(() => s3.putBucketPolicy(params).promise(), maxRetries);
+    return addAwsPromiseRetries(() => s3.putBucketPolicy(params).promise(), maxRetries);
 }
 
 
@@ -95,7 +95,7 @@ function promiseConfigureS3BucketStaticWebsite(bucketName) {
             }
         }
     };
-    return retryPromise(() => s3.putBucketWebsite(params).promise(), maxRetries);
+    return addAwsPromiseRetries(() => s3.putBucketWebsite(params).promise(), maxRetries);
 }
 
 function promiseGetS3BucketWebsiteConfig(bucketName) {
@@ -103,7 +103,7 @@ function promiseGetS3BucketWebsiteConfig(bucketName) {
     let params = {
         Bucket: bucketName
     };
-    return retryPromise(() => s3.getBucketWebsite(params).promise(), maxRetries);
+    return addAwsPromiseRetries(() => s3.getBucketWebsite(params).promise(), maxRetries);
 }
 
 function promisePutDappseed({ dappName, web3URL, guardianURL, abi, addr }) {
@@ -127,7 +127,7 @@ function promisePutDappseed({ dappName, web3URL, guardianURL, abi, addr }) {
         Key: `${dappName}/dappseed.zip`,
         Body: zipData
     };
-    return retryPromise(() => s3.putObject(params).promise(), maxRetries);
+    return addAwsPromiseRetries(() => s3.putObject(params).promise(), maxRetries);
 }
 
 function promisePutS3Objects(bucketName) {
@@ -139,7 +139,7 @@ function promisePutS3Objects(bucketName) {
         Key: 'index.html',
         Body: sampleHtml
     };
-    return retryPromise(() => s3.putObject(params).promise(), maxRetries);
+    return addAwsPromiseRetries(() => s3.putObject(params).promise(), maxRetries);
 }
 
 function promisePutBucketTags(bucketName, tags) {
@@ -150,7 +150,7 @@ function promisePutBucketTags(bucketName, tags) {
             TagSet: tags
         }
     };
-    return retryPromise(() => s3.putBucketTagging(params).promise(), maxRetries);
+    return addAwsPromiseRetries(() => s3.putBucketTagging(params).promise(), maxRetries);
 }
 
 function promiseCreateS3BucketWithTags(bucketName, dappName) {

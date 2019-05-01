@@ -30,12 +30,12 @@ function rejectDelay(reason) {
 Retries a promise returned by promiseGenerator up to maxRetries times as long as the error is retryable
 Based on https://stackoverflow.com/questions/38213668/promise-retry-design-patterns
 */
-function retryPromise(promiseGenerator, maxRetries) {
+function addAwsPromiseRetries(promiseGenerator, maxRetries) {
     // Ensure we call promiseGenerator on the first iteration
     let p = Promise.reject({retryable: true});
 
     /*
-    Run retry and wait loop up to maxRetries iterations until promiseGenerator returns a promise that resolves
+    Appends maxRetries number of retry and delay promises to an AWS promise, returning once a retry promise resolves.
 
     1. As long as promiseGenerator() rejects with a retryable error, we retry and then delay before the next loop iteration
     2. If promiseGenerator() resolves, the rest of the loop will finish without triggering any further catch functions
@@ -50,5 +50,5 @@ function retryPromise(promiseGenerator, maxRetries) {
 }
 
 module.exports = { 
-    defaultTags, dappNameTag, retryPromise
+    defaultTags, dappNameTag, addAwsPromiseRetries
 };

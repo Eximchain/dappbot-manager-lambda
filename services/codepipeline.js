@@ -1,4 +1,4 @@
-const { retryPromise } = require('../common');
+const { addAwsPromiseRetries } = require('../common');
 const { AWS, codebuildId, pipelineRoleArn, dnsRoot, artifactBucket, dappseedBucket } = require('../env');
 
 const codepipeline = new AWS.CodePipeline();
@@ -103,7 +103,7 @@ function pipelineParams(dappName, destBucket) {
 function promiseCreatePipeline(dappName, destBucket) {
     let maxRetries = 5;
     let params = pipelineParams(dappName, destBucket);
-    return retryPromise(() => codepipeline.createPipeline(params).promise(), maxRetries);
+    return addAwsPromiseRetries(() => codepipeline.createPipeline(params).promise(), maxRetries);
 }
 
 function promiseRunPipeline(dappName) {
@@ -111,7 +111,7 @@ function promiseRunPipeline(dappName) {
     let params = {
         name: pipelineName(dappName)
     };
-    return retryPromise(() => codepipeline.startPipelineExecution(params).promise(), maxRetries);
+    return addAwsPromiseRetries(() => codepipeline.startPipelineExecution(params).promise(), maxRetries);
 }
 
 function promiseDeletePipeline(dappName) {
@@ -119,7 +119,7 @@ function promiseDeletePipeline(dappName) {
     let params = {
         name: pipelineName(dappName)
     };
-    return retryPromise(() => codepipeline.deletePipeline(params).promise(), maxRetries);
+    return addAwsPromiseRetries(() => codepipeline.deletePipeline(params).promise(), maxRetries);
 }
 
 module.exports = {
