@@ -43,10 +43,10 @@ async function validateLimitsCreate(cognitoUsername, ownerEmail) {
     })
 }
 
-async function validateCreate(body, cognitoUsername) {
+async function validateCreate(body, cognitoUsername, ownerEmail) {
     validateBodyCreate(body);
     try {
-        return await validateLimitsCreate(cognitoUsername, body.OwnerEmail);
+        return await validateLimitsCreate(cognitoUsername, ownerEmail);
     } catch (err) {
         throw err;
     }

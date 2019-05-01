@@ -16,7 +16,7 @@ exports.handler = async (event) => {
     let responsePromise = (async function(method) {
         switch(method) {
             case 'create':
-                await validate.create(body, authorizedUser);
+                await validate.create(body, authorizedUser, ownerEmail);
                 console.log("Create validation passed");
                 return api.create(body, ownerEmail);
             case 'read':
