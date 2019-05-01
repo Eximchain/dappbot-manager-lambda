@@ -1,5 +1,5 @@
 const uuidv4 = require('uuid/v4');
-const { defaultTags, dappNameTag } = require('../common');
+const { defaultTags, dappNameTag, addAwsPromiseRetries } = require('../common');
 const { AWS, certArn } = require('../env');
 const { dappDNS } = require('./route53');
 const cloudfront = new AWS.CloudFront({apiVersion: '2018-11-05'});
@@ -9,6 +9,7 @@ function promiseCreateCloudfrontDistribution(appName, s3Origin) {
     // TODO: Verify that we want these args
     // TODO: Set up SSL
     
+    let maxRetries = 5;
     let extraTags = [dappNameTag(appName)];
 
     let params = {
@@ -64,17 +65,19 @@ function promiseCreateCloudfrontDistribution(appName, s3Origin) {
             }
         }
     };
-    return cloudfront.createDistributionWithTags(params).promise();
+    return addAwsPromiseRetries(() => cloudfront.createDistributionWithTags(params).promise(), maxRetries);
 }
 
 function promiseGetCloudfrontDistributionConfig(distroId) {
+    let maxRetries = 5;
     let params = {
         Id: distroId
     }
-    return cloudfront.getDistributionConfig(params).promise();
+    return addAwsPromiseRetries(() => cloudfront.getDistributionConfig(params).promise(), maxRetries);
 }
 
 function promiseDisableCloudfrontDistribution(distroId) {
+    let maxUpdateRetries = 5;
     return promiseGetCloudfrontDistributionConfig(distroId).then(function(result) {
         console.log("Get Cloudfront Distro Config Success", result);
         let config = result.DistributionConfig;
@@ -85,7 +88,7 @@ function promiseDisableCloudfrontDistribution(distroId) {
             IfMatch: result.ETag,
             DistributionConfig: config
         };
-        return cloudfront.updateDistribution(params).promise();
+        return addAwsPromiseRetries(() => cloudfront.updateDistribution(params).promise(), maxUpdateRetries);
     })
     .catch(function(err) {
         console.log("Error", err);
@@ -94,10 +97,11 @@ function promiseDisableCloudfrontDistribution(distroId) {
 }
 
 function promiseDeleteCloudfrontDistribution(distroId) {
+    let maxRetries = 5;
     let params = {
         Id: distroId
     };
-    return cloudfront.deleteDistribution(params).promise();
+    return addAwsPromiseRetries(() => cloudfront.deleteDistribution(params).promise(), maxRetries);
 }
 
 module.exports = {
