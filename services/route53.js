@@ -1,7 +1,9 @@
+const { retryPromise } = require('../common');
 const { AWS, r53HostedZoneId, dnsRoot } = require('../env');
 const route53 = new AWS.Route53({apiVersion: '2013-04-01'});
 
 function promiseCreateDnsRecord(dappName, cloudfrontDns) {
+    let maxRetries = 5;
     // TODO: Sanitize for URL
     let name = dnsNameFromDappName(dappName);
     let params = {
@@ -21,10 +23,11 @@ function promiseCreateDnsRecord(dappName, cloudfrontDns) {
             }]
         }
     }
-    return route53.changeResourceRecordSets(params).promise();
+    return retryPromise(() => route53.changeResourceRecordSets(params).promise(), maxRetries);
 }
 
 function promiseDeleteDnsRecord(dappName, cloudfrontDns) {
+    let maxRetries = 5;
     // TODO: Sanitize for URL
     let name = dnsNameFromDappName(dappName);
     let params = {
@@ -44,7 +47,7 @@ function promiseDeleteDnsRecord(dappName, cloudfrontDns) {
             }]
         }
     }
-    return route53.changeResourceRecordSets(params).promise();
+    return retryPromise(() => route53.changeResourceRecordSets(params).promise(), maxRetries);
 }
 
 function dnsNameFromDappName(dappName) {
