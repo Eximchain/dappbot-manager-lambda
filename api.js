@@ -39,7 +39,7 @@ async function apiCreate(body, owner) {
             throw err;
         })
         .then(function(result){
-            console.log("Configure Bucket as Static Site success")
+            console.log("Configure Bucket as Static Site success", result)
             return s3.putDappseed({
                 dappName, web3URL, guardianURL, abi, addr
             });
