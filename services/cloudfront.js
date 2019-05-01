@@ -1,16 +1,16 @@
 const uuidv4 = require('uuid/v4');
-const { defaultTags, dappNameTag, addAwsPromiseRetries } = require('../common');
+const { defaultTags, dappNameTag, dappOwnerTag, addAwsPromiseRetries } = require('../common');
 const { AWS, certArn } = require('../env');
 const { dappDNS } = require('./route53');
 const cloudfront = new AWS.CloudFront({apiVersion: '2018-11-05'});
 
-function promiseCreateCloudfrontDistribution(appName, s3Origin) {
+function promiseCreateCloudfrontDistribution(appName, dappOwner, s3Origin) {
     // TODO: Origin Access Identity
     // TODO: Verify that we want these args
     // TODO: Set up SSL
     
     let maxRetries = 5;
-    let extraTags = [dappNameTag(appName)];
+    let extraTags = [dappNameTag(appName), dappOwnerTag(dappOwner)];
 
     let params = {
         DistributionConfigWithTags: {

@@ -1,6 +1,6 @@
 const uuidv4 = require('uuid/v4');
 const { AWS, awsRegion, dappseedBucket } = require('../env');
-const { defaultTags, dappNameTag, addAwsPromiseRetries } = require('../common');
+const { defaultTags, dappNameTag, dappOwnerTag, addAwsPromiseRetries } = require('../common');
 const shell = require('shelljs');
 const fs = require('fs');
 const zip = require('node-zip');
@@ -153,11 +153,11 @@ function promisePutBucketTags(bucketName, tags) {
     return addAwsPromiseRetries(() => s3.putBucketTagging(params).promise(), maxRetries);
 }
 
-function promiseCreateS3BucketWithTags(bucketName, dappName) {
+function promiseCreateS3BucketWithTags(bucketName, dappName, dappOwner) {
     console.log("Creating S3 bucket ", bucketName)
     return promiseCreateS3Bucket(bucketName).then(function(result) {
         console.log("Create S3 Bucket Success", result);
-        let extraTags = [dappNameTag(dappName)];
+        let extraTags = [dappNameTag(dappName), dappOwnerTag(dappOwner)];
         let bucketTags = defaultTags.concat(extraTags);
         console.log("Applying Default Bucket Tags", defaultTags)
         return promisePutBucketTags(bucketName, bucketTags);

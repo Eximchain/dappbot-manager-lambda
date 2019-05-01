@@ -13,7 +13,7 @@ async function apiCreate(body, owner) {
         let cloudfrontDistroId = null;
         let cloudfrontDns = null;
 
-        s3.createBucketWithTags(bucketName, dappName)
+        s3.createBucketWithTags(bucketName, dappName, owner)
         .catch(function(err) {
             if (err.handled) {
                 throw err;
@@ -67,7 +67,7 @@ async function apiCreate(body, owner) {
         .then(function(result) {
             console.log("Create CodePipeline success", result);
             s3Dns = s3.bucketEndpoint(bucketName);
-            return cloudfront.createDistro(dappName, s3Dns);
+            return cloudfront.createDistro(dappName, owner, s3Dns);
         })
         .catch(function(err) {
             if (err.handled) {

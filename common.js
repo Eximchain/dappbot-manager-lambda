@@ -16,6 +16,13 @@ function dappNameTag(dappName) {
     }
 }
 
+function dappOwnerTag(dappOwner) {
+    return {
+        Key: "DappOwner",
+        Value: dappOwner
+    }
+}
+
 /*
 Returns a Promise that rejects with reason after msDelay milliseconds
 */
@@ -50,5 +57,5 @@ function addAwsPromiseRetries(promiseGenerator, maxRetries) {
 }
 
 module.exports = { 
-    defaultTags, dappNameTag, addAwsPromiseRetries
+    defaultTags, dappNameTag, dappOwnerTag, addAwsPromiseRetries
 };
