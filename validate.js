@@ -13,7 +13,6 @@ function validateBodyRead(body) {
 
 function validateBodyCreate(body) {
     assert(body.hasOwnProperty('DappName'), "create: required argument 'DappName' not found");
-    assert(body.hasOwnProperty('OwnerEmail'), "create: required argument 'OwnerEmail' not found");
     assert(body.hasOwnProperty('Abi'), "create: required argument 'Abi' not found");
     assert(body.hasOwnProperty('ContractAddr'), "create: required argument 'ContractAddr' not found");
     assert(body.hasOwnProperty('Web3URL'), "create: required argument 'Web3URL' not found");
