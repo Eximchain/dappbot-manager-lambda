@@ -102,9 +102,9 @@ async function apiDelete(body){
         bucketName = dbItem.Item.S3BucketName.S;
         cloudfrontDistroId = dbItem.Item.CloudfrontDistributionId.S;
         cloudfrontDns = dbItem.Item.CloudfrontDnsName.S;
-        await callAndLog('Disable Cloudfront distro', cloudfront.disableDistro(cloudfrontDistroId));
         
         try {
+            await callAndLog('Disable Cloudfront distro', cloudfront.disableDistro(cloudfrontDistroId));
             await callAndLog('Delete Cloudfront distro', Promise.resolve("TODO: Cloudfront's delete is turned off until we have a working strategy."));
         } catch (err) {
             switch(err.code) {
