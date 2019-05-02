@@ -96,6 +96,38 @@ function promiseDisableCloudfrontDistribution(distroId) {
     });
 }
 
+function promiseUpdateCloudfrontDistributionOrigin(distroId, s3Origin) {
+    let maxUpdateRetries = 5;
+    return promiseGetCloudfrontDistributionConfig(distroId).then(function(result) {
+        console.log("Get Cloudfront Distro Config Success", result);
+        let config = result.DistributionConfig;
+        console.log("Origin", config.Origins.Items[0]);
+        let originItem = {
+            Id: 's3-origin',
+            DomainName: s3Origin,
+            OriginPath: '',
+            S3OriginConfig: {
+                OriginAccessIdentity: ''
+            },
+            CustomHeaders: {
+                Quantity: 0
+            }
+        };
+        config.Origins.Items[0] = originItem;
+
+        let params = {
+            Id: distroId,
+            IfMatch: result.ETag,
+            DistributionConfig: config
+        };
+        return addAwsPromiseRetries(() => cloudfront.updateDistribution(params).promise(), maxUpdateRetries);
+    })
+    .catch(function(err) {
+        console.log("Error", err);
+        return Promise.reject(err);
+    });
+}
+
 function promiseDeleteCloudfrontDistribution(distroId) {
     let maxRetries = 5;
     let params = {
@@ -104,9 +136,27 @@ function promiseDeleteCloudfrontDistribution(distroId) {
     return addAwsPromiseRetries(() => cloudfront.deleteDistribution(params).promise(), maxRetries);
 }
 
+function promiseListCloudfrontDistributions() {
+    // TODO: Handle pagination
+    let maxRetries = 5;
+    let params = {};
+    return addAwsPromiseRetries(() => cloudfront.listDistributions(params).promise(), maxRetries);
+}
+
+function promiseListTagsForCloudfrontDistribution(distroArn) {
+    let maxRetries = 5;
+    let params = {
+        Resource: distroArn
+    };
+    return addAwsPromiseRetries(() => cloudfront.listTagsForResource(params).promise(), maxRetries);
+}
+
 module.exports = {
     createDistro : promiseCreateCloudfrontDistribution,
     getDistroConfig : promiseGetCloudfrontDistributionConfig,
     disableDistro : promiseDisableCloudfrontDistribution,
-    deleteDistro : promiseDeleteCloudfrontDistribution
+    deleteDistro : promiseDeleteCloudfrontDistribution,
+    listDistros : promiseListCloudfrontDistributions,
+    listTags : promiseListTagsForCloudfrontDistribution,
+    updateOrigin : promiseUpdateCloudfrontDistributionOrigin
 };

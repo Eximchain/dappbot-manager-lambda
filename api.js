@@ -1,5 +1,6 @@
 const { dynamoDB, route53, cloudfront, s3, codepipeline } = require('./services');
 const validate = require('./validate');
+const assert = require('assert');
 
 const logErr = (stage, err) => { console.log(`Error on ${stage}: `, err) }
 const logNonFatalErr = (stage, reason) => { console.log(`Ignoring non-fatal error during ${stage}: ${reason}`) }
@@ -50,10 +51,54 @@ async function apiCreate(body, owner) {
         await callAndLog('Put DappSeed', s3.putDappseed({ dappName, web3URL, guardianURL, abi, addr }));
         await callAndLog('Create CodePipeline', codepipeline.create(dappName, bucketName));
 
-        const newDistro = await callAndLog('Create Cloudfront Distro', cloudfront.createDistro(dappName, owner, s3Dns));
+        let cloudfrontDistroId = null;
+        let cloudfrontDns = null;
+        try {
+            const newDistro = await callAndLog('Create Cloudfront Distro', cloudfront.createDistro(dappName, owner, s3Dns));
 
-        let cloudfrontDistroId = newDistro.Distribution.Id;
-        let cloudfrontDns = newDistro.Distribution.DomainName;
+            cloudfrontDistroId = newDistro.Distribution.Id;
+            cloudfrontDns = newDistro.Distribution.DomainName;
+        } catch (err) {
+            switch(err.code) {
+                case 'CNAMEAlreadyExists':
+                    try {
+                        let conflictingAlias = route53.dappDNS(dappName);
+                        let existingDistros = await callAndLog('List Cloudfront Distro', cloudfront.listDistros());
+
+                        let existingDistrosMatchingAlias = existingDistros.Items.filter(item => item.Aliases.Quantity === 1)
+                                                                                .filter(item => item.Aliases.Items[0] === conflictingAlias);
+                        assert(existingDistrosMatchingAlias.length == 1, `Found ${existingDistrosMatchingAlias.length} distribution with matching CNAME instead of exactly 1. This must be a bug!`);
+                        let conflictingDistro = existingDistrosMatchingAlias[0];
+                        console.log("Cloudfront Distribution with conflicting CNAME", conflictingDistro);
+                        let conflictingDistroArn = conflictingDistro.ARN;
+
+                        let conflictingDistroTagResponse = await callAndLog('List Cloudfront Tags', cloudfront.listTags(conflictingDistroArn));
+
+                        let conflictingDistroTags = conflictingDistroTagResponse.Tags.Items;
+                        let dappOwnerTagList = conflictingDistroTags.filter(tag => tag.Key === 'DappOwner');
+                        assert(existingDistrosMatchingAlias.length == 1, `Found ${existingDistrosMatchingAlias.length} tags with Key 'DappOwner' instead of exactly 1. This must be a bug!`);
+                        let existingDappOwner = dappOwnerTagList[0].Value;
+                        
+                        if (owner !== existingDappOwner) {
+                            // Don't let the caller take someone else's distribution
+                            throw err;
+                        }
+
+                        // Required vars to exit the block without errors
+                        cloudfrontDistroId = conflictingDistro.Id;
+                        cloudfrontDns = conflictingDistro.DomainName;
+
+                        await callAndLog('Update Cloudfront Origin', cloudfront.updateOrigin(cloudfrontDistroId, s3Dns));                      
+                    } catch (err) {
+                        logErr(stage, err);
+                        throw err;
+                    }
+                    break;
+                default:
+                    logErr(stage, err);
+                    throw err;
+            }
+        }
 
         await callAndLog('Create Route 53 record', route53.createRecord(dappName, cloudfrontDns));
         await callAndLog('Create DynamoDB item', dynamoDB.putItem(dappName, owner, abi, bucketName, cloudfrontDistroId, cloudfrontDns));
