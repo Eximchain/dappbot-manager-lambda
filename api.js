@@ -5,14 +5,13 @@ const logErr = (stage, err) => { console.log(`Error on ${stage}: `, err) }
 const logNonFatalErr = (stage, reason) => { console.log(`Ignoring non-fatal error during ${stage}: ${reason}`) }
 const logSuccess = (stage, res) => { console.log(`Successfully completed ${stage}; result: `, res) }
 
-function response(body, opts={isCreate : false}){
-    // HTTP 201 means a successful response which has resulted in resources being created
-    let responseCode = opts.isCreate ? 201 : 200;
+function response(body) {
+    let responseCode = 200;
     // TODO: Replace with something useful or remove
     let responseHeaders = {"x-custom-header" : "my custom header value"};
     return {
         statusCode: responseCode,
-        header: responseHeaders,
+        headers: responseHeaders,
         body: JSON.stringify(body)
     }
 }
@@ -25,7 +24,7 @@ function callFactory(startStage) {
     const callAndLog = async (newStage, promise) => {
         stage = newStage;
         let res = await promise;
-        logSuccess(stage, res);
+        logSuccess(newStage, res);
         return res;
     }
     return [stage, callAndLog];
@@ -65,7 +64,7 @@ async function apiCreate(body, owner) {
             method: "create",
             message: "Dapp generation successfully initialized!  Check your URL in about 5 minutes."
         };
-        return response(responseBody, {isCreate:true})
+        return response(responseBody)
     } catch (err) {
         logErr(stage, err);
         return response(err);
@@ -91,7 +90,7 @@ async function apiRead(body) {
 }
 
 
-async function apiDelete(body){
+async function apiDelete(body) {
     let dappName = validate.cleanName(body.DappName);
 
     let [stage, callAndLog] = callFactory('Pre-Delete');
