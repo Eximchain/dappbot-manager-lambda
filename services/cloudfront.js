@@ -1,3 +1,4 @@
+const assert = require('assert');
 const uuidv4 = require('uuid/v4');
 const { defaultTags, dappNameTag, dappOwnerTag, addAwsPromiseRetries } = require('../common');
 const { AWS, certArn } = require('../env');
@@ -137,10 +138,9 @@ function promiseDeleteCloudfrontDistribution(distroId) {
     return addAwsPromiseRetries(() => cloudfront.deleteDistribution(params).promise(), maxRetries);
 }
 
-function promiseListCloudfrontDistributions() {
-    // TODO: Handle pagination
+function promiseListCloudfrontDistributions(marker) {
     let maxRetries = 5;
-    let params = {};
+    let params = marker ? { Marker: marker } : {};
     return addAwsPromiseRetries(() => cloudfront.listDistributions(params).promise(), maxRetries);
 }
 
@@ -152,12 +152,42 @@ function promiseListTagsForCloudfrontDistribution(distroArn) {
     return addAwsPromiseRetries(() => cloudfront.listTagsForResource(params).promise(), maxRetries);
 }
 
+async function getConflictingDistribution(dappName) {
+    let conflictingAlias = dappDNS(dappName);
+    let marker = null;
+    while (true) {
+        let existingDistroPage = await promiseListCloudfrontDistributions(marker);
+        let existingDistrosMatchingAlias = existingDistroPage.Items.filter(item => item.Aliases.Quantity === 1)
+                                                                   .filter(item => item.Aliases.Items[0] === conflictingAlias);
+        assert(existingDistrosMatchingAlias.length <= 1, `Found ${existingDistrosMatchingAlias.length} distribution with matching CNAME instead of at most 1. This must be a bug!`);
+
+        if (existingDistrosMatchingAlias.length == 1) {
+            return existingDistrosMatchingAlias[0];
+        }
+
+        if (existingDistroPage.IsTruncated) {
+            marker = existingDistroPage.Marker;
+        } else {
+            return null;
+        }
+    }
+}
+
+async function getDistributionOwner(distroArn) {
+    let listTagsResponse = await promiseListTagsForCloudfrontDistribution(distroArn);
+    let distroTags = listTagsResponse.Tags.Items;
+    let dappOwnerTagList = distroTags.filter(tag => tag.Key === 'DappOwner');
+    assert(dappOwnerTagList.length == 1, `Found ${dappOwnerTagList.length} tags with Key 'DappOwner' instead of exactly 1. This must be a bug!`);
+    return dappOwnerTagList[0].Value;
+}
+
 module.exports = {
     createDistro : promiseCreateCloudfrontDistribution,
     getDistroConfig : promiseGetCloudfrontDistributionConfig,
     disableDistro : promiseDisableCloudfrontDistribution,
     deleteDistro : promiseDeleteCloudfrontDistribution,
-    listDistros : promiseListCloudfrontDistributions,
     listTags : promiseListTagsForCloudfrontDistribution,
-    updateOriginAndEnable : promiseUpdateCloudfrontDistributionOriginAndEnable
+    updateOriginAndEnable : promiseUpdateCloudfrontDistributionOriginAndEnable,
+    getConflictingDistro : getConflictingDistribution,
+    getDistroOwner : getDistributionOwner
 };

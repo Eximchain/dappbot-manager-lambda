@@ -62,22 +62,15 @@ async function apiCreate(body, owner) {
             switch(err.code) {
                 case 'CNAMEAlreadyExists':
                     try {
-                        let conflictingAlias = route53.dappDNS(dappName);
-                        let existingDistros = await callAndLog('List Cloudfront Distro', cloudfront.listDistros());
+                        let conflictingDistro = await callAndLog('Get Conflicting Cloudfront Distro', cloudfront.getConflictingDistro(dappName));
 
-                        let existingDistrosMatchingAlias = existingDistros.Items.filter(item => item.Aliases.Quantity === 1)
-                                                                                .filter(item => item.Aliases.Items[0] === conflictingAlias);
-                        assert(existingDistrosMatchingAlias.length == 1, `Found ${existingDistrosMatchingAlias.length} distribution with matching CNAME instead of exactly 1. This must be a bug!`);
-                        let conflictingDistro = existingDistrosMatchingAlias[0];
-                        console.log("Cloudfront Distribution with conflicting CNAME", conflictingDistro);
+                        if (!conflictingDistro) {
+                            console.log("UNEXPECTED ERROR: Conflicting distro not found despite 'CNAMEAlreadyExists' error");
+                            throw err;
+                        }
+
                         let conflictingDistroArn = conflictingDistro.ARN;
-
-                        let conflictingDistroTagResponse = await callAndLog('List Cloudfront Tags', cloudfront.listTags(conflictingDistroArn));
-
-                        let conflictingDistroTags = conflictingDistroTagResponse.Tags.Items;
-                        let dappOwnerTagList = conflictingDistroTags.filter(tag => tag.Key === 'DappOwner');
-                        assert(existingDistrosMatchingAlias.length == 1, `Found ${existingDistrosMatchingAlias.length} tags with Key 'DappOwner' instead of exactly 1. This must be a bug!`);
-                        let existingDappOwner = dappOwnerTagList[0].Value;
+                        let existingDappOwner = await callAndLog('Get Conflicting Cloudfront Distro Owner', cloudfront.getDistroOwner(conflictingDistroArn));
                         
                         if (owner !== existingDappOwner) {
                             // Don't let the caller take someone else's distribution
