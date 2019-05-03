@@ -1,7 +1,8 @@
 const { addAwsPromiseRetries } = require('../common');
 const { AWS, tableName } = require('../env');
-const ddb = new AWS.DynamoDB({apiVersion: '2012-08-10'});
 const { dappDNS } = require('./route53');
+const { pipelineName } = require('./codepipeline');
+const ddb = new AWS.DynamoDB({apiVersion: '2012-08-10'});
 
 function serializeDdbKey(dappName) {
     let keyItem = {
@@ -20,6 +21,7 @@ function serializeDdbItem(dappName, ownerEmail, abi, bucketName, cloudfrontDns, 
         'S3BucketName' : {S: bucketName},
         'CloudfrontDistributionId' : {S: cloudfrontDistroId},
         'CloudfrontDnsName' : {S: cloudfrontDns},
+        'PipelineName' : {S: pipelineName(dappName)},
         'DnsName' : {S: dappDNS(dappName)}
     };
     return item;

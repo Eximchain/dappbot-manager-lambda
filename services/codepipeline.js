@@ -126,5 +126,5 @@ module.exports = {
     create: promiseCreatePipeline,
     run: promiseRunPipeline,
     delete: promiseDeletePipeline,
-    name: pipelineName
+    pipelineName: pipelineName
 }
