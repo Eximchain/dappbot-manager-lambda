@@ -96,7 +96,7 @@ function promiseDisableCloudfrontDistribution(distroId) {
     });
 }
 
-function promiseUpdateCloudfrontDistributionOrigin(distroId, s3Origin) {
+function promiseUpdateCloudfrontDistributionOriginAndEnable(distroId, s3Origin) {
     let maxUpdateRetries = 5;
     return promiseGetCloudfrontDistributionConfig(distroId).then(function(result) {
         console.log("Get Cloudfront Distro Config Success", result);
@@ -114,6 +114,7 @@ function promiseUpdateCloudfrontDistributionOrigin(distroId, s3Origin) {
             }
         };
         config.Origins.Items[0] = originItem;
+        config.Enabled = true;
 
         let params = {
             Id: distroId,
@@ -158,5 +159,5 @@ module.exports = {
     deleteDistro : promiseDeleteCloudfrontDistribution,
     listDistros : promiseListCloudfrontDistributions,
     listTags : promiseListTagsForCloudfrontDistribution,
-    updateOrigin : promiseUpdateCloudfrontDistributionOrigin
+    updateOriginAndEnable : promiseUpdateCloudfrontDistributionOriginAndEnable
 };

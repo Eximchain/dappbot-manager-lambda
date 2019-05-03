@@ -88,7 +88,7 @@ async function apiCreate(body, owner) {
                         cloudfrontDistroId = conflictingDistro.Id;
                         cloudfrontDns = conflictingDistro.DomainName;
 
-                        await callAndLog('Update Cloudfront Origin', cloudfront.updateOrigin(cloudfrontDistroId, s3Dns));                      
+                        await callAndLog('Update Cloudfront Origin', cloudfront.updateOriginAndEnable(cloudfrontDistroId, s3Dns));                      
                     } catch (err) {
                         logErr(stage, err);
                         throw err;
