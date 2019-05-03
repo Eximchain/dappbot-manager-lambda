@@ -8,7 +8,6 @@ const cloudfront = new AWS.CloudFront({apiVersion: '2018-11-05'});
 function promiseCreateCloudfrontDistribution(appName, dappOwner, s3Origin) {
     // TODO: Origin Access Identity
     // TODO: Verify that we want these args
-    // TODO: Set up SSL
     
     let maxRetries = 5;
     let extraTags = [dappNameTag(appName), dappOwnerTag(dappOwner)];

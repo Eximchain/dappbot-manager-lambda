@@ -4,7 +4,6 @@ const route53 = new AWS.Route53({apiVersion: '2013-04-01'});
 
 function promiseCreateDnsRecord(dappName, cloudfrontDns) {
     let maxRetries = 5;
-    // TODO: Sanitize for URL
     let name = dnsNameFromDappName(dappName);
     let params = {
         HostedZoneId: r53HostedZoneId,
@@ -28,7 +27,6 @@ function promiseCreateDnsRecord(dappName, cloudfrontDns) {
 
 function promiseDeleteDnsRecord(dappName, cloudfrontDns) {
     let maxRetries = 5;
-    // TODO: Sanitize for URL
     let name = dnsNameFromDappName(dappName);
     let params = {
         HostedZoneId: r53HostedZoneId,
