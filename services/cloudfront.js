@@ -151,6 +151,23 @@ function promiseListTagsForCloudfrontDistribution(distroArn) {
     return addAwsPromiseRetries(() => cloudfront.listTagsForResource(params).promise(), maxRetries);
 }
 
+function promiseCreateCloudfrontInvalidation(distroId, pathPrefix='/') {
+    let maxRetries = 5;
+    let params = {
+        DistributionId: distroId,
+        InvalidationBatch: {
+            CallerReference: uuidv4(),
+            Paths: {
+                Quantity: 1,
+                Items: [
+                    `${pathPrefix}*`
+                ]
+            }
+        }
+    };
+    return addAwsPromiseRetries(() => cloudfront.createInvalidation(params).promise(), maxRetries);
+}
+
 async function getConflictingDistribution(dappName) {
     let conflictingAlias = dappDNS(dappName);
     let marker = null;
@@ -188,5 +205,6 @@ module.exports = {
     listTags : promiseListTagsForCloudfrontDistribution,
     updateOriginAndEnable : promiseUpdateCloudfrontDistributionOriginAndEnable,
     getConflictingDistro : getConflictingDistribution,
-    getDistroOwner : getDistributionOwner
+    getDistroOwner : getDistributionOwner,
+    invalidateDistroPrefix : promiseCreateCloudfrontInvalidation
 };

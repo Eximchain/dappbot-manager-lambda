@@ -137,8 +137,9 @@ async function apiUpdate(body, owner) {
 
     try {
         const dbItem = await callAndLog('Get DynamoDB Item', dynamoDB.getItem(dappName));
-
         let dbOwner = dbItem.Item.OwnerEmail.S;
+        let cloudfrontDistroId = dbItem.Item.CloudfrontDistributionId.S;
+
         assert(owner === dbOwner, "You do not have permission to update the specified Dapp.");
 
         let rawItem = dbItem.Item;
@@ -155,6 +156,8 @@ async function apiUpdate(body, owner) {
 
         await callAndLog('Update DappSeed', s3.putDappseed({ dappName, updatedWeb3URL, updatedGuardianURL, updatedAbi, updatedAddr }));
         await callAndLog('Update DynamoDB item', dynamoDB.putRawItem(rawItem));
+        // TODO: Make this happen after the pipeline build
+        await callAndLog('Invalidate Cloudfront Distro', cloudfront.invalidateDistroPrefix(cloudfrontDistroId));
 
         let responseBody = {
             method: "update",
