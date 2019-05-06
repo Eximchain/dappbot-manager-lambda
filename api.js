@@ -137,9 +137,10 @@ async function apiUpdate(body, owner) {
 
     try {
         const dbItem = await callAndLog('Get DynamoDB Item', dynamoDB.getItem(dappName));
+        assert(dbItem.Item, "Dapp Not Found");
+
         let dbOwner = dbItem.Item.OwnerEmail.S;
         let cloudfrontDistroId = dbItem.Item.CloudfrontDistributionId.S;
-
         assert(owner === dbOwner, "You do not have permission to update the specified Dapp.");
 
         let rawItem = dbItem.Item;
@@ -177,6 +178,7 @@ async function apiDelete(body) {
 
     try {
         const dbItem = await callAndLog('Get Dapp DynamoDb Item', dynamoDB.getItem(dappName));
+        assert(dbItem.Item, "Dapp Not Found");
 
         let bucketName = dbItem.Item.S3BucketName.S;
         let cloudfrontDistroId = dbItem.Item.CloudfrontDistributionId.S;
