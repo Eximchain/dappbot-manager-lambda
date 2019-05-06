@@ -40,6 +40,16 @@ function promisePutDappItem(dappName, owner, abi, bucketName, cloudfrontDistroId
     return addAwsPromiseRetries(() => ddb.putItem(putItemParams).promise(), maxRetries);
 }
 
+function promisePutRawDappItem(item) {
+    let maxRetries = 5;
+    let putItemParams = {
+        TableName: tableName,
+        Item: item
+    };
+
+    return addAwsPromiseRetries(() => ddb.putItem(putItemParams).promise(), maxRetries);
+}
+
 function promiseGetDappItem(dappName) {
     let maxRetries = 5;
     let getItemParams = {
@@ -82,6 +92,7 @@ function promiseGetItemsByOwner(ownerEmail) {
 
 module.exports = {
     putItem : promisePutDappItem,
+    putRawItem : promisePutRawDappItem,
     getItem : promiseGetDappItem,
     deleteItem : promiseDeleteDappItem,
     getByOwner : promiseGetItemsByOwner
