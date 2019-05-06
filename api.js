@@ -72,10 +72,8 @@ async function apiCreate(body, owner) {
                         let conflictingDistroArn = conflictingDistro.ARN;
                         let existingDappOwner = await callAndLog('Get Conflicting Cloudfront Distro Owner', cloudfront.getDistroOwner(conflictingDistroArn));
                         
-                        if (owner !== existingDappOwner) {
-                            // Don't let the caller take someone else's distribution
-                            throw err;
-                        }
+                        // Don't let the caller take someone else's distribution
+                        assert(owner === existingDappOwner, err);
 
                         // Required vars to exit the block without errors
                         cloudfrontDistroId = conflictingDistro.Id;
