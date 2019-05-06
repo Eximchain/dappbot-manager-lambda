@@ -136,6 +136,13 @@ async function apiUpdate(body, owner) {
     let [stage, callAndLog] = callFactory('Pre-Update');
 
     try {
+        if (!abi && !web3URL && !guardianURL && !addr) {
+            let responseBody = {
+                method: "update",
+                message: "No attributes specified to update."
+            };
+            return response(responseBody);
+        }
         const dbItem = await callAndLog('Get DynamoDB Item', dynamoDB.getItem(dappName));
         assert(dbItem.Item, "Dapp Not Found");
 
