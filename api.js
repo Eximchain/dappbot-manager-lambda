@@ -153,11 +153,12 @@ async function apiUpdate(body, owner) {
         rawItem.GuardianURL.S = updatedGuardianURL;
         rawItem.ContractAddr.S = updatedAddr;
 
+        await callAndLog('Update DappSeed', s3.putDappseed({ dappName, updatedWeb3URL, updatedGuardianURL, updatedAbi, updatedAddr }));
         await callAndLog('Update DynamoDB item', dynamoDB.putRawItem(rawItem));
 
         let responseBody = {
             method: "update",
-            message: "Your Dapp was successfully updated."
+            message: "Your Dapp was successfully updated! Allow 5 minutes for rebuild, then check your URL."
         };
         return response(responseBody);
     } catch (err) {
