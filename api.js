@@ -92,7 +92,7 @@ async function apiCreate(body, owner) {
         }
 
         await callAndLog('Create Route 53 record', route53.createRecord(dappName, cloudfrontDns));
-        await callAndLog('Create DynamoDB item', dynamoDB.putItem(dappName, owner, abi, bucketName, cloudfrontDistroId, cloudfrontDns));
+        await callAndLog('Create DynamoDB item', dynamoDB.putItem(dappName, owner, abi, bucketName, cloudfrontDistroId, cloudfrontDns, addr, web3URL, guardianURL));
 
         console.log("Dapp generation successfully initialized!");
 
@@ -125,6 +125,50 @@ async function apiRead(body) {
     }
 }
 
+async function apiUpdate(body, owner) {
+    let dappName = validate.cleanName(body.DappName);
+    // These values may or may not be defined
+    let abi = body.Abi;
+    let web3URL = body.Web3URL;
+    let guardianURL = body.GuardianURL;
+    let addr = body.ContractAddr;
+
+    let [stage, callAndLog] = callFactory('Pre-Update');
+
+    try {
+        const dbItem = await callAndLog('Get DynamoDB Item', dynamoDB.getItem(dappName));
+        let dbOwner = dbItem.Item.OwnerEmail.S;
+        let cloudfrontDistroId = dbItem.Item.CloudfrontDistributionId.S;
+
+        assert(owner === dbOwner, "You do not have permission to update the specified Dapp.");
+
+        let rawItem = dbItem.Item;
+
+        let updatedAbi = abi ? abi : rawItem.Abi.S;
+        let updatedWeb3URL = web3URL ? web3URL : rawItem.Web3URL.S;
+        let updatedGuardianURL = guardianURL ? guardianURL : rawItem.GuardianURL.S;
+        let updatedAddr = addr ? addr : rawItem.ContractAddr.S;
+
+        rawItem.Abi.S = updatedAbi;
+        rawItem.Web3URL.S = updatedWeb3URL;
+        rawItem.GuardianURL.S = updatedGuardianURL;
+        rawItem.ContractAddr.S = updatedAddr;
+
+        await callAndLog('Update DappSeed', s3.putDappseed({ dappName, updatedWeb3URL, updatedGuardianURL, updatedAbi, updatedAddr }));
+        await callAndLog('Update DynamoDB item', dynamoDB.putRawItem(rawItem));
+        // TODO: Make this happen after the pipeline build
+        await callAndLog('Invalidate Cloudfront Distro', cloudfront.invalidateDistroPrefix(cloudfrontDistroId));
+
+        let responseBody = {
+            method: "update",
+            message: "Your Dapp was successfully updated! Allow 5 minutes for rebuild, then check your URL."
+        };
+        return response(responseBody);
+    } catch (err) {
+        logErr(stage, err);
+        return response(err); 
+    }
+}
 
 async function apiDelete(body) {
     let dappName = validate.cleanName(body.DappName);
@@ -187,5 +231,6 @@ async function apiDelete(body) {
 module.exports = {
   create : apiCreate,
   read : apiRead,
+  update : apiUpdate,
   delete : apiDelete
 }

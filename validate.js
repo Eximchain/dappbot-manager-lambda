@@ -11,6 +11,10 @@ function validateBodyRead(body) {
     assert(body.hasOwnProperty('DappName'), "read: required argument 'DappName' not found");
 }
 
+function validateBodyUpdate(body) {
+    assert(body.hasOwnProperty('DappName'), "update: required argument 'DappName' not found");
+}
+
 function validateBodyCreate(body) {
     assert(body.hasOwnProperty('DappName'), "create: required argument 'DappName' not found");
     assert(body.hasOwnProperty('Abi'), "create: required argument 'Abi' not found");
@@ -52,13 +56,18 @@ async function validateCreate(body, cognitoUsername, ownerEmail) {
     }
 }
 
-async function validateDelete(body) {
-    validateBodyDelete(body);
+async function validateRead(body) {
+    validateBodyRead(body);
     return true;
 }
 
-async function validateRead(body) {
-    validateBodyRead(body);
+async function validateUpdate(body) {
+    validateBodyUpdate(body);
+    return true;
+}
+
+async function validateDelete(body) {
+    validateBodyDelete(body);
     return true;
 }
 
@@ -70,5 +79,6 @@ module.exports = {
     delete : validateDelete,
     create : validateCreate,
     read : validateRead,
+    update : validateUpdate,
     cleanName: cleanDappName
 }
