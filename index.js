@@ -28,6 +28,8 @@ exports.handler = async (event) => {
             case 'delete':
                 await validate.delete(body);
                 return api.delete(body);
+            case 'list':
+                return api.list(ownerEmail);
             default:
                 throw new Error("Unrecognized method name ".concat(method));
         }

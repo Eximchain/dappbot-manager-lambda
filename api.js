@@ -237,9 +237,27 @@ async function apiDelete(body) {
 
 }
 
+async function apiList(owner) {
+    let [stage, callAndLog] = callFactory('Pre-List');
+
+    try {
+        let ddbResponse = await callAndLog('List DynamoDB Items', dynamoDB.getByOwner(owner));
+        let responseBody = {
+            method: "list",
+            count: ddbResponse.Count,
+            items: ddbResponse.Items
+        };
+    return response(responseBody);
+    } catch (err) {
+        logErr(stage, err);
+        return response(err, {isErr:true});
+    }
+}
+
 module.exports = {
   create : apiCreate,
   read : apiRead,
   update : apiUpdate,
-  delete : apiDelete
+  delete : apiDelete,
+  list : apiList
 }
