@@ -22,6 +22,9 @@ exports.handler = async (event) => {
             case 'read':
                 await validate.read(body);
                 return api.read(body);
+            case 'update':
+                await validate.update(body);
+                return api.update(body);
             case 'delete':
                 await validate.delete(body);
                 return api.delete(body);

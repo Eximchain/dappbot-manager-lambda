@@ -125,6 +125,13 @@ async function apiRead(body) {
     }
 }
 
+async function apiUpdate(body) {
+    let responseBody = {
+        method: "update",
+        message: "Your Dapp was successfully updated."
+    };
+    return response(responseBody);
+}
 
 async function apiDelete(body) {
     let dappName = validate.cleanName(body.DappName);
@@ -187,5 +194,6 @@ async function apiDelete(body) {
 module.exports = {
   create : apiCreate,
   read : apiRead,
+  update : apiUpdate,
   delete : apiDelete
 }
