@@ -92,7 +92,7 @@ async function apiCreate(body, owner) {
         }
 
         await callAndLog('Create Route 53 record', route53.createRecord(dappName, cloudfrontDns));
-        await callAndLog('Create DynamoDB item', dynamoDB.putItem(dappName, owner, abi, bucketName, cloudfrontDistroId, cloudfrontDns));
+        await callAndLog('Create DynamoDB item', dynamoDB.putItem(dappName, owner, abi, bucketName, cloudfrontDistroId, cloudfrontDns, addr, web3URL, guardianURL));
 
         console.log("Dapp generation successfully initialized!");
 

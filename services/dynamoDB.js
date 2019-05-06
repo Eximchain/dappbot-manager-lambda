@@ -11,13 +11,16 @@ function serializeDdbKey(dappName) {
     return keyItem;
 }
 
-function serializeDdbItem(dappName, ownerEmail, abi, bucketName, cloudfrontDns, cloudfrontDistroId) {
+function serializeDdbItem(dappName, ownerEmail, abi, bucketName, cloudfrontDns, cloudfrontDistroId, contractAddr, web3Url, guardianUrl) {
     let creationTime = new Date().toISOString();
     let item = {
         'DappName' : {S: dappName},
         'OwnerEmail' : {S: ownerEmail},
         'CreationTime' : {S: creationTime},
         'Abi' : {S: abi},
+        'ContractAddr' : {S: contractAddr},
+        'Web3URL' : {S: web3Url},
+        'GuardianURL' : {S: guardianUrl},
         'S3BucketName' : {S: bucketName},
         'CloudfrontDistributionId' : {S: cloudfrontDistroId},
         'CloudfrontDnsName' : {S: cloudfrontDns},
@@ -27,11 +30,11 @@ function serializeDdbItem(dappName, ownerEmail, abi, bucketName, cloudfrontDns, 
     return item;
 }
 
-function promisePutDappItem(dappName, owner, abi, bucketName, cloudfrontDistroId, cloudfrontDns) {
+function promisePutDappItem(dappName, owner, abi, bucketName, cloudfrontDistroId, cloudfrontDns, contractAddr, web3Url, guardianUrl) {
     let maxRetries = 5;
     let putItemParams = {
         TableName: tableName,
-        Item: serializeDdbItem(dappName, owner, abi, bucketName, cloudfrontDns, cloudfrontDistroId)
+        Item: serializeDdbItem(dappName, owner, abi, bucketName, cloudfrontDns, cloudfrontDistroId, contractAddr, web3Url, guardianUrl)
     };
 
     return addAwsPromiseRetries(() => ddb.putItem(putItemParams).promise(), maxRetries);
