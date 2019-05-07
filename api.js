@@ -114,9 +114,10 @@ async function apiRead(body) {
 
     try {
         const dappItem = await callAndLog('Get DynamoDB Item', dynamoDB.getItem(dappName));
+        let outputItem = dynamoDB.toApiRepresentation(dappItem);
         let responseBody = {
             method: "read",
-            item: dappItem.Item
+            item: outputItem
         };
         return response(responseBody);
     } catch (err) {
@@ -242,10 +243,11 @@ async function apiList(owner) {
 
     try {
         let ddbResponse = await callAndLog('List DynamoDB Items', dynamoDB.getByOwner(owner));
+        let outputItems = ddbResponse.Items.map(item => dynamoDB.toApiRepresentation(item));
         let responseBody = {
             method: "list",
             count: ddbResponse.Count,
-            items: ddbResponse.Items
+            items: outputItems
         };
     return response(responseBody);
     } catch (err) {

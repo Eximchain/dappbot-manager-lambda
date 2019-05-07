@@ -30,6 +30,10 @@ function serializeDdbItem(dappName, ownerEmail, abi, bucketName, cloudfrontDns, 
     return item;
 }
 
+function dbItemToApiRepresentation(dbItem) {
+    return dbItem;
+}
+
 function promisePutDappItem(dappName, owner, abi, bucketName, cloudfrontDistroId, cloudfrontDns, contractAddr, web3Url, guardianUrl) {
     let maxRetries = 5;
     let putItemParams = {
@@ -95,5 +99,6 @@ module.exports = {
     putRawItem : promisePutRawDappItem,
     getItem : promiseGetDappItem,
     deleteItem : promiseDeleteDappItem,
-    getByOwner : promiseGetItemsByOwner
+    getByOwner : promiseGetItemsByOwner,
+    toApiRepresentation : dbItemToApiRepresentation
 }
