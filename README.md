@@ -46,14 +46,14 @@ A DappItem is a JSON object used in some responses. It has the following structu
 
 ```json
 {
-  "DappName": 'STRING: The canonical name of the Dapp',
-  "OwnerEmail": 'STRING: The email of the owner of the Dapp',
-  "CreationTime": 'STRING: The timestamp at which the Dapp was created',
-  "DnsName": 'STRING: The DNS name at which the Dapp can be accessed',
-  "Abi": 'OBJECT: The ABI for the Dapp',
-  "ContractAddr": 'STRING: The address which hosts the contract for the Dapp',
-  "Web3URL": 'STRING: The URL at which to access an Eximchain or Ethereum node',
-  "GuardianURL": 'STRING: The URL of the Guardian instance to use for this Dapp'
+  "DappName": "<STRING: The canonical name of the Dapp>",
+  "OwnerEmail": "<STRING: The email of the owner of the Dapp>",
+  "CreationTime": "<STRING: The timestamp at which the Dapp was created>",
+  "DnsName": "STRING: The DNS name at which the Dapp can be accessed",
+  "Abi": "<OBJECT: The ABI for the Dapp>",
+  "ContractAddr": "<STRING: The address which hosts the contract for the Dapp>",
+  "Web3URL": "<STRING: The URL at which to access an Eximchain or Ethereum node>",
+  "GuardianURL": "<STRING: The URL of the Guardian instance to use for this Dapp>"
 }
 ```
 
@@ -66,7 +66,7 @@ Successful API Calls return responses that look like the following:
 ```json
 {
   "method": "create",
-  "message": `STRING: A message describing your successful call`
+  "message": "<STRING: A message describing your successful call>"
 }
 ```
 
@@ -75,7 +75,7 @@ Successful API Calls return responses that look like the following:
 ```json
 {
   "method": "read",
-  "item": `DAPP_ITEM: The DappItem matching the specified DappName`
+  "item": "<DAPP_ITEM: The DappItem matching the specified DappName>"
 }
 ```
 
@@ -84,7 +84,7 @@ Successful API Calls return responses that look like the following:
 ```json
 {
   "method": "update",
-  "message": `STRING: A message describing your successful call`
+  "message": "<STRING: A message describing your successful call>"
 }
 ```
 
@@ -93,7 +93,7 @@ Successful API Calls return responses that look like the following:
 ```json
 {
   "method": "delete",
-  "message": `STRING: A message describing your successful call`
+  "message": "<STRING: A message describing your successful call>"
 }
 ```
 
@@ -102,7 +102,7 @@ Successful API Calls return responses that look like the following:
 ```json
 {
   "method": "list",
-  "items": `LIST: A list of DappItems owned by the caller`
+  "items": "<LIST: A list of DappItems owned by the caller>"
 }
 ```
 
