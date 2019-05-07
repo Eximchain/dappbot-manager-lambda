@@ -32,6 +32,9 @@ function serializeDdbItem(dappName, ownerEmail, abi, bucketName, cloudfrontDns, 
 }
 
 function dbItemToApiRepresentation(dbItem) {
+    if (!dbItem) {
+        return {};
+    }
     validateDbItemForOutput(dbItem);
     
     let dappName = dbItem.DappName.S;
