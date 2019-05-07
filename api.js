@@ -113,8 +113,8 @@ async function apiRead(body) {
     let [stage, callAndLog] = callFactory('Pre-Read');
 
     try {
-        const dappItem = await callAndLog('Get DynamoDB Item', dynamoDB.getItem(dappName));
-        let outputItem = dynamoDB.toApiRepresentation(dappItem);
+        const dbItem = await callAndLog('Get DynamoDB Item', dynamoDB.getItem(dappName));
+        let outputItem = dynamoDB.toApiRepresentation(dbItem.Item);
         let responseBody = {
             method: "read",
             item: outputItem
