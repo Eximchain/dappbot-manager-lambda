@@ -49,7 +49,7 @@ A DappItem is a JSON object used in some responses. It has the following structu
   "DappName": "<STRING: The canonical name of the Dapp>",
   "OwnerEmail": "<STRING: The email of the owner of the Dapp>",
   "CreationTime": "<STRING: The timestamp at which the Dapp was created>",
-  "DnsName": "STRING: The DNS name at which the Dapp can be accessed",
+  "DnsName": "<STRING: The DNS name at which the Dapp can be accessed>",
   "Abi": "<OBJECT: The ABI for the Dapp>",
   "ContractAddr": "<STRING: The address which hosts the contract for the Dapp>",
   "Web3URL": "<STRING: The URL at which to access an Eximchain or Ethereum node>",
