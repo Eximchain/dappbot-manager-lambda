@@ -81,6 +81,7 @@ Successful API Calls return responses with `"err": null` that look like the foll
 {
   "data": {
     "method": "read",
+    "exists": "<BOOLEAN: Whether or not an item was found>",
     "item": "<DAPP_ITEM: The DappItem matching the specified DappName>"
   },
   "err": null
@@ -117,6 +118,7 @@ Successful API Calls return responses with `"err": null` that look like the foll
 {
   "data": {
     "method": "list",
+    "count": "<INTEGER: The number of items returned>",
     "items": "<LIST[DAPP_ITEM]: A list of DappItems owned by the caller>"
   },
   "err": null
