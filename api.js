@@ -10,10 +10,14 @@ function response(body, opts={isCreate: false}) {
     let responseCode = opts.isCreate ? 201 : 200;
     // TODO: Replace with something useful or remove
     let responseHeaders = {"x-custom-header" : "my custom header value"};
+    let responseBody = {
+        data: body,
+        err: null
+    };
     return {
         statusCode: responseCode,
         headers: responseHeaders,
-        body: JSON.stringify(body)
+        body: JSON.stringify(responseBody)
     }
 }
 
