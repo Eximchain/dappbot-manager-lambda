@@ -117,7 +117,7 @@ Successful API Calls return responses with `"err": null` that look like the foll
 {
   "data": {
     "method": "list",
-    "items": "<LIST: A list of DappItems owned by the caller>"
+    "items": "<LIST[DAPP_ITEM]: A list of DappItems owned by the caller>"
   },
   "err": null
 }
