@@ -7,12 +7,22 @@ const logNonFatalErr = (stage, reason) => { console.log(`Ignoring non-fatal erro
 const logSuccess = (stage, res) => { console.log(`Successfully completed ${stage}; result: `, res) }
 
 function response(body, opts) {
-    let responseCode = opts.isCreate ? 201 : 200;
+    let responseCode = 200;
+    // Override response code based on opts
+    if (opts.isErr) {
+        responseCode = 500;
+    } else if (opts.isCreate) {
+        responseCode = 201;
+    }
+
     // TODO: Replace with something useful or remove
     let responseHeaders = {"x-custom-header" : "my custom header value"};
+
+    let dataField = opts.isErr ? {} : body;
+    let errField = opts.isErr ? body : null;
     let responseBody = {
-        data: body,
-        err: null
+        data: dataField,
+        err: errField
     };
     return {
         statusCode: responseCode,
