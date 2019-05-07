@@ -2,6 +2,7 @@ const { addAwsPromiseRetries } = require('../common');
 const { AWS, tableName } = require('../env');
 const { dappDNS } = require('./route53');
 const { pipelineName } = require('./codepipeline');
+const validate = require('../validate');
 const ddb = new AWS.DynamoDB({apiVersion: '2012-08-10'});
 
 function serializeDdbKey(dappName) {
@@ -28,6 +29,31 @@ function serializeDdbItem(dappName, ownerEmail, abi, bucketName, cloudfrontDns, 
         'DnsName' : {S: dappDNS(dappName)}
     };
     return item;
+}
+
+function dbItemToApiRepresentation(dbItem) {
+    validate.dbItem(dbItem);
+    
+    let dappName = dbItem.DappName.S;
+    let ownerEmail = dbItem.OwnerEmail.S;
+    let creationTime = dbItem.CreationTime.S;
+    let dnsName = dbItem.DnsName.S;
+    let abi = dbItem.Abi.S;
+    let contractAddr = dbItem.ContractAddr.S;
+    let web3Url = dbItem.Web3URL.S;
+    let guardianUrl = dbItem.GuardianURL.S;
+
+    let apiItem = {
+        "DappName": dappName,
+        "OwnerEmail": ownerEmail,
+        "CreationTime": creationTime,
+        "DnsName": dnsName,
+        "Abi": abi,
+        "ContractAddr": contractAddr,
+        "Web3URL": web3Url,
+        "GuardianURL": guardianUrl
+    };
+    return apiItem;
 }
 
 function promisePutDappItem(dappName, owner, abi, bucketName, cloudfrontDistroId, cloudfrontDns, contractAddr, web3Url, guardianUrl) {
@@ -95,5 +121,6 @@ module.exports = {
     putRawItem : promisePutRawDappItem,
     getItem : promiseGetDappItem,
     deleteItem : promiseDeleteDappItem,
-    getByOwner : promiseGetItemsByOwner
+    getByOwner : promiseGetItemsByOwner,
+    toApiRepresentation : dbItemToApiRepresentation
 }

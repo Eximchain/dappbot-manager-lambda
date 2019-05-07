@@ -113,10 +113,11 @@ async function apiRead(body) {
     let [stage, callAndLog] = callFactory('Pre-Read');
 
     try {
-        const dappItem = await callAndLog('Get DynamoDB Item', dynamoDB.getItem(dappName));
+        const dbItem = await callAndLog('Get DynamoDB Item', dynamoDB.getItem(dappName));
+        let outputItem = dynamoDB.toApiRepresentation(dbItem.Item);
         let responseBody = {
             method: "read",
-            item: dappItem.Item
+            item: outputItem
         };
         return response(responseBody);
     } catch (err) {
@@ -237,9 +238,28 @@ async function apiDelete(body) {
 
 }
 
+async function apiList(owner) {
+    let [stage, callAndLog] = callFactory('Pre-List');
+
+    try {
+        let ddbResponse = await callAndLog('List DynamoDB Items', dynamoDB.getByOwner(owner));
+        let outputItems = ddbResponse.Items.map(item => dynamoDB.toApiRepresentation(item));
+        let responseBody = {
+            method: "list",
+            count: ddbResponse.Count,
+            items: outputItems
+        };
+    return response(responseBody);
+    } catch (err) {
+        logErr(stage, err);
+        return response(err, {isErr:true});
+    }
+}
+
 module.exports = {
   create : apiCreate,
   read : apiRead,
   update : apiUpdate,
-  delete : apiDelete
+  delete : apiDelete,
+  list : apiList
 }

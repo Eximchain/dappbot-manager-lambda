@@ -15,7 +15,6 @@ This will produce an `abi-clerk-lambda.zip` at the package root directory.  The 
 - **`/create`**
   - Accepts a body with the following keys:
     - **`DappName`**: Unique name for your dapp, will be in the domain.
-    - **`OwnerEmail`**: Email address of the dapp's owner.  Will receive completion notification.
     - **`Abi`**: An ABI method array as an escaped JSON string.
     - **`ContractAddr`**: The deployed address of your chosen contract.
     - **`Web3URL`**: The URL for your HTTPProvider.  Our transaction executors work for Eximchain dapps, Infura would work for Ethereum dapps.  Include `https://`
@@ -23,10 +22,106 @@ This will produce an `abi-clerk-lambda.zip` at the package root directory.  The 
   - Spins up all associated infrastructure and returns a success.
 - **`/read`**
   - Accepts a body with key `DappName`.
-  - Returns the dapp's corresponding DynamoDB object.
+  - Returns a DappItem as defined below.
+- **`/update`**
+  - Accepts a body with required key `DappName`.
+  - Also accepts the following optional keys in the body:
+    - **`Abi`**: An ABI method array as an escaped JSON string.
+    - **`ContractAddr`**: The deployed address of your chosen contract.
+    - **`Web3URL`**: The URL for your HTTPProvider.  Our transaction executors work for Eximchain dapps, Infura would work for Ethereum dapps.  Include `https://`
+    - **`GuardianURL`**: The URL of your Guardian instance.  Include `https://`
+  - Simply returns success if no optional keys were specified. Otherwise, updates the values of the specified optional keys in the dapp and returns success.
 - **`/delete`**
   - Accepts a body with key `DappName`.
   - Destroys all associated resources and returns a success.
+- **`/list`**
+  - Accepts an empty body with no keys.
+  - Returns a DappItem corresponding to every Dapp owned by the calling account.
+
+## Responses
+
+### DappItem
+
+A DappItem is a JSON object used in some responses. It has the following structure:
+
+```json
+{
+  "DappName": "<STRING: The canonical name of the Dapp>",
+  "OwnerEmail": "<STRING: The email of the owner of the Dapp>",
+  "CreationTime": "<STRING: The timestamp at which the Dapp was created>",
+  "DnsName": "<STRING: The DNS name at which the Dapp can be accessed>",
+  "Abi": "<OBJECT: The ABI for the Dapp>",
+  "ContractAddr": "<STRING: The address which hosts the contract for the Dapp>",
+  "Web3URL": "<STRING: The URL at which to access an Eximchain or Ethereum node>",
+  "GuardianURL": "<STRING: The URL of the Guardian instance to use for this Dapp>"
+}
+```
+
+### Success Responses
+
+API Calls that error return either a response with non-null `err`, or an empty body `{}` (The empty body response is a bug).
+
+Successful API Calls return responses with `"err": null` that look like the following:
+
+#### Create
+
+```json
+{
+  "data": {
+    "method": "create",
+    "message": "<STRING: A message describing your successful call>"
+  },
+  "err": null
+}
+```
+
+#### Read
+
+```json
+{
+  "data": {
+    "method": "read",
+    "item": "<DAPP_ITEM: The DappItem matching the specified DappName>"
+  },
+  "err": null
+}
+```
+
+#### Update
+
+```json
+{
+  "data": {
+    "method": "update",
+    "message": "<STRING: A message describing your successful call>"
+  },
+  "err": null
+}
+```
+
+#### Delete
+
+```json
+{
+  "data": {
+    "method": "delete",
+    "message": "<STRING: A message describing your successful call>"
+  },
+  "err": null
+}
+```
+
+#### List
+
+```json
+{
+  "data": {
+    "method": "list",
+    "items": "<LIST[DAPP_ITEM]: A list of DappItems owned by the caller>"
+  },
+  "err": null
+}
+```
 
 ## Constraints
 - Dapp names will be lowercased and can only include letters, numbers, and hyphens.
