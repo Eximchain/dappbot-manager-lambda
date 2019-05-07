@@ -115,8 +115,10 @@ async function apiRead(body) {
     try {
         const dbItem = await callAndLog('Get DynamoDB Item', dynamoDB.getItem(dappName));
         let outputItem = dynamoDB.toApiRepresentation(dbItem.Item);
+        let itemExists = Boolean(outputItem.DappName);
         let responseBody = {
             method: "read",
+            exists: itemExists,
             item: outputItem
         };
         return response(responseBody);
