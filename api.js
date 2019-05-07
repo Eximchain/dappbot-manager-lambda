@@ -107,7 +107,7 @@ async function apiCreate(body, owner) {
     }
 }
 
-async function apiRead(body) {
+async function apiRead(body, callerEmail) {
     let dappName = validate.cleanName(body.DappName);
 
     let [stage, callAndLog] = callFactory('Pre-Read');
@@ -115,6 +115,9 @@ async function apiRead(body) {
     try {
         const dbItem = await callAndLog('Get DynamoDB Item', dynamoDB.getItem(dappName));
         let outputItem = dynamoDB.toApiRepresentation(dbItem.Item);
+        if (outputItem.OwnerEmail !== callerEmail) {
+            outputItem = {};
+        }
         let itemExists = Boolean(outputItem.DappName);
         let responseBody = {
             method: "read",
