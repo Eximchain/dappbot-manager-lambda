@@ -59,14 +59,19 @@ A DappItem is a JSON object used in some responses. It has the following structu
 
 ### Success Responses
 
-Successful API Calls return responses that look like the following:
+API Calls that error return either a response with non-null `err`, or an empty body `{}` (The empty body response is a bug).
+
+Successful API Calls return responses with `"err": null` that look like the following:
 
 #### Create
 
 ```json
 {
-  "method": "create",
-  "message": "<STRING: A message describing your successful call>"
+  "data": {
+    "method": "create",
+    "message": "<STRING: A message describing your successful call>"
+  },
+  "err": null
 }
 ```
 
@@ -74,8 +79,11 @@ Successful API Calls return responses that look like the following:
 
 ```json
 {
-  "method": "read",
-  "item": "<DAPP_ITEM: The DappItem matching the specified DappName>"
+  "data": {
+    "method": "read",
+    "item": "<DAPP_ITEM: The DappItem matching the specified DappName>"
+  },
+  "err": null
 }
 ```
 
@@ -83,8 +91,11 @@ Successful API Calls return responses that look like the following:
 
 ```json
 {
-  "method": "update",
-  "message": "<STRING: A message describing your successful call>"
+  "data": {
+    "method": "update",
+    "message": "<STRING: A message describing your successful call>"
+  },
+  "err": null
 }
 ```
 
@@ -92,8 +103,11 @@ Successful API Calls return responses that look like the following:
 
 ```json
 {
-  "method": "delete",
-  "message": "<STRING: A message describing your successful call>"
+  "data": {
+    "method": "delete",
+    "message": "<STRING: A message describing your successful call>"
+  },
+  "err": null
 }
 ```
 
@@ -101,8 +115,11 @@ Successful API Calls return responses that look like the following:
 
 ```json
 {
-  "method": "list",
-  "items": "<LIST: A list of DappItems owned by the caller>"
+  "data": {
+    "method": "list",
+    "items": "<LIST: A list of DappItems owned by the caller>"
+  },
+  "err": null
 }
 ```
 
