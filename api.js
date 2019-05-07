@@ -6,7 +6,7 @@ const logErr = (stage, err) => { console.log(`Error on ${stage}: `, err) }
 const logNonFatalErr = (stage, reason) => { console.log(`Ignoring non-fatal error during ${stage}: ${reason}`) }
 const logSuccess = (stage, res) => { console.log(`Successfully completed ${stage}; result: `, res) }
 
-function response(body, opts={isCreate: false}) {
+function response(body, opts) {
     let responseCode = opts.isCreate ? 201 : 200;
     // TODO: Replace with something useful or remove
     let responseHeaders = {"x-custom-header" : "my custom header value"};
@@ -19,6 +19,18 @@ function response(body, opts={isCreate: false}) {
         headers: responseHeaders,
         body: JSON.stringify(responseBody)
     }
+}
+
+function successResponse(body, opts={isCreate: false}) {
+    let successOpt = {isErr: false};
+    let callOpts = {...opts, ...successOpt};
+    return response(body, callOpts);
+}
+
+function errorResponse(body, opts={isCreate: false}) {
+    let errorOpt = {isErr: true};
+    let callOpts = {...opts, ...errorOpt};
+    return response(body, callOpts);
 }
 
 // Using this factory function lets us create a new "stage" variable
@@ -104,10 +116,10 @@ async function apiCreate(body, owner) {
             method: "create",
             message: "Dapp generation successfully initialized!  Check your URL in about 5 minutes."
         };
-        return response(responseBody, {isCreate: true})
+        return successResponse(responseBody, {isCreate: true})
     } catch (err) {
         logErr(stage, err);
-        return response(err);
+        return errorResponse(err, {isCreate: true});
     }
 }
 
@@ -128,10 +140,10 @@ async function apiRead(body, callerEmail) {
             exists: itemExists,
             item: outputItem
         };
-        return response(responseBody);
+        return successResponse(responseBody);
     } catch (err) {
         logErr(stage, err);
-        return response(err);
+        return errorResponse(err);
     }
 }
 
@@ -151,7 +163,7 @@ async function apiUpdate(body, owner) {
                 method: "update",
                 message: "No attributes specified to update."
             };
-            return response(responseBody);
+            return successResponse(responseBody);
         }
         const dbItem = await callAndLog('Get DynamoDB Item', dynamoDB.getItem(dappName));
         assert(dbItem.Item, "Dapp Not Found");
@@ -181,10 +193,10 @@ async function apiUpdate(body, owner) {
             method: "update",
             message: "Your Dapp was successfully updated! Allow 5 minutes for rebuild, then check your URL."
         };
-        return response(responseBody);
+        return successResponse(responseBody);
     } catch (err) {
         logErr(stage, err);
-        return response(err); 
+        return errorResponse(err); 
     }
 }
 
@@ -238,11 +250,11 @@ async function apiDelete(body) {
             method: "delete",
             message: "Your Dapp was successfully deleted."
         };
-        return response(responseBody);
+        return successResponse(responseBody);
 
     } catch (err) {
         logErr(stage, err);
-        return response(err, {isErr:true});
+        return errorResponse(err);
     }
 
 }
@@ -258,10 +270,10 @@ async function apiList(owner) {
             count: ddbResponse.Count,
             items: outputItems
         };
-    return response(responseBody);
+    return successResponse(responseBody);
     } catch (err) {
         logErr(stage, err);
-        return response(err, {isErr:true});
+        return errorResponse(err);
     }
 }
 
