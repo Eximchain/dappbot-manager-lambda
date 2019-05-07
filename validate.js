@@ -75,10 +75,31 @@ function cleanDappName(name) {
     return name.toLowerCase().replace(/\s/g, '-').replace(/[^A-Za-z0-9-]/g, '')
 }
 
+function validateDbItemForOutput(dbItem) {
+    assert(dbItem.hasOwnProperty('DappName'), "dbItem: required attribute 'DappName' not found");
+    assert(dbItem.hasOwnProperty('OwnerEmail'), "dbItem: required attribute 'OwnerEmail' not found");
+    assert(dbItem.hasOwnProperty('CreationTime'), "dbItem: required attribute 'CreationTime' not found");
+    assert(dbItem.hasOwnProperty('DnsName'), "dbItem: required attribute 'DnsName' not found");
+    assert(dbItem.hasOwnProperty('Abi'), "dbItem: required attribute 'Abi' not found");
+    assert(dbItem.hasOwnProperty('ContractAddr'), "dbItem: required attribute 'ContractAddr' not found");
+    assert(dbItem.hasOwnProperty('Web3URL'), "dbItem: required attribute 'Web3URL' not found");
+    assert(dbItem.hasOwnProperty('GuardianURL'), "dbItem: required attribute 'GuardianURL' not found");
+
+    assert(dbItem.DappName.hasOwnProperty('S'), "dbItem: required attribute 'DappName' has wrong shape");
+    assert(dbItem.OwnerEmail.hasOwnProperty('S'), "dbItem: required attribute 'OwnerEmail' has wrong shape");
+    assert(dbItem.CreationTime.hasOwnProperty('S'), "dbItem: required attribute 'CreationTime' has wrong shape");
+    assert(dbItem.DnsName.hasOwnProperty('S'), "dbItem: required attribute 'DnsName' has wrong shape");
+    assert(dbItem.Abi.hasOwnProperty('S'), "dbItem: required attribute 'Abi' has wrong shape");
+    assert(dbItem.ContractAddr.hasOwnProperty('S'), "dbItem: required attribute 'ContractAddr' has wrong shape");
+    assert(dbItem.Web3URL.hasOwnProperty('S'), "dbItem: required attribute 'Web3URL' has wrong shape");
+    assert(dbItem.GuardianURL.hasOwnProperty('S'), "dbItem: required attribute 'GuardianURL' has wrong shape");
+}
+
 module.exports = {
     delete : validateDelete,
     create : validateCreate,
     read : validateRead,
     update : validateUpdate,
-    cleanName: cleanDappName
+    cleanName: cleanDappName,
+    dbItem: validateDbItemForOutput
 }

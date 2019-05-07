@@ -2,6 +2,7 @@ const { addAwsPromiseRetries } = require('../common');
 const { AWS, tableName } = require('../env');
 const { dappDNS } = require('./route53');
 const { pipelineName } = require('./codepipeline');
+const validate = require('../validate');
 const ddb = new AWS.DynamoDB({apiVersion: '2012-08-10'});
 
 function serializeDdbKey(dappName) {
@@ -31,6 +32,8 @@ function serializeDdbItem(dappName, ownerEmail, abi, bucketName, cloudfrontDns, 
 }
 
 function dbItemToApiRepresentation(dbItem) {
+    validate.dbItem(dbItem);
+    
     let dappName = dbItem.DappName.S;
     let ownerEmail = dbItem.OwnerEmail.S;
     let creationTime = dbItem.CreationTime.S;
