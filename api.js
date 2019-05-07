@@ -6,8 +6,8 @@ const logErr = (stage, err) => { console.log(`Error on ${stage}: `, err) }
 const logNonFatalErr = (stage, reason) => { console.log(`Ignoring non-fatal error during ${stage}: ${reason}`) }
 const logSuccess = (stage, res) => { console.log(`Successfully completed ${stage}; result: `, res) }
 
-function response(body) {
-    let responseCode = 200;
+function response(body, opts={isCreate: false}) {
+    let responseCode = opts.isCreate ? 201 : 200;
     // TODO: Replace with something useful or remove
     let responseHeaders = {"x-custom-header" : "my custom header value"};
     return {
@@ -100,7 +100,7 @@ async function apiCreate(body, owner) {
             method: "create",
             message: "Dapp generation successfully initialized!  Check your URL in about 5 minutes."
         };
-        return response(responseBody)
+        return response(responseBody, {isCreate: true})
     } catch (err) {
         logErr(stage, err);
         return response(err);
