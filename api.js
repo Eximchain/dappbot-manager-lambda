@@ -71,6 +71,9 @@ async function apiCreate(body, owner) {
     let [stage, callAndLog] = callFactory('Pre-Creation');
 
     try {
+        const existingItem = await callAndLog('Get DynamoDB Item', dynamoDB.getItem(dappName));
+        assert(!existingItem.Item, `DappName ${dappName} is already taken. Please choose another name.`);
+
         await callAndLog('Create S3 Bucket', s3.createBucketWithTags(bucketName, dappName, owner))
         await callAndLog('Set Bucket Readable', s3.setBucketPublic(bucketName));
         await callAndLog('Configure Bucket Website', s3.configureBucketWebsite(bucketName))
