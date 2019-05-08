@@ -3,6 +3,40 @@ const assert = require('assert');
 
 const dappLimitAttrName = 'dev:custom:num_dapps';
 
+// Names that should be disallowed for DappName values
+const reservedDappNames = new Set([
+    'abi',
+    'abiclerk',
+    'abi-clerk',
+    'admin',
+    'administrator',
+    'api',
+    'app',
+    'automate',
+    'community',
+    'conference',
+    'console',
+    'dashboard',
+    'dapp',
+    'dappbot',
+    'dapp-bot',
+    'dapperator',
+    'dappname',
+    'dapp-name',
+    'dappsmith',
+    'dapp-smith',
+    'deploy',
+    'directory',
+    'exim',
+    'eximchain',
+    'forum',
+    'help',
+    'home',
+    'marketplace',
+    'root',
+    'support'
+]);
+
 function validateBodyDelete(body) {
     assert(body.hasOwnProperty('DappName'), "delete: required argument 'DappName' not found");
 }
@@ -47,8 +81,14 @@ async function validateLimitsCreate(cognitoUsername, ownerEmail) {
     })
 }
 
+function validateAllowedDappName(dappName) {
+    assert(!reservedDappNames.has(dappName), `Specified DappName ${dappName} is not an allowed name`);
+}
+
 async function validateCreate(body, cognitoUsername, ownerEmail) {
     validateBodyCreate(body);
+    let dappName = cleanDappName(body.DappName);
+    validateAllowedDappName(dappName);
     try {
         return await validateLimitsCreate(cognitoUsername, ownerEmail);
     } catch (err) {
