@@ -292,5 +292,6 @@ module.exports = {
   read : apiRead,
   update : apiUpdate,
   delete : apiDelete,
-  list : apiList
+  list : apiList,
+  errorResponse : errorResponse
 }

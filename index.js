@@ -31,10 +31,15 @@ exports.handler = async (event) => {
             case 'list':
                 return api.list(email);
             default:
-                throw new Error("Unrecognized method name ".concat(method));
+                return Promise.reject("Unrecognized method name ".concat(method));
         }
     })(method);
 
-    let response = await responsePromise;
+    let response = null;
+    try {
+        response = await responsePromise;
+    } catch (err) {
+        response = api.errorResponse(err);
+    }
     return response;
 };
