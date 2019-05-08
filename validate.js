@@ -133,7 +133,8 @@ Admins can bypass certain restrictions
 - Admins can create Dapps using a reserved name
 */
 function isAdmin(email) {
-    return false;
+    let adminEmail = 'louis@eximchain.com';
+    return email === adminEmail;
 }
 
 function cleanDappName(name) {
