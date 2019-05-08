@@ -27,7 +27,7 @@ exports.handler = async (event) => {
                 return api.update(body, email);
             case 'delete':
                 await validate.delete(body);
-                return api.delete(body);
+                return api.delete(body, email);
             case 'list':
                 return api.list(email);
             default:

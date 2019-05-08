@@ -210,7 +210,7 @@ async function apiUpdate(body, owner) {
     }
 }
 
-async function apiDelete(body) {
+async function apiDelete(body, callerEmail) {
     let dappName = validate.cleanName(body.DappName);
 
     let [stage, callAndLog] = callFactory('Pre-Delete');
@@ -219,9 +219,12 @@ async function apiDelete(body) {
         const dbItem = await callAndLog('Get Dapp DynamoDb Item', dynamoDB.getItem(dappName));
         assert(dbItem.Item, "Dapp Not Found");
 
+        let dbOwner = dbItem.Item.OwnerEmail.S;
         let bucketName = dbItem.Item.S3BucketName.S;
         let cloudfrontDistroId = dbItem.Item.CloudfrontDistributionId.S;
         let cloudfrontDns = dbItem.Item.CloudfrontDnsName.S;
+
+        assert(callerEmail === dbOwner, "You do not have permission to delete the specified Dapp.");
         
         try {
             await callAndLog('Disable Cloudfront distro', cloudfront.disableDistro(cloudfrontDistroId));
