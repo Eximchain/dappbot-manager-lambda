@@ -31,7 +31,7 @@ exports.handler = async (event) => {
             case 'list':
                 return api.list(email);
             default:
-                return Promise.reject("Unrecognized method name ".concat(method));
+                return Promise.reject({message: "Unrecognized method name ".concat(method)});
         }
     })(method);
 
