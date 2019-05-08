@@ -129,6 +129,7 @@ Returns whether an email has Admin rights
 Admins can bypass certain restrictions
 
 - Admins can delete other users' Dapps
+- Admins can read other users' Dapps
 - Admins can create Dapps using a reserved name
 */
 function isAdmin(email) {

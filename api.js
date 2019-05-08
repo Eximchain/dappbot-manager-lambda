@@ -144,7 +144,7 @@ async function apiRead(body, callerEmail) {
     try {
         const dbItem = await callAndLog('Get DynamoDB Item', dynamoDB.getItem(dappName));
         let outputItem = dynamoDB.toApiRepresentation(dbItem.Item);
-        if (outputItem.OwnerEmail !== callerEmail) {
+        if (outputItem.OwnerEmail !== callerEmail && !validate.isAdmin(callerEmail)) {
             outputItem = {};
         }
         let itemExists = Boolean(outputItem.DappName);
