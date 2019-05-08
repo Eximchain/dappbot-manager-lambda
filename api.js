@@ -227,7 +227,7 @@ async function apiDelete(body, callerEmail) {
         let cloudfrontDistroId = dbItem.Item.CloudfrontDistributionId.S;
         let cloudfrontDns = dbItem.Item.CloudfrontDnsName.S;
 
-        assert(callerEmail === dbOwner, "You do not have permission to delete the specified Dapp.");
+        assert(callerEmail === dbOwner || validate.isAdmin(callerEmail), "You do not have permission to delete the specified Dapp.");
         
         try {
             await callAndLog('Disable Cloudfront distro', cloudfront.disableDistro(cloudfrontDistroId));

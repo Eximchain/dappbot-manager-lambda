@@ -89,14 +89,19 @@ async function validateLimitsCreate(cognitoUsername, ownerEmail) {
     })
 }
 
-function validateAllowedDappName(dappName) {
+function validateAllowedDappName(dappName, email) {
+    // Admins can use reserved names
+    if (isAdmin(email)) {
+        return true;
+    }
     assert(!reservedDappNames.has(dappName), `Specified DappName ${dappName} is not an allowed name`);
+    return true;
 }
 
 async function validateCreate(body, cognitoUsername, ownerEmail) {
     validateBodyCreate(body);
     let dappName = cleanDappName(body.DappName);
-    validateAllowedDappName(dappName);
+    validateAllowedDappName(dappName, ownerEmail);
     try {
         return await validateLimitsCreate(cognitoUsername, ownerEmail);
     } catch (err) {
@@ -119,6 +124,17 @@ async function validateDelete(body) {
     return true;
 }
 
+/*
+Returns whether an email has Admin rights
+Admins can bypass certain restrictions
+
+- Admins can delete other users' Dapps
+- Admins can create Dapps using a reserved name
+*/
+function isAdmin(email) {
+    return false;
+}
+
 function cleanDappName(name) {
     return name.toLowerCase().replace(/\s/g, '-').replace(/[^A-Za-z0-9-]/g, '')
 }
@@ -128,5 +144,6 @@ module.exports = {
     create : validateCreate,
     read : validateRead,
     update : validateUpdate,
-    cleanName: cleanDappName
+    cleanName : cleanDappName,
+    isAdmin : isAdmin
 }
