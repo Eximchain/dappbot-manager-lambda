@@ -13,6 +13,8 @@ const reservedDappNames = new Set([
     'api',
     'app',
     'automate',
+    'blockvote',
+    'blockvoting',
     'community',
     'conference',
     'console',
@@ -33,8 +35,14 @@ const reservedDappNames = new Set([
     'help',
     'home',
     'marketplace',
+    'quadraticvote',
+    'quadraticvoting',
     'root',
-    'support'
+    'support',
+    'weyl',
+    'weylgov',
+    'weylgovern',
+    'weylgovernance'
 ]);
 
 function validateBodyDelete(body) {
