@@ -35,7 +35,7 @@ function response(body, opts) {
     }
 }
 
-function successResponse(body, opts={isCreate: false}) {
+export function successResponse(body, opts={isCreate: false}) {
     let successOpt = {isErr: false};
     let callOpts = {...opts, ...successOpt};
     return response(body, callOpts);

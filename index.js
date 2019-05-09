@@ -1,5 +1,5 @@
 'use strict';
-const api = require('./api');
+const api, { successResponse } = require('./api');
 const validate = require('./validate');
 
 exports.handler = async (event) => {
@@ -31,7 +31,11 @@ exports.handler = async (event) => {
             case 'list':
                 return api.list(email);
             default:
-                return Promise.reject({message: "Unrecognized method name ".concat(method)});
+                return successResponse({
+                    method : 'none',
+                    message : 'Please provide a method.'
+                })
+                // return Promise.reject({message: "Unrecognized method name ".concat(method)});
         }
     })(method);
 
