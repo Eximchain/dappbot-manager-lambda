@@ -16,7 +16,11 @@ function response(body, opts) {
     }
 
     // TODO: Replace with something useful or remove
-    let responseHeaders = {"x-custom-header" : "my custom header value"};
+    let responseHeaders = {
+        'Content-Type': 'application/json', 
+        'Access-Control-Allow-Origin': '*' 
+    };
+    
 
     let dataField = opts.isErr ? {} : body;
     let errField = opts.isErr ? body : null;
