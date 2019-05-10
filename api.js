@@ -35,7 +35,7 @@ function response(body, opts) {
     }
 }
 
-export function successResponse(body, opts={isCreate: false}) {
+function successResponse(body, opts={isCreate: false}) {
     let successOpt = {isErr: false};
     let callOpts = {...opts, ...successOpt};
     return response(body, callOpts);
@@ -303,5 +303,6 @@ module.exports = {
   update : apiUpdate,
   delete : apiDelete,
   list : apiList,
-  errorResponse : errorResponse
+  errorResponse : errorResponse,
+  successResponse : successResponse
 }

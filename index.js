@@ -1,9 +1,14 @@
 'use strict';
-const api, { successResponse } = require('./api');
+const api = require('./api');
 const validate = require('./validate');
 
 exports.handler = async (event) => {
     console.log("request: " + JSON.stringify(event));
+
+    // Auto-return success for CORS pre-flight OPTIONS requests
+    if (event.httpMethod.toLowercase() == 'options'){
+        return api.successResponse({});
+    }
 
     let method = event.pathParameters.proxy;
     let body = null;
@@ -31,11 +36,7 @@ exports.handler = async (event) => {
             case 'list':
                 return api.list(email);
             default:
-                return successResponse({
-                    method : 'none',
-                    message : 'Please provide a method.'
-                })
-                // return Promise.reject({message: "Unrecognized method name ".concat(method)});
+                return Promise.reject({message: "Unrecognized method name ".concat(method)});
         }
     })(method);
 
