@@ -18,7 +18,8 @@ function response(body, opts) {
     // TODO: Replace with something useful or remove
     let responseHeaders = {
         'Content-Type': 'application/json', 
-        'Access-Control-Allow-Origin': '*' 
+        'Access-Control-Allow-Origin': '*' ,
+        'Access-Control-Allow-Headers': 'Authorization,Content-Type'
     };
     
 
@@ -303,5 +304,6 @@ module.exports = {
   update : apiUpdate,
   delete : apiDelete,
   list : apiList,
-  errorResponse : errorResponse
+  errorResponse : errorResponse,
+  successResponse : successResponse
 }

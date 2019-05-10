@@ -32,6 +32,8 @@ const reservedDappNames = new Set([
     'exim',
     'eximchain',
     'forum',
+    'guard',
+    'guardian',
     'help',
     'home',
     'marketplace',
@@ -39,6 +41,8 @@ const reservedDappNames = new Set([
     'quadraticvoting',
     'root',
     'support',
+    'vault',
+    'wallet',
     'weyl',
     'weylgov',
     'weylgovern',
@@ -133,7 +137,8 @@ Admins can bypass certain restrictions
 - Admins can create Dapps using a reserved name
 */
 function isAdmin(email) {
-    return false;
+    let adminEmail = 'louis@eximchain.com';
+    return email === adminEmail;
 }
 
 function cleanDappName(name) {
