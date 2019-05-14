@@ -1,4 +1,3 @@
-const shell = require('shelljs');
 const zip = require('node-zip');
 const { updateRootObject } = require('./cloudfront');
 const { getObject, configureBucketWebsite } = require('./s3'); 
@@ -16,7 +15,6 @@ async function postPipelineCleanup({ actionConfiguration, inputArtifacts }){
   // Fetch the dappseed artifact, make sure we're in /tmp, unzip it to the filesystem
   const { bucketName, objectKey } = inputArtifacts[0].location.s3Location;
   let dappName, indexName;
-  shell.cd('/tmp');
   try {
     const dappseedBuffer = await getObject(bucketName, objectKey);
     const dappseedZip = new zip(dappseedBuffer, { base64: false })
@@ -33,7 +31,7 @@ async function postPipelineCleanup({ actionConfiguration, inputArtifacts }){
   console.log(`DistributionID: ${DistributionId}`);
   console.log(`DappName: `,dappName);
   console.log(`IndexName: `,indexName);
-  
+
   try {
     await configureBucketWebsite(bucketName, indexName);
   } catch (err) {
