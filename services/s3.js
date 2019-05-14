@@ -82,16 +82,16 @@ function promiseSetS3BucketPublicReadable(bucketName){
 }
 
 
-function promiseConfigureS3BucketStaticWebsite(bucketName) {
+function promiseConfigureS3BucketStaticWebsite(bucketName, indexName='index.html') {
     let maxRetries = 5;
     let params = {
         Bucket: bucketName,
         WebsiteConfiguration: {
             ErrorDocument: {
-                Key: 'index.html'
+                Key: indexName
             },
             IndexDocument: {
-                Suffix: 'index.html'
+                Suffix: indexName
             }
         }
     };
@@ -106,7 +106,7 @@ function promiseGetS3BucketWebsiteConfig(bucketName) {
     return addAwsPromiseRetries(() => s3.getBucketWebsite(params).promise(), maxRetries);
 }
 
-function promisePutDappseed({ dappName, web3URL, guardianURL, abi, addr }) {
+function promisePutDappseed({ dappName, web3URL, guardianURL, abi, addr, cdnURL }) {
     shell.cd('/tmp');
     const dappZip = new zip();
     const abiObj = typeof abi === 'string' ? JSON.parse(abi) : abi;
@@ -115,7 +115,8 @@ function promisePutDappseed({ dappName, web3URL, guardianURL, abi, addr }) {
         contract_name : dappName,
         contract_addr : addr,
         contract_path : './Contract.json',
-        web3URL, guardianURL
+        indexName : `index-${uuidv4()}.html`,
+        web3URL, guardianURL, cdnURL
     }, undefined, 2));
     fs.writeFileSync('./dappseed.zip', dappZip.generate({base64:false,compression:'DEFLATE'}), 'binary')
     const zipData = fs.readFileSync('./dappseed.zip');
@@ -168,6 +169,15 @@ function promiseCreateS3BucketWithTags(bucketName, dappName, dappOwner) {
     });
 }
 
+function promiseGetS3Object(bucketName, objectKey) {
+    let maxRetries = 5;
+    const params = {
+        Bucket : bucketName,
+        Key : objectKey
+    }
+    return addAwsPromiseRetries(() => s3.getObject(params).promise(), maxRetries);
+}
+
 function createBucketName() {
     return s3BucketPrefix.concat(uuidv4());
 }
@@ -186,6 +196,7 @@ module.exports = {
     deleteBucket : promiseDeleteS3Bucket,
     emptyBucket : promiseEmptyS3Bucket,
     listObjects : promiseListS3Objects,
+    getObject : promiseGetS3Object,
     newBucketName : createBucketName,
     bucketEndpoint : getS3BucketEndpoint
 }

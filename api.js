@@ -82,9 +82,9 @@ async function apiCreate(body, owner) {
         await callAndLog('Create S3 Bucket', s3.createBucketWithTags(bucketName, dappName, owner))
         await callAndLog('Set Bucket Readable', s3.setBucketPublic(bucketName));
         await callAndLog('Configure Bucket Website', s3.configureBucketWebsite(bucketName))
-        await callAndLog('Put DappSeed', s3.putDappseed({ dappName, web3URL, guardianURL, abi, addr }));
-        await callAndLog('Create CodePipeline', codepipeline.create(dappName, bucketName));
 
+        // Making Cloudfront Distribution first because we now want to incorporate its ID into the
+        // dappseed.zip information for use at cleanup time.
         let cloudfrontDistroId = null;
         let cloudfrontDns = null;
         try {
@@ -125,6 +125,8 @@ async function apiCreate(body, owner) {
             }
         }
 
+        await callAndLog('Put DappSeed', s3.putDappseed({ dappName, web3URL, guardianURL, abi, addr, cdnURL: cloudfrontDns }));
+        await callAndLog('Create CodePipeline', codepipeline.create(dappName, bucketName, owner, cloudfrontDistroId));
         await callAndLog('Create Route 53 record', route53.createRecord(dappName, cloudfrontDns));
         await callAndLog('Create DynamoDB item', dynamoDB.putItem(dappName, owner, abi, bucketName, cloudfrontDistroId, cloudfrontDns, addr, web3URL, guardianURL));
 
@@ -204,7 +206,7 @@ async function apiUpdate(body, owner) {
 
         await callAndLog('Update DappSeed', s3.putDappseed({ dappName, updatedWeb3URL, updatedGuardianURL, updatedAbi, updatedAddr }));
         await callAndLog('Update DynamoDB item', dynamoDB.putRawItem(rawItem));
-        // TODO: Make this happen after the pipeline build
+        // TODO: Remove this once we have the DefaultRootObject update behavior
         await callAndLog('Invalidate Cloudfront Distro', cloudfront.invalidateDistroPrefix(cloudfrontDistroId));
 
         let responseBody = {
