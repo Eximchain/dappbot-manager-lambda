@@ -1,5 +1,8 @@
+// Provided automagically by AWS
 const awsRegion = process.env.AWS_REGION;
 const lambdaFxnName = process.env.AWS_LAMBDA_FUNCTION_NAME;
+
+// Provided to us via Terraform
 const tableName = process.env.DDB_TABLE;
 const r53HostedZoneId = process.env.R53_HOSTED_ZONE_ID;
 const dnsRoot = process.env.DNS_ROOT;

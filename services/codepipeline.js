@@ -104,17 +104,15 @@ function pipelineParams(dappName, destBucket, owner, distroId) {
                                 "category": "Invoke",
                                 "owner": "AWS",
                                 "version": "1",
-                                "configuration": {
-                                    "FunctionName": lambdaFxnName,
-                                    "UserParameters": JSON.stringify({
-                                        OwnerEmail: owner,
-                                        DistributionId: distroId
-                                    })
-                                }
+                                "provider": "Lambda"
                             },
                             "runOrder":2,
                             "configuration": {
-
+                                "FunctionName": lambdaFxnName,
+                                "UserParameters": JSON.stringify({
+                                    OwnerEmail: owner,
+                                    DistributionId: distroId
+                                })
                             }
                         }
                     ]
