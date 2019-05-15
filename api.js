@@ -87,8 +87,7 @@ async function apiCreate(body, owner) {
 
         // Making Cloudfront Distribution first because we now want to incorporate its ID into the
         // dappseed.zip information for use at cleanup time.
-        let cloudfrontDistroId = null;
-        let cloudfrontDns = null;
+        let cloudfrontDistroId, cloudfrontDns;
         try {
             const newDistro = await callAndLog('Create Cloudfront Distro', cloudfront.createDistro(dappName, owner, s3Dns));
 

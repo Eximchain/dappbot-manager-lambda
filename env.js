@@ -20,6 +20,6 @@ AWS.config.update({region: awsRegion});
 
 module.exports = { 
     AWS, awsRegion, tableName, r53HostedZoneId, dnsRoot, codebuildId, 
-    lambdaFxnName,pipelineRoleArn, kmsKeyName, artifactBucket, 
+    lambdaFxnName, pipelineRoleArn, kmsKeyName, artifactBucket, 
     dappseedBucket, certArn, cognitoUserPoolId, sendgridApiKey
 };

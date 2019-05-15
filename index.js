@@ -21,14 +21,13 @@ exports.handler = async (event) => {
     }
 
     let method = event.pathParameters.proxy;
-    let body = null;
+    let body;
     if (event.body) {
         body = JSON.parse(event.body);
     }
     let authorizedUser = event.requestContext.authorizer.claims["cognito:username"];
     let email = event.requestContext.authorizer.claims.email;
-    let responsePromise;
-    responsePromise = (async function(method) {
+    let responsePromise = (async function(method) {
         switch(method) {
             case 'create':
                 await validate.create(body, authorizedUser, email);
@@ -50,7 +49,7 @@ exports.handler = async (event) => {
         }
     })(method);
 
-    let response = null;
+    let response;
     try {
         response = await responsePromise;
     } catch (err) {
