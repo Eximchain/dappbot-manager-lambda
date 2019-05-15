@@ -11,13 +11,14 @@ exports.handler = async (event) => {
         return cleanup.postPipelineCleanup(event['CodePipeline.job']);
     }
 
-    // Auto-return success for CORS pre-flight OPTIONS requests
-    if (event.httpMethod && event.httpMethod.toLowerCase() == 'options'){
-        return api.successResponse({});
-    }
-
+    // All other requests here should be from API Gateway
     if (!event.httpMethod){
         return api.errorResponse(`Lambda received an event it did not know how to parse: ${JSON.stringify(event, undefined, 2)}`);
+    }
+
+    // Auto-return success for CORS pre-flight OPTIONS requests
+    if (event.httpMethod.toLowerCase() == 'options'){
+        return api.successResponse({});
     }
 
     let method = event.pathParameters.proxy;
