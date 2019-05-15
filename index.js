@@ -1,9 +1,20 @@
 'use strict';
 const api = require('./api');
+const cleanup = require('./services/cleanup');
 const validate = require('./validate');
 
 exports.handler = async (event) => {
     console.log("request: " + JSON.stringify(event));
+
+    // Pass CodePipeline events straight to cleanup function
+    if (event['CodePipeline.job']){
+        return cleanup.postPipelineCleanup(event['CodePipeline.job']);
+    }
+
+    // All other requests here should be from API Gateway
+    if (!event.httpMethod){
+        return api.errorResponse(`Lambda received an event it did not know how to parse: ${JSON.stringify(event, undefined, 2)}`);
+    }
 
     // Auto-return success for CORS pre-flight OPTIONS requests
     if (event.httpMethod.toLowerCase() == 'options'){
@@ -11,13 +22,12 @@ exports.handler = async (event) => {
     }
 
     let method = event.pathParameters.proxy;
-    let body = null;
+    let body;
     if (event.body) {
         body = JSON.parse(event.body);
     }
     let authorizedUser = event.requestContext.authorizer.claims["cognito:username"];
     let email = event.requestContext.authorizer.claims.email;
-
     let responsePromise = (async function(method) {
         switch(method) {
             case 'create':
@@ -40,7 +50,7 @@ exports.handler = async (event) => {
         }
     })(method);
 
-    let response = null;
+    let response;
     try {
         response = await responsePromise;
     } catch (err) {

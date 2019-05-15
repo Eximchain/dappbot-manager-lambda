@@ -1,5 +1,5 @@
 const { addAwsPromiseRetries } = require('../common');
-const { AWS, codebuildId, pipelineRoleArn, dnsRoot, artifactBucket, dappseedBucket } = require('../env');
+const { AWS, codebuildId, pipelineRoleArn, dnsRoot, artifactBucket, dappseedBucket, lambdaFxnName } = require('../env');
 
 const codepipeline = new AWS.CodePipeline();
 
@@ -7,7 +7,7 @@ function pipelineName(dappName) {
   return `${dappName}${dnsRoot}`
 }
 
-function pipelineParams(dappName, destBucket) {
+function pipelineParams(dappName, destBucket, owner) {
     return {
         pipeline: {
             name: pipelineName(dappName),
@@ -22,7 +22,6 @@ function pipelineParams(dappName, destBucket) {
                     "name": "FetchDappseed",
                     "actions": [
                         {
-                            "inputArtifacts": [],
                             "name": "Source",
                             "actionTypeId": {
                                 "category": "Source",
@@ -92,6 +91,24 @@ function pipelineParams(dappName, destBucket) {
                                 "BucketName" : destBucket,
                                 "Extract": "true"
                             }
+                        },
+                        {
+                            "name": "Cleanup",
+                            "actionTypeId": {
+                                "category": "Invoke",
+                                "owner": "AWS",
+                                "version": "1",
+                                "provider": "Lambda"
+                            },
+                            "runOrder":2,
+                            "configuration": {
+                                "FunctionName": lambdaFxnName,
+                                "UserParameters": JSON.stringify({
+                                    OwnerEmail: owner,
+                                    DestinationBucket : destBucket,
+                                    DappName : dappName
+                                })
+                            }
                         }
                     ]
                 }
@@ -100,9 +117,9 @@ function pipelineParams(dappName, destBucket) {
     }
 }
 
-function promiseCreatePipeline(dappName, destBucket) {
+function promiseCreatePipeline(dappName, destBucket, owner) {
     let maxRetries = 5;
-    let params = pipelineParams(dappName, destBucket);
+    let params = pipelineParams(dappName, destBucket, owner);
     return addAwsPromiseRetries(() => codepipeline.createPipeline(params).promise(), maxRetries);
 }
 
@@ -122,9 +139,27 @@ function promiseDeletePipeline(dappName) {
     return addAwsPromiseRetries(() => codepipeline.deletePipeline(params).promise(), maxRetries);
 }
 
+function promiseCompleteJob(jobId) {
+    let maxRetries = 5;
+    let params = {
+        jobId : jobId
+    }
+    return addAwsPromiseRetries(() => codepipeline.putJobSuccessResult(params).promise(), maxRetries);
+}
+
+function promiseFailJob(jobId) {
+    let maxRetries = 5;
+    let params = {
+        jobId : jobId
+    }
+    return addAwsPromiseRetries(() => codepipeline.putJobFailureResult(params).promise(), maxRetries);
+}
+
 module.exports = {
     create: promiseCreatePipeline,
     run: promiseRunPipeline,
     delete: promiseDeletePipeline,
-    pipelineName: pipelineName
+    pipelineName: pipelineName,
+    completeJob: promiseCompleteJob,
+    failJob : promiseFailJob
 }

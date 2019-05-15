@@ -1,18 +1,14 @@
 const uuidv4 = require('uuid/v4');
-const { AWS, awsRegion, dappseedBucket } = require('../env');
-const { defaultTags, dappNameTag, dappOwnerTag, addAwsPromiseRetries } = require('../common');
 const shell = require('shelljs');
 const fs = require('fs');
 const zip = require('node-zip');
-const s3 = new AWS.S3({apiVersion: '2006-03-01'});
 
+const { AWS, awsRegion, dappseedBucket } = require('../env');
+const s3 = new AWS.S3({apiVersion: '2006-03-01'});
+const { dappDNS } = require('./route53');
+const { defaultTags, dappNameTag, dappOwnerTag, addAwsPromiseRetries } = require('../common');
+const { loadingPageHTML } = require('./loadingPageHtml');
 const s3BucketPrefix = "exim-abi-clerk-";
-const sampleHtml = `<html>
-<header><title>This is title</title></header>
-<body>
-Hello world
-</body>
-</html>`;
 
 function promiseCreateS3Bucket(bucketName) {
     let maxRetries = 5;
@@ -98,6 +94,24 @@ function promiseConfigureS3BucketStaticWebsite(bucketName) {
     return addAwsPromiseRetries(() => s3.putBucketWebsite(params).promise(), maxRetries);
 }
 
+function promiseEnableS3BucketCORS(bucketName, dappName){
+    let maxRetries = 5;
+    let params = {
+        Bucket : bucketName,
+        CORSConfiguration : {
+            CORSRules : [
+                {
+                    "AllowedHeaders": ["Authorization"],
+                    "AllowedOrigins": [`https://${dappDNS(dappName)}`],
+                    "AllowedMethods": ["GET"],
+                    MaxAgeSeconds   : 3000
+                }
+            ]
+        }
+    }
+    return addAwsPromiseRetries(() => s3.putBucketCors(params).promise(), maxRetries);
+}
+
 function promiseGetS3BucketWebsiteConfig(bucketName) {
     let maxRetries = 5;
     let params = {
@@ -106,7 +120,7 @@ function promiseGetS3BucketWebsiteConfig(bucketName) {
     return addAwsPromiseRetries(() => s3.getBucketWebsite(params).promise(), maxRetries);
 }
 
-function promisePutDappseed({ dappName, web3URL, guardianURL, abi, addr }) {
+function promisePutDappseed({ dappName, web3URL, guardianURL, abi, addr, cdnURL }) {
     shell.cd('/tmp');
     const dappZip = new zip();
     const abiObj = typeof abi === 'string' ? JSON.parse(abi) : abi;
@@ -115,7 +129,7 @@ function promisePutDappseed({ dappName, web3URL, guardianURL, abi, addr }) {
         contract_name : dappName,
         contract_addr : addr,
         contract_path : './Contract.json',
-        web3URL, guardianURL
+        web3URL, guardianURL, cdnURL:`https://${cdnURL}`
     }, undefined, 2));
     fs.writeFileSync('./dappseed.zip', dappZip.generate({base64:false,compression:'DEFLATE'}), 'binary')
     const zipData = fs.readFileSync('./dappseed.zip');
@@ -130,16 +144,31 @@ function promisePutDappseed({ dappName, web3URL, guardianURL, abi, addr }) {
     return addAwsPromiseRetries(() => s3.putObject(params).promise(), maxRetries);
 }
 
-function promisePutS3Objects(bucketName) {
+function promisePutS3LoadingPage(bucketName) {
     let maxRetries = 5;
     let params = {
         Bucket: bucketName,
         ACL: 'public-read',
         ContentType: 'text/html',
         Key: 'index.html',
-        Body: sampleHtml
+        Body: loadingPageHTML,
+        CacheControl: 'max-age=0'
     };
     return addAwsPromiseRetries(() => s3.putObject(params).promise(), maxRetries);
+}
+
+async function promiseMakeObjectNoCache(bucketName, objectKey) {
+    let maxRetries = 5;
+    const indexObject = await promiseGetS3Object(bucketName, objectKey);
+    const putParams = {
+        Bucket : bucketName,
+        ACL : 'public-read',
+        ContentType: indexObject.ContentType,
+        Key : objectKey,
+        Body : indexObject.Body,
+        CacheControl: 'max-age=0'
+    }
+    return addAwsPromiseRetries(() => s3.putObject(putParams).promise(), maxRetries);
 }
 
 function promisePutBucketTags(bucketName, tags) {
@@ -168,6 +197,15 @@ function promiseCreateS3BucketWithTags(bucketName, dappName, dappOwner) {
     });
 }
 
+function promiseGetS3Object(bucketName, objectKey) {
+    let maxRetries = 5;
+    const params = {
+        Bucket : bucketName,
+        Key : objectKey
+    }
+    return addAwsPromiseRetries(() => s3.getObject(params).promise(), maxRetries);
+}
+
 function createBucketName() {
     return s3BucketPrefix.concat(uuidv4());
 }
@@ -180,12 +218,15 @@ module.exports = {
     getBucketWebsite : promiseGetS3BucketWebsiteConfig,
     configureBucketWebsite : promiseConfigureS3BucketStaticWebsite,
     setBucketPublic : promiseSetS3BucketPublicReadable,
-    putBucketWebsite : promisePutS3Objects,
+    putLoadingPage : promisePutS3LoadingPage,
     putDappseed : promisePutDappseed,
     createBucketWithTags : promiseCreateS3BucketWithTags,
     deleteBucket : promiseDeleteS3Bucket,
     emptyBucket : promiseEmptyS3Bucket,
     listObjects : promiseListS3Objects,
+    getObject : promiseGetS3Object,
+    makeObjectNoCache : promiseMakeObjectNoCache,
+    enableBucketCors : promiseEnableS3BucketCORS,
     newBucketName : createBucketName,
     bucketEndpoint : getS3BucketEndpoint
 }
