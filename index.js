@@ -16,9 +16,8 @@ exports.handler = async (event) => {
         return api.successResponse({});
     }
 
-    let responsePromise;
     if (!event.httpMethod){
-        responsePromise = Promise.reject(`Lambda received an event it did not know how to parse: ${JSON.stringify(event, undefined, 2)}`)
+        return api.errorResponse(`Lambda received an event it did not know how to parse: ${JSON.stringify(event, undefined, 2)}`);
     }
 
     let method = event.pathParameters.proxy;
@@ -28,7 +27,7 @@ exports.handler = async (event) => {
     }
     let authorizedUser = event.requestContext.authorizer.claims["cognito:username"];
     let email = event.requestContext.authorizer.claims.email;
-
+    let responsePromise;
     responsePromise = (async function(method) {
         switch(method) {
             case 'create':
