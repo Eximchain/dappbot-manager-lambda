@@ -8,12 +8,7 @@ const zip = require('node-zip');
 const s3 = new AWS.S3({apiVersion: '2006-03-01'});
 
 const s3BucketPrefix = "exim-abi-clerk-";
-const loadingPageHTML = `<html>
-<header><title>DappBot</title></header>
-<body>
-<h1>Your dapp is building, please wait...</h1>
-</body>
-</html>`;
+const loadingPageHTML = fs.readFileSync('./loadingPage.html');
 
 function promiseCreateS3Bucket(bucketName) {
     let maxRetries = 5;
