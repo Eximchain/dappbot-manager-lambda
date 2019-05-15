@@ -2,7 +2,7 @@
 
 > Lambda function for the ABI Clerk.
 
-## How to Build
+## How to Build & Deploy
 To deploy a Lambda function, it must be wrapped into a zip file with all of its dependencies.  You can produce this zip file with:
 
 ```sh
@@ -10,6 +10,8 @@ npm run build
 ```
 
 This will produce an `abi-clerk-lambda.zip` at the package root directory.  The command is idempotent -- if you run it again while a build already exists, it won't package that old build into the new build.
+
+This Lambda function's zip will typically be manually placed in [`terraform-aws-abi-clerk`](https://github.com/eximchain/terraform-aws-abi-clerk/), where it gets deployed as part of `terraform apply`.  However, if you are iterating on the function and don't want to cycle the rest of your infrastructure, you can also manually upload the zip file on the Lambda function's AWS console page. 
 
 ## Endpoints
 - **`/create`**
