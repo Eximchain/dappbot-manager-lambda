@@ -129,7 +129,6 @@ function promisePutDappseed({ dappName, web3URL, guardianURL, abi, addr, cdnURL 
         contract_name : dappName,
         contract_addr : addr,
         contract_path : './Contract.json',
-        indexName : `index-${uuidv4()}.html`,
         web3URL, guardianURL, cdnURL:`https://${cdnURL}`
     }, undefined, 2));
     fs.writeFileSync('./dappseed.zip', dappZip.generate({base64:false,compression:'DEFLATE'}), 'binary')
