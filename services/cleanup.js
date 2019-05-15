@@ -7,39 +7,21 @@ const { sendConfirmation } = require('./sendgrid');
 //
 // https://docs.aws.amazon.com/codepipeline/latest/userguide/actions-invoke-lambda-function.html#actions-invoke-lambda-function-json-event-example
 //
-// Below function is called by index, it receives the event["CodePipeline.job"]["data"] field.
+// Below function is called by index, it receives the event["CodePipeline.job"] field.
 async function postPipelineCleanup({ data, id }){
-  // Get distroId & owner from UserParameters
   const { actionConfiguration } = data;
   const { OwnerEmail, DappseedBucket, DappName } = JSON.parse(actionConfiguration.configuration.UserParameters) 
-  console.log("parsed and unpacked UserParameters")
-
+  
   console.log("Successfully loaded all info to the clean function:");
-  console.log(`OwnerEmail: ${OwnerEmail}`);
-  console.log(`DappName: `,DappName);
-  console.log('DappseedBucket: ',DappseedBucket);
+  console.log(`OwnerEmail: ${OwnerEmail}; DappName: ${DappName}; DappseedBucket: ${DappseedBucket}`);
 
-  // Set the index.html file's Cache-Control to max-age=0
   try {
     await makeObjectNoCache(DappseedBucket, 'index.html');
-  } catch (err) {
-    console.log("Error updating S3 bucket website config!: ",err);
-    return await failJob(id);
-  }
-
-  // Send out the "Dapp complete!" Sendgrid email
-  try {
     await sendConfirmation(OwnerEmail, DappName);
-  } catch (err) {
-    console.log("Error sending the confirmation email via Sendgrid!: ",err);
-    return await failJob(id);
-  }
-
-  try {
-    console.log("Successfully completed CodePipeline cleanup!")
+    console.log("Successfully completed all CodePipeline cleanup steps!");
     return await completeJob(id);
   } catch (err) {
-    console.log("Error marking the job as complete!: ",err);
+    console.log("Error cleaning up the CodePipeline execution: ",err);
     return await failJob(id);
   }
 }
