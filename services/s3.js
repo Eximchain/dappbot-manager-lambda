@@ -1,5 +1,6 @@
 const uuidv4 = require('uuid/v4');
 const { AWS, awsRegion, dappseedBucket } = require('../env');
+const { dappDNS } = require('./route53');
 const { defaultTags, dappNameTag, dappOwnerTag, addAwsPromiseRetries } = require('../common');
 const shell = require('shelljs');
 const fs = require('fs');
@@ -96,6 +97,24 @@ function promiseConfigureS3BucketStaticWebsite(bucketName) {
         }
     };
     return addAwsPromiseRetries(() => s3.putBucketWebsite(params).promise(), maxRetries);
+}
+
+function promiseEnableS3BucketCORS(bucketName, dappName){
+    let maxRetries = 5;
+    let params = {
+        Bucket : bucketName,
+        CORSConfiguration : {
+            CORSRules : [
+                {
+                    "AllowedHeaders": ["Authorization"],
+                    "AllowedOrigins": [`https://${dappDNS(dappName)}`],
+                    "AllowedMethods": ["GET"],
+                    MaxAgeSeconds   : 3000
+                }
+            ]
+        }
+    }
+    return addAwsPromiseRetries(() => s3.putBucketCors(params).promise(), maxRetries);
 }
 
 function promiseGetS3BucketWebsiteConfig(bucketName) {
@@ -213,6 +232,7 @@ module.exports = {
     listObjects : promiseListS3Objects,
     getObject : promiseGetS3Object,
     makeObjectNoCache : promiseMakeObjectNoCache,
+    enableBucketCors : promiseEnableS3BucketCORS,
     newBucketName : createBucketName,
     bucketEndpoint : getS3BucketEndpoint
 }

@@ -82,6 +82,7 @@ async function apiCreate(body, owner) {
         await callAndLog('Create S3 Bucket', s3.createBucketWithTags(bucketName, dappName, owner));
         await callAndLog('Set Bucket Readable', s3.setBucketPublic(bucketName));
         await callAndLog('Configure Bucket Website', s3.configureBucketWebsite(bucketName));
+        await callAndLog('Enable Bucket CORS', s3.enableBucketCors(bucketName, dappName));
         await callAndLog('Put Loading Page', s3.putLoadingPage(bucketName));
 
         // Making Cloudfront Distribution first because we now want to incorporate its ID into the
@@ -127,7 +128,7 @@ async function apiCreate(body, owner) {
         }
 
         await callAndLog('Put DappSeed', s3.putDappseed({ dappName, web3URL, guardianURL, abi, addr, cdnURL: cloudfrontDns }));
-        await callAndLog('Create CodePipeline', codepipeline.create(dappName, bucketName, owner, cloudfrontDistroId));
+        await callAndLog('Create CodePipeline', codepipeline.create(dappName, bucketName, owner));
         await callAndLog('Create Route 53 record', route53.createRecord(dappName, cloudfrontDns));
         await callAndLog('Create DynamoDB item', dynamoDB.putItem(dappName, owner, abi, bucketName, cloudfrontDistroId, cloudfrontDns, addr, web3URL, guardianURL));
 

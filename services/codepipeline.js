@@ -117,9 +117,9 @@ function pipelineParams(dappName, destBucket, owner) {
     }
 }
 
-function promiseCreatePipeline(dappName, destBucket, owner, distroId) {
+function promiseCreatePipeline(dappName, destBucket, owner) {
     let maxRetries = 5;
-    let params = pipelineParams(dappName, destBucket, owner, distroId);
+    let params = pipelineParams(dappName, destBucket, owner);
     return addAwsPromiseRetries(() => codepipeline.createPipeline(params).promise(), maxRetries);
 }
 
