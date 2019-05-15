@@ -1,6 +1,6 @@
 const loadingPageHtml = `<!DOCTYPE html>
 <html>
-  <header><title>DappBot</title></header>
+  <head><title>DappBot</title></head>
   <body>
     <div class="terminal">
       <p class="line1">$ dappsmith create --dapp<span class="cursor1">_</span></p>
