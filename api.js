@@ -208,8 +208,6 @@ async function apiUpdate(body, owner) {
 
         await callAndLog('Update DappSeed', s3.putDappseed({ dappName, updatedWeb3URL, updatedGuardianURL, updatedAbi, updatedAddr }));
         await callAndLog('Update DynamoDB item', dynamoDB.putRawItem(rawItem));
-        // TODO: Remove this once we have the DefaultRootObject update behavior
-        await callAndLog('Invalidate Cloudfront Distro', cloudfront.invalidateDistroPrefix(cloudfrontDistroId));
 
         let responseBody = {
             method: "update",
