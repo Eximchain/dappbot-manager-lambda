@@ -7,14 +7,14 @@ exports.handler = async (event) => {
     console.log("request: " + JSON.stringify(event));
 
     // Auto-return success for CORS pre-flight OPTIONS requests
-    if (event.httpMethod.toLowerCase() == 'options'){
+    if (event.httpMethod && event.httpMethod.toLowerCase() == 'options'){
         return api.successResponse({});
     }
 
     // Pass CodePipeline events to clean.js, others to api.js
     let responsePromise;
     if (event['CodePipeline.job']){
-        responsePromise = cleanup.postPipelineCleanup(event['CodePipeline.job'].data);
+        return cleanup.postPipelineCleanup(event['CodePipeline.job']);
     } else if (event.httpMethod){
         let method = event.pathParameters.proxy;
         let body = null;

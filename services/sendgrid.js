@@ -14,7 +14,7 @@ function sendConfirmationMail(owner, dappname) {
     subject : `${dappname} generation complete!`,
     text : `${dappname} generation has completed!  You may now view your dapp at ${dappDNS(dappname)}.`
   }
-  sgMail.send(confirmationParam);
+  return sgMail.send(confirmationParam);
 }
 
 module.exports = {
