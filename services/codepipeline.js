@@ -105,7 +105,7 @@ function pipelineParams(dappName, destBucket, owner) {
                                 "FunctionName": lambdaFxnName,
                                 "UserParameters": JSON.stringify({
                                     OwnerEmail: owner,
-                                    DappseedBucket : destBucket,
+                                    DestinationBucket : destBucket,
                                     DappName : dappName
                                 })
                             }

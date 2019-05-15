@@ -10,13 +10,13 @@ const { sendConfirmation } = require('./sendgrid');
 // Below function is called by index, it receives the event["CodePipeline.job"] field.
 async function postPipelineCleanup({ data, id }){
   const { actionConfiguration } = data;
-  const { OwnerEmail, DappseedBucket, DappName } = JSON.parse(actionConfiguration.configuration.UserParameters) 
-  
+  const { OwnerEmail, DestinationBucket, DappName } = JSON.parse(actionConfiguration.configuration.UserParameters) 
+
   console.log("Successfully loaded all info to the clean function:");
-  console.log(`OwnerEmail: ${OwnerEmail}; DappName: ${DappName}; DappseedBucket: ${DappseedBucket}`);
+  console.log(`OwnerEmail: ${OwnerEmail}; DappName: ${DappName}; DestinationBucket: ${DestinationBucket}`);
 
   try {
-    await makeObjectNoCache(DappseedBucket, 'index.html');
+    await makeObjectNoCache(DestinationBucket, 'index.html');
     await sendConfirmation(OwnerEmail, DappName);
     console.log("Successfully completed all CodePipeline cleanup steps!");
     return await completeJob(id);
