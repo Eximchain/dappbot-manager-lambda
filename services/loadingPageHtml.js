@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+const loadingPageHtml = `<!DOCTYPE html>
 <html>
   <header><title>DappBot</title></header>
   <body>
@@ -324,4 +324,6 @@
         }
       </style>
   </body>
-</html>
+</html>`;
+
+module.exports = { loadingPageHtml };

@@ -1,14 +1,14 @@
 const uuidv4 = require('uuid/v4');
-const { AWS, awsRegion, dappseedBucket } = require('../env');
-const { dappDNS } = require('./route53');
-const { defaultTags, dappNameTag, dappOwnerTag, addAwsPromiseRetries } = require('../common');
 const shell = require('shelljs');
 const fs = require('fs');
 const zip = require('node-zip');
-const s3 = new AWS.S3({apiVersion: '2006-03-01'});
 
+const { AWS, awsRegion, dappseedBucket } = require('../env');
+const s3 = new AWS.S3({apiVersion: '2006-03-01'});
+const { dappDNS } = require('./route53');
+const { defaultTags, dappNameTag, dappOwnerTag, addAwsPromiseRetries } = require('../common');
+const { loadingPageHTML } = require('./loadingPageHtml');
 const s3BucketPrefix = "exim-abi-clerk-";
-const loadingPageHTML = fs.readFileSync('./loadingPage.html');
 
 function promiseCreateS3Bucket(bucketName) {
     let maxRetries = 5;
