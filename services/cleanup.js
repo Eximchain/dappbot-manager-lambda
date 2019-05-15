@@ -22,7 +22,13 @@ async function postPipelineCleanup({ data, id }){
     return await completeJob(id);
   } catch (err) {
     console.log("Error cleaning up the CodePipeline execution: ",err);
-    return await failJob(id);
+    return await failJob({
+      jobId : id,
+      failureParams : {
+        type : 'JobFailed',
+        message : JSON.stringify(err)
+      }
+    });
   }
 }
 
