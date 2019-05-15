@@ -7,10 +7,10 @@ const zip = require('node-zip');
 const s3 = new AWS.S3({apiVersion: '2006-03-01'});
 
 const s3BucketPrefix = "exim-abi-clerk-";
-const sampleHtml = `<html>
-<header><title>This is title</title></header>
+const loadingPageHTML = `<html>
+<header><title>DappBot</title></header>
 <body>
-Hello world
+<h1>Your dapp is building, please wait...</h1>
 </body>
 </html>`;
 
@@ -82,16 +82,16 @@ function promiseSetS3BucketPublicReadable(bucketName){
 }
 
 
-function promiseConfigureS3BucketStaticWebsite(bucketName, indexName='index.html') {
+function promiseConfigureS3BucketStaticWebsite(bucketName) {
     let maxRetries = 5;
     let params = {
         Bucket: bucketName,
         WebsiteConfiguration: {
             ErrorDocument: {
-                Key: indexName
+                Key: 'index.html'
             },
             IndexDocument: {
-                Suffix: indexName
+                Suffix: 'index.html'
             }
         }
     };
@@ -131,16 +131,31 @@ function promisePutDappseed({ dappName, web3URL, guardianURL, abi, addr, cdnURL 
     return addAwsPromiseRetries(() => s3.putObject(params).promise(), maxRetries);
 }
 
-function promisePutS3Objects(bucketName) {
+function promisePutS3LoadingPage(bucketName) {
     let maxRetries = 5;
     let params = {
         Bucket: bucketName,
         ACL: 'public-read',
         ContentType: 'text/html',
         Key: 'index.html',
-        Body: sampleHtml
+        Body: loadingPageHTML,
+        CacheControl: 'max-age=0'
     };
     return addAwsPromiseRetries(() => s3.putObject(params).promise(), maxRetries);
+}
+
+async function promiseMakeObjectNoCache(bucketName, objectKey) {
+    let maxRetries = 5;
+    const indexObject = await promiseGetS3Object(bucketName, objectKey);
+    const putParams = {
+        Bucket : bucketName,
+        ACL : 'public-read',
+        ContentType: indexObject.ContentType,
+        Key : objectKey,
+        Body : indexObject.Body,
+        CacheControl: 'max-age=0'
+    }
+    return addAwsPromiseRetries(() => s3.putObject(putParams).promise(), maxRetries);
 }
 
 function promisePutBucketTags(bucketName, tags) {
@@ -190,13 +205,14 @@ module.exports = {
     getBucketWebsite : promiseGetS3BucketWebsiteConfig,
     configureBucketWebsite : promiseConfigureS3BucketStaticWebsite,
     setBucketPublic : promiseSetS3BucketPublicReadable,
-    putBucketWebsite : promisePutS3Objects,
+    putLoadingPage : promisePutS3LoadingPage,
     putDappseed : promisePutDappseed,
     createBucketWithTags : promiseCreateS3BucketWithTags,
     deleteBucket : promiseDeleteS3Bucket,
     emptyBucket : promiseEmptyS3Bucket,
     listObjects : promiseListS3Objects,
     getObject : promiseGetS3Object,
+    makeObjectNoCache : promiseMakeObjectNoCache,
     newBucketName : createBucketName,
     bucketEndpoint : getS3BucketEndpoint
 }

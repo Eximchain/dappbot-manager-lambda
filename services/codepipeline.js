@@ -111,7 +111,7 @@ function pipelineParams(dappName, destBucket, owner, distroId) {
                                 "FunctionName": lambdaFxnName,
                                 "UserParameters": JSON.stringify({
                                     OwnerEmail: owner,
-                                    DistributionId: distroId
+                                    DappseedBucket : dappseedBucket
                                 })
                             }
                         }

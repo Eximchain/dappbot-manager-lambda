@@ -1,6 +1,5 @@
 const zip = require('node-zip');
-const { updateRootObject } = require('./cloudfront');
-const { getObject, configureBucketWebsite } = require('./s3'); 
+const { getObject, makeObjectNoCache } = require('./s3'); 
 const { sendConfirmation } = require('./sendgrid');
 
 // View a sample JSON event from a CodePipeline here:
@@ -10,17 +9,16 @@ const { sendConfirmation } = require('./sendgrid');
 // Below function is called by index, it receives the event["CodePipeline.job"]["data"] field.
 async function postPipelineCleanup({ actionConfiguration, inputArtifacts }){
   // Get distroId & owner from UserParameters
-  const { OwnerEmail, DistributionId } = JSON.parse(actionConfiguration.UserParameters) 
+  const { OwnerEmail, DappseedBucket } = JSON.parse(actionConfiguration.UserParameters) 
 
   // Fetch the dappseed artifact, make sure we're in /tmp, unzip it to the filesystem
   const { bucketName, objectKey } = inputArtifacts[0].location.s3Location;
-  let dappName, indexName;
+  let dappName;
   try {
     const dappseedBuffer = await getObject(bucketName, objectKey);
     const dappseedZip = new zip(dappseedBuffer, { base64: false })
     const dappseedConfig = JSON.parse(dappseedZip.files['config.json']);
     dappName = dappseedConfig.contract_name;
-    indexName = dappseedConfig.indexName;
   } catch (err) {
     console.log("Error fetching & parsing the dappseed!: ",err);
     throw err;
@@ -28,22 +26,13 @@ async function postPipelineCleanup({ actionConfiguration, inputArtifacts }){
 
   console.log("Successfully loaded all info to the clean function:");
   console.log(`OwnerEmail: ${OwnerEmail}`);
-  console.log(`DistributionID: ${DistributionId}`);
   console.log(`DappName: `,dappName);
-  console.log(`IndexName: `,indexName);
 
+  // Set the index.html file's Cache-Control to max-age=0
   try {
-    await configureBucketWebsite(bucketName, indexName);
+    await makeObjectNoCache(DappseedBucket, 'index.html');
   } catch (err) {
     console.log("Error updating S3 bucket website config!: ",err);
-    throw err;
-  }
-
-  // Call the Cloudfront update fxn
-  try {
-    await updateRootObject(DistributionId, indexName);
-  } catch (err) {
-    console.log("Error updating the Cloudfront distro's root object!: ",err);
     throw err;
   }
 

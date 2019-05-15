@@ -79,9 +79,10 @@ async function apiCreate(body, owner) {
         const existingItem = await callAndLog('Get DynamoDB Item', dynamoDB.getItem(dappName));
         assert(!existingItem.Item, `DappName ${dappName} is already taken. Please choose another name.`);
 
-        await callAndLog('Create S3 Bucket', s3.createBucketWithTags(bucketName, dappName, owner))
+        await callAndLog('Create S3 Bucket', s3.createBucketWithTags(bucketName, dappName, owner));
         await callAndLog('Set Bucket Readable', s3.setBucketPublic(bucketName));
-        await callAndLog('Configure Bucket Website', s3.configureBucketWebsite(bucketName))
+        await callAndLog('Configure Bucket Website', s3.configureBucketWebsite(bucketName));
+        await callAndLog('Put Loading Page', s3.putLoadingPage(bucketName));
 
         // Making Cloudfront Distribution first because we now want to incorporate its ID into the
         // dappseed.zip information for use at cleanup time.

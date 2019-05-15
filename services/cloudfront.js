@@ -197,18 +197,6 @@ async function getDistributionOwner(distroArn) {
     return dappOwnerTagList[0].Value;
 }
 
-async function promiseUpdateCloudfrontDistrubtionRootObject(distroId, objectName) {
-    let maxRetries = 5;
-    const currentConfig = await cloudfront.getDistributionConfig(distroId).promise();
-    let newConfigParams = {
-        Id : distroId,
-        IfMatch : currentConfig.ETag,
-        DistributionConfig : currentConfig.DistributionConfig
-    }
-    newConfigParams.DistributionConfig.DefaultRootObject = objectName;
-    return addAwsPromiseRetries(() => cloudfront.updateDistribution(newConfigParams).promise(), maxRetries);
-}
-
 module.exports = {
     createDistro : promiseCreateCloudfrontDistribution,
     getDistroConfig : promiseGetCloudfrontDistributionConfig,
@@ -218,6 +206,5 @@ module.exports = {
     updateOriginAndEnable : promiseUpdateCloudfrontDistributionOriginAndEnable,
     getConflictingDistro : getConflictingDistribution,
     getDistroOwner : getDistributionOwner,
-    invalidateDistroPrefix : promiseCreateCloudfrontInvalidation,
-    updateRootObject : promiseUpdateCloudfrontDistrubtionRootObject
+    invalidateDistroPrefix : promiseCreateCloudfrontInvalidation
 };
