@@ -4,7 +4,7 @@ const { dappDNS } = require('./route53');
 
 let USING_SENDGRID = false;
 
-if (sendgridApiKey){
+if (sendgridApiKey && sendgridApiKey !== ""){
   sgMail.setApiKey(sendgridApiKey);
   USING_SENDGRID = true;
 }
