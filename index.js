@@ -11,40 +11,21 @@ exports.handler = async (event) => {
         return cleanup.postPipelineCleanup(event['CodePipeline.job']);
     }
 
-    // All other requests here should be from API Gateway
-    if (!event.httpMethod){
-        return api.errorResponse(`Lambda received an event it did not know how to parse: ${JSON.stringify(event, undefined, 2)}`);
-    }
+    let record = event.Records[0];
 
-    // Auto-return success for CORS pre-flight OPTIONS requests
-    if (event.httpMethod.toLowerCase() == 'options'){
-        return api.successResponse({});
-    }
+    let method = record.messageAttributes.Method.stringValue;
+    let body = JSON.parse(record.body);
+    let dappName = body.DappName;
 
-    let method = event.pathParameters.proxy;
-    let body;
-    if (event.body) {
-        body = JSON.parse(event.body);
-    }
-    let authorizedUser = event.requestContext.authorizer.claims["cognito:username"];
-    let email = event.requestContext.authorizer.claims.email;
+
     let responsePromise = (async function(method) {
         switch(method) {
             case 'create':
-                await validate.create(body, authorizedUser, email);
-                console.log("Create validation passed");
-                return api.create(body, email);
-            case 'read':
-                await validate.read(body);
-                return api.read(body, email);
+                return api.create(dappName);
             case 'update':
-                await validate.update(body);
-                return api.update(body, email);
+                return api.update(dappName);
             case 'delete':
-                await validate.delete(body);
-                return api.delete(body, email);
-            case 'list':
-                return api.list(email);
+                return api.delete(dappName);
             default:
                 return Promise.reject({message: "Unrecognized method name ".concat(method)});
         }

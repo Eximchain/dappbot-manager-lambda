@@ -29,6 +29,14 @@ function response(body, opts) {
         data: dataField,
         err: errField
     };
+    let jsonResponse = JSON.stringify(responseBody);
+    if (opts.isErr) {
+        console.log("Error Processing Record");
+        throw {};
+    } else {
+        console.log("Success Processing Record");
+        return {};
+    }
     return {
         statusCode: responseCode,
         headers: responseHeaders,
@@ -62,22 +70,21 @@ function callFactory(startStage) {
     return [stage, callAndLog];
 }
 
-async function apiCreate(body, owner) {
-    let dappName = validate.cleanName(body.DappName);
-
-    let abi = body.Abi;
-    let web3URL = body.Web3URL;
-    let guardianURL = body.GuardianURL;
-    let addr = body.ContractAddr;
-
-    let bucketName = s3.newBucketName();
-    let s3Dns = s3.bucketEndpoint(bucketName);
-
+async function apiCreate(dappName) {
     let [stage, callAndLog] = callFactory('Pre-Creation');
 
     try {
-        const existingItem = await callAndLog('Get DynamoDB Item', dynamoDB.getItem(dappName));
-        assert(!existingItem.Item, `DappName ${dappName} is already taken. Please choose another name.`);
+        let dbItem = await callAndLog('Get DynamoDB Item', dynamoDB.getItem(dappName));
+
+        let abi = dbItem.Item.Abi.S;
+        let addr = dbItem.Item.ContractAddr.S;
+        let web3URL = dbItem.Item.Web3URL.S;
+        let guardianURL = dbItem.Item.GuardianURL.S;
+        let bucketName = dbItem.Item.S3BucketName.S;
+        let s3Dns = s3.bucketEndpoint(bucketName);
+        let owner = dbItem.Item.OwnerEmail.S;
+        let pipelineName = dbItem.Item.PipelineName.S;
+        let dnsName = dbItem.Item.DnsName.S;
 
         await callAndLog('Create S3 Bucket', s3.createBucketWithTags(bucketName, dappName, owner));
         await callAndLog('Set Bucket Readable', s3.setBucketPublic(bucketName));
@@ -127,9 +134,9 @@ async function apiCreate(body, owner) {
         }
 
         await callAndLog('Put DappSeed', s3.putDappseed({ dappName, web3URL, guardianURL, abi, addr, cdnURL: cloudfrontDns }));
-        await callAndLog('Create CodePipeline', codepipeline.create(dappName, bucketName, owner));
-        await callAndLog('Create Route 53 record', route53.createRecord(dappName, cloudfrontDns));
-        await callAndLog('Create DynamoDB item', dynamoDB.putItem(dappName, owner, abi, bucketName, cloudfrontDistroId, cloudfrontDns, addr, web3URL, guardianURL));
+        await callAndLog('Create CodePipeline', codepipeline.create(dappName, pipelineName, bucketName, owner));
+        await callAndLog('Create Route 53 record', route53.createRecord(dnsName, cloudfrontDns));
+        await callAndLog('Set DynamoDB item BUILDING_DAPP', dynamoDB.setItemBuilding(dbItem.Item, cloudfrontDistroId, cloudfrontDns));
 
         console.log("Dapp generation successfully initialized!");
 
@@ -144,69 +151,21 @@ async function apiCreate(body, owner) {
     }
 }
 
-async function apiRead(body, callerEmail) {
-    let dappName = validate.cleanName(body.DappName);
-
-    let [stage, callAndLog] = callFactory('Pre-Read');
-
-    try {
-        const dbItem = await callAndLog('Get DynamoDB Item', dynamoDB.getItem(dappName));
-        let outputItem = dynamoDB.toApiRepresentation(dbItem.Item);
-        if (outputItem.OwnerEmail !== callerEmail && !validate.isAdmin(callerEmail)) {
-            outputItem = {};
-        }
-        let itemExists = Boolean(outputItem.DappName);
-        let responseBody = {
-            method: "read",
-            exists: itemExists,
-            item: outputItem
-        };
-        return successResponse(responseBody);
-    } catch (err) {
-        logErr(stage, err);
-        return errorResponse(err);
-    }
-}
-
-async function apiUpdate(body, owner) {
-    let dappName = validate.cleanName(body.DappName);
-    // These values may or may not be defined
-    let abi = body.Abi;
-    let web3URL = body.Web3URL;
-    let guardianURL = body.GuardianURL;
-    let addr = body.ContractAddr;
-
+async function apiUpdate(dappName) {
     let [stage, callAndLog] = callFactory('Pre-Update');
 
     try {
-        if (!abi && !web3URL && !guardianURL && !addr) {
-            let responseBody = {
-                method: "update",
-                message: "No attributes specified to update."
-            };
-            return successResponse(responseBody);
-        }
         const dbItem = await callAndLog('Get DynamoDB Item', dynamoDB.getItem(dappName));
         assert(dbItem.Item, "Dapp Not Found");
 
-        let dbOwner = dbItem.Item.OwnerEmail.S;
-        let cloudfrontDistroId = dbItem.Item.CloudfrontDistributionId.S;
-        assert(owner === dbOwner, "You do not have permission to update the specified Dapp.");
+        let abi = dbItem.Item.Abi.S;
+        let addr = dbItem.Item.ContractAddr.S;
+        let web3URL = dbItem.Item.Web3URL.S;
+        let guardianURL = dbItem.Item.GuardianURL.S;
+        let cdnURL = dbItem.Item.CloudfrontDnsName.S;
 
-        let rawItem = dbItem.Item;
-
-        let updatedAbi = abi ? abi : rawItem.Abi.S;
-        let updatedWeb3URL = web3URL ? web3URL : rawItem.Web3URL.S;
-        let updatedGuardianURL = guardianURL ? guardianURL : rawItem.GuardianURL.S;
-        let updatedAddr = addr ? addr : rawItem.ContractAddr.S;
-
-        rawItem.Abi.S = updatedAbi;
-        rawItem.Web3URL.S = updatedWeb3URL;
-        rawItem.GuardianURL.S = updatedGuardianURL;
-        rawItem.ContractAddr.S = updatedAddr;
-
-        await callAndLog('Update DappSeed', s3.putDappseed({ dappName, updatedWeb3URL, updatedGuardianURL, updatedAbi, updatedAddr }));
-        await callAndLog('Update DynamoDB item', dynamoDB.putRawItem(rawItem));
+        await callAndLog('Update DappSeed', s3.putDappseed({ dappName, web3URL, guardianURL, abi, addr, cdnURL }));
+        await callAndLog('Set DynamoDB item BUILDING_DAPP', dynamoDB.setItemBuilding(dbItem.Item));
 
         let responseBody = {
             method: "update",
@@ -219,21 +178,18 @@ async function apiUpdate(body, owner) {
     }
 }
 
-async function apiDelete(body, callerEmail) {
-    let dappName = validate.cleanName(body.DappName);
-
+async function apiDelete(dappName) {
     let [stage, callAndLog] = callFactory('Pre-Delete');
 
     try {
         const dbItem = await callAndLog('Get Dapp DynamoDb Item', dynamoDB.getItem(dappName));
         assert(dbItem.Item, "Dapp Not Found");
 
-        let dbOwner = dbItem.Item.OwnerEmail.S;
         let bucketName = dbItem.Item.S3BucketName.S;
         let cloudfrontDistroId = dbItem.Item.CloudfrontDistributionId.S;
         let cloudfrontDns = dbItem.Item.CloudfrontDnsName.S;
-
-        assert(callerEmail === dbOwner || validate.isAdmin(callerEmail), "You do not have permission to delete the specified Dapp.");
+        let pipelineName = dbItem.Item.PipelineName.S;
+        let dnsName = dbItem.Item.DnsName.S;
         
         try {
             await callAndLog('Disable Cloudfront distro', cloudfront.disableDistro(cloudfrontDistroId));
@@ -249,7 +205,7 @@ async function apiDelete(body, callerEmail) {
             }
         }
 
-        await callAndLog('Delete Route53 Record', route53.deleteRecord(dappName, cloudfrontDns));
+        await callAndLog('Delete Route53 Record', route53.deleteRecord(dnsName, cloudfrontDns));
 
         try {
             await callAndLog('Empty S3 Bucket', s3.emptyBucket(bucketName));
@@ -266,7 +222,7 @@ async function apiDelete(body, callerEmail) {
         }
 
         await callAndLog('Delete DynamoDB item', dynamoDB.deleteItem(dappName));
-        await callAndLog('Delete CodePipeline', codepipeline.delete(dappName));
+        await callAndLog('Delete CodePipeline', codepipeline.delete(pipelineName));
 
         let responseBody = {
             method: "delete",
@@ -281,30 +237,10 @@ async function apiDelete(body, callerEmail) {
 
 }
 
-async function apiList(owner) {
-    let [stage, callAndLog] = callFactory('Pre-List');
-
-    try {
-        let ddbResponse = await callAndLog('List DynamoDB Items', dynamoDB.getByOwner(owner));
-        let outputItems = ddbResponse.Items.map(item => dynamoDB.toApiRepresentation(item));
-        let responseBody = {
-            method: "list",
-            count: ddbResponse.Count,
-            items: outputItems
-        };
-    return successResponse(responseBody);
-    } catch (err) {
-        logErr(stage, err);
-        return errorResponse(err);
-    }
-}
-
 module.exports = {
   create : apiCreate,
-  read : apiRead,
   update : apiUpdate,
   delete : apiDelete,
-  list : apiList,
   errorResponse : errorResponse,
   successResponse : successResponse
 }

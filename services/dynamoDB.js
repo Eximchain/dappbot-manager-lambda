@@ -12,6 +12,19 @@ function serializeDdbKey(dappName) {
     return keyItem;
 }
 
+function promiseSetItemBuilding(dbItem, cloudfrontDistroId, cloudfrontDns) {
+    if (cloudfrontDistroId) {
+        dbItem.CloudfrontDistributionId = {S: cloudfrontDistroId};
+    }
+    if (cloudfrontDns) {
+        dbItem.CloudfrontDnsName = {S: cloudfrontDns};
+    }
+
+    dbItem.State.S = 'BUILDING_DAPP';
+
+    return promisePutRawDappItem(dbItem);
+}
+
 function serializeDdbItem(dappName, ownerEmail, abi, bucketName, cloudfrontDns, cloudfrontDistroId, contractAddr, web3Url, guardianUrl) {
     let creationTime = new Date().toISOString();
     let item = {
@@ -145,5 +158,6 @@ module.exports = {
     getItem : promiseGetDappItem,
     deleteItem : promiseDeleteDappItem,
     getByOwner : promiseGetItemsByOwner,
-    toApiRepresentation : dbItemToApiRepresentation
+    toApiRepresentation : dbItemToApiRepresentation,
+    setItemBuilding : promiseSetItemBuilding
 }
