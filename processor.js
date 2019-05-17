@@ -33,14 +33,14 @@ async function processorCreate(dappName) {
     await callAndLog('Create S3 Bucket', s3.createBucketWithTags(bucketName, dappName, owner));
     await callAndLog('Set Bucket Readable', s3.setBucketPublic(bucketName));
     await callAndLog('Configure Bucket Website', s3.configureBucketWebsite(bucketName));
-    await callAndLog('Enable Bucket CORS', s3.enableBucketCors(bucketName, dappName));
+    await callAndLog('Enable Bucket CORS', s3.enableBucketCors(bucketName, dnsName));
     await callAndLog('Put Loading Page', s3.putLoadingPage(bucketName));
 
     // Making Cloudfront Distribution first because we now want to incorporate its ID into the
     // dappseed.zip information for use at cleanup time.
     let cloudfrontDistroId, cloudfrontDns;
     try {
-        const newDistro = await callAndLog('Create Cloudfront Distro', cloudfront.createDistro(dappName, owner, s3Dns));
+        const newDistro = await callAndLog('Create Cloudfront Distro', cloudfront.createDistro(dappName, owner, s3Dns, dnsName));
 
         cloudfrontDistroId = newDistro.Distribution.Id;
         cloudfrontDns = newDistro.Distribution.DomainName;
@@ -48,7 +48,7 @@ async function processorCreate(dappName) {
         switch(err.code) {
             case 'CNAMEAlreadyExists':
                 try {
-                    let conflictingDistro = await callAndLog('Get Conflicting Cloudfront Distro', cloudfront.getConflictingDistro(dappName));
+                    let conflictingDistro = await callAndLog('Get Conflicting Cloudfront Distro', cloudfront.getConflictingDistro(dappName, dnsName));
                     await validate.conflictingDistroRepurposable(conflictingDistro, owner);
 
                     // Required vars to exit the block without errors

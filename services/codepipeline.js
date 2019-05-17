@@ -1,11 +1,7 @@
 const { addAwsPromiseRetries } = require('../common');
-const { AWS, codebuildId, pipelineRoleArn, dnsRoot, artifactBucket, dappseedBucket, lambdaFxnName } = require('../env');
+const { AWS, codebuildId, pipelineRoleArn, artifactBucket, dappseedBucket, lambdaFxnName } = require('../env');
 
 const codepipeline = new AWS.CodePipeline();
-
-function pipelineName(dappName) {
-    return `${dappName}${dnsRoot}`
-}
 
 function pipelineParams(dappName, pipelineName, destBucket, owner) {
     return {
@@ -163,7 +159,6 @@ module.exports = {
     create: promiseCreatePipeline,
     run: promiseRunPipeline,
     delete: promiseDeletePipeline,
-    pipelineName: pipelineName,
     completeJob: promiseCompleteJob,
     failJob : promiseFailJob
 }

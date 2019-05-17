@@ -46,12 +46,7 @@ function promiseDeleteDnsRecord(dnsName, cloudfrontDns) {
     return addAwsPromiseRetries(() => route53.changeResourceRecordSets(params).promise(), maxRetries);
 }
 
-function dnsNameFromDappName(dappName) {
-    return dappName.concat(dnsRoot);
-}
-
 module.exports = {
     createRecord : promiseCreateDnsRecord,
-    deleteRecord : promiseDeleteDnsRecord,
-    dappDNS : dnsNameFromDappName
+    deleteRecord : promiseDeleteDnsRecord
 }

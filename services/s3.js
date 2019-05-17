@@ -5,7 +5,6 @@ const zip = require('node-zip');
 
 const { AWS, awsRegion, dappseedBucket } = require('../env');
 const s3 = new AWS.S3({apiVersion: '2006-03-01'});
-const { dappDNS } = require('./route53');
 const { defaultTags, dappNameTag, dappOwnerTag, addAwsPromiseRetries } = require('../common');
 const { loadingPageHTML } = require('./loadingPageHtml');
 const s3BucketPrefix = "exim-abi-clerk-";
@@ -94,7 +93,7 @@ function promiseConfigureS3BucketStaticWebsite(bucketName) {
     return addAwsPromiseRetries(() => s3.putBucketWebsite(params).promise(), maxRetries);
 }
 
-function promiseEnableS3BucketCORS(bucketName, dappName){
+function promiseEnableS3BucketCORS(bucketName, dappDNS){
     let maxRetries = 5;
     let params = {
         Bucket : bucketName,
@@ -102,7 +101,7 @@ function promiseEnableS3BucketCORS(bucketName, dappName){
             CORSRules : [
                 {
                     "AllowedHeaders": ["Authorization"],
-                    "AllowedOrigins": [`https://${dappDNS(dappName)}`],
+                    "AllowedOrigins": [`https://${dappDNS}`],
                     "AllowedMethods": ["GET"],
                     MaxAgeSeconds   : 3000
                 }
@@ -227,6 +226,5 @@ module.exports = {
     getObject : promiseGetS3Object,
     makeObjectNoCache : promiseMakeObjectNoCache,
     enableBucketCors : promiseEnableS3BucketCORS,
-    newBucketName : createBucketName,
     bucketEndpoint : getS3BucketEndpoint
 }

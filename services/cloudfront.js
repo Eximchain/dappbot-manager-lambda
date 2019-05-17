@@ -2,10 +2,9 @@ const assert = require('assert');
 const uuidv4 = require('uuid/v4');
 const { defaultTags, dappNameTag, dappOwnerTag, addAwsPromiseRetries } = require('../common');
 const { AWS, certArn } = require('../env');
-const { dappDNS } = require('./route53');
 const cloudfront = new AWS.CloudFront({apiVersion: '2018-11-05'});
 
-function promiseCreateCloudfrontDistribution(appName, dappOwner, s3Origin) {
+function promiseCreateCloudfrontDistribution(appName, dappOwner, s3Origin, dappDNS) {
     // TODO: Origin Access Identity
     // TODO: Verify that we want these args
     
@@ -19,7 +18,7 @@ function promiseCreateCloudfrontDistribution(appName, dappOwner, s3Origin) {
                 DefaultRootObject: 'index.html',
                 Aliases: {
                     Quantity: 1,
-                    Items: [dappDNS(appName)]
+                    Items: [dappDNS]
                 },
                 ViewerCertificate : {
                     ACMCertificateArn : certArn,
@@ -168,8 +167,8 @@ function promiseCreateCloudfrontInvalidation(distroId, pathPrefix='/') {
     return addAwsPromiseRetries(() => cloudfront.createInvalidation(params).promise(), maxRetries);
 }
 
-async function getConflictingDistribution(dappName) {
-    let conflictingAlias = dappDNS(dappName);
+async function getConflictingDistribution(dappName, dappDNS) {
+    let conflictingAlias = dappDNS;
     let marker = null;
     while (true) {
         let existingDistroPage = await promiseListCloudfrontDistributions(marker);
