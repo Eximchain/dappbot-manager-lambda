@@ -1,5 +1,5 @@
 const { dnsRoot } = require('../env');
-const { setDappAvailable } = require('./dynamoDB');
+const { setDappAvailable, setDappFailed } = require('./dynamoDB');
 const { makeObjectNoCache } = require('./s3'); 
 const { completeJob, failJob } = require('./codepipeline');
 const { sendConfirmation } = require('./sendgrid');
@@ -25,7 +25,8 @@ async function postPipelineCleanup({ data, id }){
     return await completeJob(id);
   } catch (err) {
     console.log("Error cleaning up the CodePipeline execution: ", err);
-    return await failJob(id, err);
+    await failJob(id, err);
+    return await setDappFailed(DappName);
   }
 }
 

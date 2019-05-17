@@ -17,6 +17,14 @@ async function promiseSetDappAvailable(dappName) {
     return promisePutRawDappItem(dbItem);
 }
 
+async function promiseSetDappFailed(dappName) {
+    let dbResponse = await promiseGetDappItem(dappName);
+    let dbItem = dbResponse.Item;
+    dbItem.State.S = 'FAILED';
+
+    return promisePutRawDappItem(dbItem);
+}
+
 function promiseSetItemBuilding(dbItem, cloudfrontDistroId, cloudfrontDns) {
     if (cloudfrontDistroId) {
         dbItem.CloudfrontDistributionId = {S: cloudfrontDistroId};
@@ -85,5 +93,6 @@ module.exports = {
     deleteItem : promiseDeleteDappItem,
     getByOwner : promiseGetItemsByOwner,
     setDappAvailable : promiseSetDappAvailable,
+    setDappFailed : promiseSetDappFailed,
     setItemBuilding : promiseSetItemBuilding
 }
