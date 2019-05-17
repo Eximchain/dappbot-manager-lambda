@@ -10,6 +10,7 @@ exports.handler = async (event) => {
         return cleanup.postPipelineCleanup(event['CodePipeline.job']);
     }
 
+    // TODO: Handle multiple records
     let record = event.Records[0];
 
     let method = record.messageAttributes.Method.stringValue;
