@@ -1,4 +1,3 @@
-const uuidv4 = require('uuid/v4');
 const shell = require('shelljs');
 const fs = require('fs');
 const zip = require('node-zip');
@@ -7,7 +6,6 @@ const { AWS, awsRegion, dappseedBucket } = require('../env');
 const s3 = new AWS.S3({apiVersion: '2006-03-01'});
 const { defaultTags, dappNameTag, dappOwnerTag, addAwsPromiseRetries } = require('../common');
 const { loadingPageHTML } = require('./loadingPageHtml');
-const s3BucketPrefix = "exim-abi-clerk-";
 
 function promiseCreateS3Bucket(bucketName) {
     let maxRetries = 5;
@@ -203,10 +201,6 @@ function promiseGetS3Object(bucketName, objectKey) {
         Key : objectKey
     }
     return addAwsPromiseRetries(() => s3.getObject(params).promise(), maxRetries);
-}
-
-function createBucketName() {
-    return s3BucketPrefix.concat(uuidv4());
 }
 
 function getS3BucketEndpoint(bucketName) {
