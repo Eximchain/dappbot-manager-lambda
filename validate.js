@@ -1,11 +1,24 @@
 const { assertStateValid, assertPermission, throwInternalValidationError } = require('./errors');
 const { cloudfront } = require('./services');
 
-// TODO: Allowed actions by state
+const ALLOWED_OPERATIONS_BY_STATE = {
+    CREATING: new Set(['create', 'update', 'delete']),
+    BUILDING_DAPP: new Set(['update', 'delete']),
+    AVAILABLE: new Set(['update', 'delete']),
+    DELETING: new Set(['delete']),
+    FAILED: new Set(['update', 'delete']),
+    DEPOSED: new Set(['delete'])
+};
+
+function allowedOpFromState(operation, state) {
+    return ALLOWED_OPERATIONS_BY_STATE[state].has(operation);
+}
 
 function validateStateCreate(dbResponse) {
+    const operation = 'create';
+
     let dbItem = dbResponse.Item;
-    assertStateValid(dbItem, "Dapp Not Found");
+    assertStateValid(dbItem, `Dapp Not Found for ${operation} operation`);
 
     assertStateValid(dbItem.hasOwnProperty('DappName'), "dbItem: required attribute 'DappName' not found");
     assertStateValid(dbItem.hasOwnProperty('OwnerEmail'), "dbItem: required attribute 'OwnerEmail' not found");
@@ -26,11 +39,16 @@ function validateStateCreate(dbResponse) {
     assertStateValid(dbItem.Web3URL.hasOwnProperty('S'), "dbItem: required attribute 'Web3URL' has wrong shape");
     assertStateValid(dbItem.GuardianURL.hasOwnProperty('S'), "dbItem: required attribute 'GuardianURL' has wrong shape");
     assertStateValid(dbItem.State.hasOwnProperty('S'), "dbItem: required attribute 'State' has wrong shape");
+
+    let state = dbItem.State.S;
+    assertPermission(allowedOpFromState(operation, state), `'${operation}' operation prohibited from state '${state}'`);
 }
 
 function validateStateUpdate(dbResponse) {
+    const operation = 'update';
+
     let dbItem = dbResponse.Item;
-    assertStateValid(dbItem, "Dapp Not Found");
+    assertStateValid(dbItem, `Dapp Not Found for ${operation} operation`);
 
     assertStateValid(dbItem.hasOwnProperty('DappName'), "dbItem: required attribute 'DappName' not found");
     assertStateValid(dbItem.hasOwnProperty('OwnerEmail'), "dbItem: required attribute 'OwnerEmail' not found");
@@ -53,11 +71,16 @@ function validateStateUpdate(dbResponse) {
     assertStateValid(dbItem.Web3URL.hasOwnProperty('S'), "dbItem: required attribute 'Web3URL' has wrong shape");
     assertStateValid(dbItem.GuardianURL.hasOwnProperty('S'), "dbItem: required attribute 'GuardianURL' has wrong shape");
     assertStateValid(dbItem.State.hasOwnProperty('S'), "dbItem: required attribute 'State' has wrong shape");
+
+    let state = dbItem.State.S;
+    assertPermission(allowedOpFromState(operation, state), `'${operation}' operation prohibited from state '${state}'`);
 }
 
 function validateStateDelete(dbResponse) {
+    const operation = 'delete';
+
     let dbItem = dbResponse.Item;
-    assertStateValid(dbItem, "Dapp Not Found");
+    assertStateValid(dbItem, `Dapp Not Found for ${operation} operation`);
 
     assertStateValid(dbItem.hasOwnProperty('DappName'), "dbItem: required attribute 'DappName' not found");
     assertStateValid(dbItem.hasOwnProperty('OwnerEmail'), "dbItem: required attribute 'OwnerEmail' not found");
@@ -76,6 +99,9 @@ function validateStateDelete(dbResponse) {
     assertStateValid(dbItem.CloudfrontDistributionId.hasOwnProperty('S'), "dbItem: required attribute 'CloudfrontDistributionId' has wrong shape");
     assertStateValid(dbItem.S3BucketName.hasOwnProperty('S'), "dbItem: required attribute 'S3BucketName' has wrong shape");
     assertStateValid(dbItem.State.hasOwnProperty('S'), "dbItem: required attribute 'State' has wrong shape");
+
+    let state = dbItem.State.S;
+    assertPermission(allowedOpFromState(operation, state), `'${operation}' operation prohibited from state '${state}'`);
 }
 
 async function validateConflictingDistributionRepurposable(conflictingDistro, owner) {
