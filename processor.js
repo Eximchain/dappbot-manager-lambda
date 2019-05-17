@@ -17,7 +17,7 @@ async function callAndLog(stage, promise) {
 }
 
 async function processorCreate(dappName) {
-    let dbItem = await callAndLog('Get DynamoDB Item', dynamoDB.getItem(dappName));
+    const dbItem = await callAndLog('Get DynamoDB Item', dynamoDB.getItem(dappName));
     validate.stateCreate(dbItem);
 
     let abi = dbItem.Item.Abi.S;
@@ -40,7 +40,7 @@ async function processorCreate(dappName) {
     // dappseed.zip information for use at cleanup time.
     let cloudfrontDistroId, cloudfrontDns;
     try {
-        const newDistro = await callAndLog('Create Cloudfront Distro', cloudfront.createDistro(dappName, owner, s3Dns, dnsName));
+        let newDistro = await callAndLog('Create Cloudfront Distro', cloudfront.createDistro(dappName, owner, s3Dns, dnsName));
 
         cloudfrontDistroId = newDistro.Distribution.Id;
         cloudfrontDns = newDistro.Distribution.DomainName;
