@@ -16,7 +16,7 @@ async function callAndLog(stage, promise) {
     }
 }
 
-async function apiCreate(dappName) {
+async function processorCreate(dappName) {
     let dbItem = await callAndLog('Get DynamoDB Item', dynamoDB.getItem(dappName));
     validate.stateCreate(dbItem);
 
@@ -75,7 +75,7 @@ async function apiCreate(dappName) {
     return {};
 }
 
-async function apiUpdate(dappName) {
+async function processorUpdate(dappName) {
     const dbItem = await callAndLog('Get DynamoDB Item', dynamoDB.getItem(dappName));
     validate.stateUpdate(dbItem);
 
@@ -91,7 +91,7 @@ async function apiUpdate(dappName) {
     return {};
 }
 
-async function apiDelete(dappName) {
+async function processorDelete(dappName) {
     const dbItem = await callAndLog('Get Dapp DynamoDb Item', dynamoDB.getItem(dappName));
     validate.stateDelete(dbItem);
 
@@ -136,7 +136,7 @@ async function apiDelete(dappName) {
 }
 
 module.exports = {
-  create : apiCreate,
-  update : apiUpdate,
-  delete : apiDelete
+  create : processorCreate,
+  update : processorUpdate,
+  delete : processorDelete
 }

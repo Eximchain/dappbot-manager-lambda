@@ -1,5 +1,5 @@
 'use strict';
-const api = require('./api');
+const processor = require('./processor');
 const cleanup = require('./services/cleanup');
 
 exports.handler = async (event) => {
@@ -21,11 +21,11 @@ exports.handler = async (event) => {
     let processRecordPromise = (async function(method) {
         switch(method) {
             case 'create':
-                return api.create(dappName);
+                return processor.create(dappName);
             case 'update':
-                return api.update(dappName);
+                return processor.update(dappName);
             case 'delete':
-                return api.delete(dappName);
+                return processor.delete(dappName);
             default:
                 return Promise.reject({message: "Unrecognized method name ".concat(method)});
         }
