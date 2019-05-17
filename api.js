@@ -1,10 +1,20 @@
 const { dynamoDB, route53, cloudfront, s3, codepipeline } = require('./services');
-const validate = require('./validate');
 const assert = require('assert');
 
 const logErr = (stage, err) => { console.log(`Error on ${stage}: `, err) }
 const logNonFatalErr = (stage, reason) => { console.log(`Ignoring non-fatal error during ${stage}: ${reason}`) }
 const logSuccess = (stage, res) => { console.log(`Successfully completed ${stage}; result: `, res) }
+
+async function callAndLog(stage, promise) {
+    try {
+        let res = await promise;
+        logSuccess(stage, res);
+        return res;
+    } catch (err) {
+        logErr(stage, err);
+        throw err;
+    }
+}
 
 function response(body, opts) {
     let responseCode = 200;
@@ -56,23 +66,7 @@ function errorResponse(body, opts={isCreate: false}) {
     return response(body, callOpts);
 }
 
-// Using this factory function lets us create a new "stage" variable
-// for each invocation.  Otherwise, `stage` and `callAndLog` function would
-// need to be re-declared in each of the functions below.
-function callFactory(startStage) {
-    let stage = startStage;
-    const callAndLog = async (newStage, promise) => {
-        stage = newStage;
-        let res = await promise;
-        logSuccess(newStage, res);
-        return res;
-    }
-    return [stage, callAndLog];
-}
-
 async function apiCreate(dappName) {
-    let [stage, callAndLog] = callFactory('Pre-Creation');
-
     try {
         let dbItem = await callAndLog('Get DynamoDB Item', dynamoDB.getItem(dappName));
 
@@ -146,14 +140,11 @@ async function apiCreate(dappName) {
         };
         return successResponse(responseBody, {isCreate: true})
     } catch (err) {
-        logErr(stage, err);
         return errorResponse(err, {isCreate: true});
     }
 }
 
 async function apiUpdate(dappName) {
-    let [stage, callAndLog] = callFactory('Pre-Update');
-
     try {
         const dbItem = await callAndLog('Get DynamoDB Item', dynamoDB.getItem(dappName));
         assert(dbItem.Item, "Dapp Not Found");
@@ -173,14 +164,11 @@ async function apiUpdate(dappName) {
         };
         return successResponse(responseBody);
     } catch (err) {
-        logErr(stage, err);
         return errorResponse(err); 
     }
 }
 
 async function apiDelete(dappName) {
-    let [stage, callAndLog] = callFactory('Pre-Delete');
-
     try {
         const dbItem = await callAndLog('Get Dapp DynamoDb Item', dynamoDB.getItem(dappName));
         assert(dbItem.Item, "Dapp Not Found");
@@ -200,7 +188,6 @@ async function apiDelete(dappName) {
                     logNonFatalErr("Distribution already deleted.")
                     break;
                 default:
-                    logErr(stage, err);
                     throw err;
             }
         }
@@ -216,7 +203,6 @@ async function apiDelete(dappName) {
                     logNonFatalErr(stage, 'Bucket already deleted.');
                     break;
                 default:
-                    logErr(stage, err);
                     throw err;
             }
         }
@@ -231,7 +217,6 @@ async function apiDelete(dappName) {
         return successResponse(responseBody);
 
     } catch (err) {
-        logErr(stage, err);
         return errorResponse(err);
     }
 

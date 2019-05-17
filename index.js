@@ -1,7 +1,6 @@
 'use strict';
 const api = require('./api');
 const cleanup = require('./services/cleanup');
-const validate = require('./validate');
 
 exports.handler = async (event) => {
     console.log("request: " + JSON.stringify(event));
