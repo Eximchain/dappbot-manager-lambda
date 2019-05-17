@@ -12,6 +12,14 @@ function serializeDdbKey(dappName) {
     return keyItem;
 }
 
+async function promiseSetDappAvailable(dappName) {
+    let dbResponse = await promiseGetDappItem(dappName);
+    let dbItem = dbResponse.Item;
+    dbItem.State.S = 'AVAILABLE';
+
+    return promisePutRawDappItem(dbItem);
+}
+
 function promiseSetItemBuilding(dbItem, cloudfrontDistroId, cloudfrontDns) {
     if (cloudfrontDistroId) {
         dbItem.CloudfrontDistributionId = {S: cloudfrontDistroId};
@@ -159,5 +167,6 @@ module.exports = {
     deleteItem : promiseDeleteDappItem,
     getByOwner : promiseGetItemsByOwner,
     toApiRepresentation : dbItemToApiRepresentation,
+    setDappAvailable : promiseSetDappAvailable,
     setItemBuilding : promiseSetItemBuilding
 }

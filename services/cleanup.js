@@ -1,5 +1,5 @@
-const zip = require('node-zip');
-const { getObject, makeObjectNoCache } = require('./s3'); 
+const { setDappAvailable } = require('./dynamoDB');
+const { makeObjectNoCache } = require('./s3'); 
 const { completeJob, failJob } = require('./codepipeline');
 const { sendConfirmation } = require('./sendgrid');
 
@@ -17,6 +17,7 @@ async function postPipelineCleanup({ data, id }){
 
   try {
     await makeObjectNoCache(DestinationBucket, 'index.html');
+    await setDappAvailable(DappName);
     await sendConfirmation(OwnerEmail, DappName);
     console.log("Successfully completed all CodePipeline cleanup steps!");
     return await completeJob(id);
