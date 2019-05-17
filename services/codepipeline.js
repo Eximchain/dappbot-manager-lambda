@@ -147,10 +147,14 @@ function promiseCompleteJob(jobId) {
     return addAwsPromiseRetries(() => codepipeline.putJobSuccessResult(params).promise(), maxRetries);
 }
 
-function promiseFailJob(jobId) {
+function promiseFailJob(jobId, err) {
     let maxRetries = 5;
     let params = {
-        jobId : jobId
+        jobId : jobId,
+        failureDetails : {
+            type : 'JobFailed',
+            message : JSON.stringify(err)
+        }
     }
     return addAwsPromiseRetries(() => codepipeline.putJobFailureResult(params).promise(), maxRetries);
 }
