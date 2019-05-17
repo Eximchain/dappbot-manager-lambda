@@ -17,7 +17,7 @@ exports.handler = async (event) => {
     let dappName = body.DappName;
 
 
-    let responsePromise = (async function(method) {
+    let processRecordPromise = (async function(method) {
         switch(method) {
             case 'create':
                 return api.create(dappName);
@@ -30,11 +30,32 @@ exports.handler = async (event) => {
         }
     })(method);
 
-    let response;
     try {
-        response = await responsePromise;
+        let result = await processRecordPromise;
+        return successResponse(result);
     } catch (err) {
-        response = api.errorResponse(err);
+        throw errorResponse(err);
     }
-    return response;
 };
+
+function response(result, opts) {
+    if (opts.isErr) {
+        console.log("Returning Error Response for result", result);
+        throw {};
+    } else {
+        console.log("Returning Success Response for result", result);
+        return {};
+    }
+}
+
+function successResponse(result, opts={isCreate: false}) {
+    let successOpt = {isErr: false};
+    let callOpts = {...opts, ...successOpt};
+    return response(result, callOpts);
+}
+
+function errorResponse(result, opts={isCreate: false}) {
+    let errorOpt = {isErr: true};
+    let callOpts = {...opts, ...errorOpt};
+    return response(result, callOpts);
+}
