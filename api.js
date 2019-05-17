@@ -1,5 +1,5 @@
 const { dynamoDB, route53, cloudfront, s3, codepipeline } = require('./services');
-const assert = require('assert');
+const validate = require('./validate');
 
 const logErr = (stage, err) => { console.log(`Error on ${stage}: `, err) }
 const logNonFatalErr = (stage, reason) => { console.log(`Ignoring non-fatal error during ${stage}: ${reason}`) }
@@ -18,16 +18,17 @@ async function callAndLog(stage, promise) {
 
 async function apiCreate(dappName) {
     let dbItem = await callAndLog('Get DynamoDB Item', dynamoDB.getItem(dappName));
+    validate.stateCreate(dbItem);
 
     let abi = dbItem.Item.Abi.S;
     let addr = dbItem.Item.ContractAddr.S;
     let web3URL = dbItem.Item.Web3URL.S;
     let guardianURL = dbItem.Item.GuardianURL.S;
     let bucketName = dbItem.Item.S3BucketName.S;
-    let s3Dns = s3.bucketEndpoint(bucketName);
     let owner = dbItem.Item.OwnerEmail.S;
     let pipelineName = dbItem.Item.PipelineName.S;
     let dnsName = dbItem.Item.DnsName.S;
+    let s3Dns = s3.bucketEndpoint(bucketName);
 
     await callAndLog('Create S3 Bucket', s3.createBucketWithTags(bucketName, dappName, owner));
     await callAndLog('Set Bucket Readable', s3.setBucketPublic(bucketName));
@@ -48,17 +49,7 @@ async function apiCreate(dappName) {
             case 'CNAMEAlreadyExists':
                 try {
                     let conflictingDistro = await callAndLog('Get Conflicting Cloudfront Distro', cloudfront.getConflictingDistro(dappName));
-
-                    if (!conflictingDistro) {
-                        console.log("UNEXPECTED ERROR: Conflicting distro not found despite 'CNAMEAlreadyExists' error");
-                        throw err;
-                    }
-
-                    let conflictingDistroArn = conflictingDistro.ARN;
-                    let existingDappOwner = await callAndLog('Get Conflicting Cloudfront Distro Owner', cloudfront.getDistroOwner(conflictingDistroArn));
-                        
-                    // Don't let the caller take someone else's distribution
-                    assert(owner === existingDappOwner, err);
+                    await validate.conflictingDistroRepurposable(conflictingDistro, owner);
 
                     // Required vars to exit the block without errors
                     cloudfrontDistroId = conflictingDistro.Id;
@@ -66,12 +57,12 @@ async function apiCreate(dappName) {
 
                     await callAndLog('Update Cloudfront Origin', cloudfront.updateOriginAndEnable(cloudfrontDistroId, s3Dns));                      
                 } catch (err) {
-                    logErr(stage, err);
+                    logErr("Repurpose existing Cloudfrong Distribution", err);
                     throw err;
                 }
                 break;
             default:
-                logErr(stage, err);
+                logErr("Create Cloudfront Distribution", err);
                 throw err;
         }
     }
@@ -86,7 +77,7 @@ async function apiCreate(dappName) {
 
 async function apiUpdate(dappName) {
     const dbItem = await callAndLog('Get DynamoDB Item', dynamoDB.getItem(dappName));
-    assert(dbItem.Item, "Dapp Not Found");
+    validate.stateUpdate(dbItem);
 
     let abi = dbItem.Item.Abi.S;
     let addr = dbItem.Item.ContractAddr.S;
@@ -102,7 +93,7 @@ async function apiUpdate(dappName) {
 
 async function apiDelete(dappName) {
     const dbItem = await callAndLog('Get Dapp DynamoDb Item', dynamoDB.getItem(dappName));
-    assert(dbItem.Item, "Dapp Not Found");
+    validate.stateDelete(dbItem);
 
     let bucketName = dbItem.Item.S3BucketName.S;
     let cloudfrontDistroId = dbItem.Item.CloudfrontDistributionId.S;
@@ -138,8 +129,8 @@ async function apiDelete(dappName) {
         }
     }
 
-    await callAndLog('Delete DynamoDB item', dynamoDB.deleteItem(dappName));
     await callAndLog('Delete CodePipeline', codepipeline.delete(pipelineName));
+    await callAndLog('Delete DynamoDB item', dynamoDB.deleteItem(dappName));
 
     return {};
 }
