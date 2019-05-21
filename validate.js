@@ -1,17 +1,48 @@
 const { assertStateValid, assertPermission, throwInternalValidationError } = require('./errors');
 const { cloudfront } = require('./services');
 
-const ALLOWED_OPERATIONS_BY_STATE = {
-    CREATING: new Set(['create', 'update', 'delete']),
-    BUILDING_DAPP: new Set(['update', 'delete']),
-    AVAILABLE: new Set(['update', 'delete']),
-    DELETING: new Set(['delete']),
-    FAILED: new Set(['update', 'delete']),
-    DEPOSED: new Set(['delete'])
+const OPERATION_HANDLING_BY_STATE = {
+    CREATING: {
+        'create': 'process',
+        'update': 'retry',
+        'delete': 'process'
+    },
+    BUILDING_DAPP: {
+        'create': 'ignore',
+        'update': 'process',
+        'delete': 'process'
+    },
+    AVAILABLE: {
+        'create': 'ignore',
+        'update': 'process',
+        'delete': 'process'
+    },
+    DELETING: {
+        'create': 'ignore',
+        'update': 'ignore',
+        'delete': 'process'
+    },
+    FAILED: {
+        'create': 'ignore',
+        'update': 'ignore',
+        'delete': 'process'
+    },
+    DEPOSED: {
+        'create': 'ignore',
+        'update': 'ignore',
+        'delete': 'process'
+    }
 };
 
-function allowedOpFromState(operation, state) {
-    return ALLOWED_OPERATIONS_BY_STATE[state].has(operation);
+/*
+- This function throws an error if processing should be delayed but retried
+- Returns true if the operation should be processed
+- Returns false otherwise
+*/
+function processOpFromState(operation, state) {
+    let directive = OPERATION_HANDLING_BY_STATE[state][operation];
+    assertPermission(directive !== 'retry', `'${operation}' operation prohibited from state '${state}'. Failing processing and retrying after visibility timeout.`);
+    return directive == 'process';
 }
 
 function validateStateCreate(dbResponse) {
@@ -41,7 +72,7 @@ function validateStateCreate(dbResponse) {
     assertStateValid(dbItem.State.hasOwnProperty('S'), "dbItem: required attribute 'State' has wrong shape");
 
     let state = dbItem.State.S;
-    assertPermission(allowedOpFromState(operation, state), `'${operation}' operation prohibited from state '${state}'`);
+    return processOpFromState(operation, state);
 }
 
 function validateStateUpdate(dbResponse) {
@@ -73,7 +104,7 @@ function validateStateUpdate(dbResponse) {
     assertStateValid(dbItem.State.hasOwnProperty('S'), "dbItem: required attribute 'State' has wrong shape");
 
     let state = dbItem.State.S;
-    assertPermission(allowedOpFromState(operation, state), `'${operation}' operation prohibited from state '${state}'`);
+    return processOpFromState(operation, state);
 }
 
 function validateStateDelete(dbResponse) {
@@ -101,7 +132,7 @@ function validateStateDelete(dbResponse) {
     assertStateValid(dbItem.State.hasOwnProperty('S'), "dbItem: required attribute 'State' has wrong shape");
 
     let state = dbItem.State.S;
-    assertPermission(allowedOpFromState(operation, state), `'${operation}' operation prohibited from state '${state}'`);
+    return processOpFromState(operation, state);
 }
 
 async function validateConflictingDistributionRepurposable(conflictingDistro, owner) {

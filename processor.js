@@ -18,7 +18,11 @@ async function callAndLog(stage, promise) {
 
 async function processorCreate(dappName) {
     const dbItem = await callAndLog('Get DynamoDB Item', dynamoDB.getItem(dappName));
-    validate.stateCreate(dbItem);
+    let processOp = validate.stateCreate(dbItem);
+    if (!processOp) {
+        console.log("Ignoring operation 'create'");
+        return {};
+    }
 
     let abi = dbItem.Item.Abi.S;
     let addr = dbItem.Item.ContractAddr.S;
@@ -83,7 +87,11 @@ async function processorCreate(dappName) {
 
 async function processorUpdate(dappName) {
     const dbItem = await callAndLog('Get DynamoDB Item', dynamoDB.getItem(dappName));
-    validate.stateUpdate(dbItem);
+    let processOp = validate.stateUpdate(dbItem);
+    if (!processOp) {
+        console.log("Ignoring operation 'update'");
+        return {};
+    }
 
     let abi = dbItem.Item.Abi.S;
     let addr = dbItem.Item.ContractAddr.S;
@@ -99,7 +107,11 @@ async function processorUpdate(dappName) {
 
 async function processorDelete(dappName) {
     const dbItem = await callAndLog('Get Dapp DynamoDb Item', dynamoDB.getItem(dappName));
-    validate.stateDelete(dbItem);
+    let processOp = validate.stateDelete(dbItem);
+    if (!processOp) {
+        console.log("Ignoring operation 'delete'");
+        return {};
+    }
 
     let bucketName = dbItem.Item.S3BucketName.S;
     let cloudfrontDistroId = dbItem.Item.CloudfrontDistributionId.S;
