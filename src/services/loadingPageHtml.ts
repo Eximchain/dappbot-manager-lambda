@@ -1,4 +1,4 @@
-const loadingPageHtml = `<!DOCTYPE html>
+export const loadingPageHtml = `<!DOCTYPE html>
 <html>
   <head><title>DappBot</title></head>
   <body>
@@ -326,4 +326,4 @@ const loadingPageHtml = `<!DOCTYPE html>
   </body>
 </html>`;
 
-module.exports = { loadingPageHtml };
+export default loadingPageHtml;

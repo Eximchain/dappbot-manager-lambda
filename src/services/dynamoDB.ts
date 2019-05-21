@@ -1,31 +1,32 @@
-const { addAwsPromiseRetries } = require('../common');
-const { AWS, tableName } = require('../env');
+import { PutItemInputAttributeMap, AttributeMap } from "aws-sdk/clients/dynamodb";
+import { addAwsPromiseRetries } from '../common';
+import { AWS, tableName } from '../env';
 const ddb = new AWS.DynamoDB({apiVersion: '2012-08-10'});
 
-function serializeDdbKey(dappName) {
+function serializeDdbKey(dappName:string) {
     let keyItem = {
         'DappName': {S: dappName}
     };
     return keyItem;
 }
 
-async function promiseSetDappAvailable(dappName) {
+async function promiseSetDappAvailable(dappName:string) {
     let dbResponse = await promiseGetDappItem(dappName);
-    let dbItem = dbResponse.Item;
+    let dbItem = dbResponse.Item as AttributeMap;
     dbItem.State.S = 'AVAILABLE';
 
     return promisePutRawDappItem(dbItem);
 }
 
-async function promiseSetDappFailed(dappName) {
+async function promiseSetDappFailed(dappName:string) {
     let dbResponse = await promiseGetDappItem(dappName);
-    let dbItem = dbResponse.Item;
+    let dbItem = dbResponse.Item as AttributeMap;
     dbItem.State.S = 'FAILED';
 
     return promisePutRawDappItem(dbItem);
 }
 
-function promiseSetItemBuilding(dbItem, cloudfrontDistroId, cloudfrontDns) {
+function promiseSetItemBuilding(dbItem:PutItemInputAttributeMap, cloudfrontDistroId?:string, cloudfrontDns?:string) {
     if (cloudfrontDistroId) {
         dbItem.CloudfrontDistributionId = {S: cloudfrontDistroId};
     }
@@ -38,7 +39,7 @@ function promiseSetItemBuilding(dbItem, cloudfrontDistroId, cloudfrontDns) {
     return promisePutRawDappItem(dbItem);
 }
 
-function promisePutRawDappItem(item) {
+function promisePutRawDappItem(item:PutItemInputAttributeMap) {
     let maxRetries = 5;
     let putItemParams = {
         TableName: tableName,
@@ -48,7 +49,7 @@ function promisePutRawDappItem(item) {
     return addAwsPromiseRetries(() => ddb.putItem(putItemParams).promise(), maxRetries);
 }
 
-function promiseGetDappItem(dappName) {
+function promiseGetDappItem(dappName:string) {
     let maxRetries = 5;
     let getItemParams = {
         TableName: tableName,
@@ -58,7 +59,7 @@ function promiseGetDappItem(dappName) {
     return addAwsPromiseRetries(() => ddb.getItem(getItemParams).promise(), maxRetries);
 }
 
-function promiseDeleteDappItem(dappName) {
+function promiseDeleteDappItem(dappName:string) {
     let maxRetries = 5;
     let deleteItemParams = {
         TableName: tableName,
@@ -68,7 +69,7 @@ function promiseDeleteDappItem(dappName) {
     return addAwsPromiseRetries(() => ddb.deleteItem(deleteItemParams).promise(), maxRetries);
 }
 
-function promiseGetItemsByOwner(ownerEmail) {
+function promiseGetItemsByOwner(ownerEmail:string) {
     let maxRetries = 5;
     let getItemParams = {
         TableName: tableName,
@@ -88,7 +89,7 @@ function promiseGetItemsByOwner(ownerEmail) {
     return addAwsPromiseRetries(() => ddb.query(getItemParams).promise(), maxRetries);
 }
 
-module.exports = {
+export default {
     getItem : promiseGetDappItem,
     deleteItem : promiseDeleteDappItem,
     getByOwner : promiseGetItemsByOwner,

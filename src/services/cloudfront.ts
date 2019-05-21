@@ -1,10 +1,11 @@
-const assert = require('assert');
-const uuidv4 = require('uuid/v4');
-const { defaultTags, dappNameTag, dappOwnerTag, addAwsPromiseRetries } = require('../common');
-const { AWS, certArn } = require('../env');
+import assert from 'assert';
+import uuidv4 from 'uuid';
+import { defaultTags, dappNameTag, dappOwnerTag, addAwsPromiseRetries } from '../common';
+import { AWS, certArn } from '../env';
+import { DistributionConfig, ListDistributionsResult, AliasList, Tag } from 'aws-sdk/clients/cloudfront';
 const cloudfront = new AWS.CloudFront({apiVersion: '2018-11-05'});
 
-function promiseCreateCloudfrontDistribution(appName, dappOwner, s3Origin, dappDNS) {
+function promiseCreateCloudfrontDistribution(appName:string, dappOwner:string, s3Origin:string, dappDNS:string) {
     // TODO: Origin Access Identity
     // TODO: Verify that we want these args
     
@@ -67,7 +68,7 @@ function promiseCreateCloudfrontDistribution(appName, dappOwner, s3Origin, dappD
     return addAwsPromiseRetries(() => cloudfront.createDistributionWithTags(params).promise(), maxRetries);
 }
 
-function promiseGetCloudfrontDistributionConfig(distroId) {
+function promiseGetCloudfrontDistributionConfig(distroId:string) {
     let maxRetries = 5;
     let params = {
         Id: distroId
@@ -75,11 +76,11 @@ function promiseGetCloudfrontDistributionConfig(distroId) {
     return addAwsPromiseRetries(() => cloudfront.getDistributionConfig(params).promise(), maxRetries);
 }
 
-function promiseDisableCloudfrontDistribution(distroId) {
+function promiseDisableCloudfrontDistribution(distroId:string) {
     let maxUpdateRetries = 5;
     return promiseGetCloudfrontDistributionConfig(distroId).then(function(result) {
         console.log("Get Cloudfront Distro Config Success", result);
-        let config = result.DistributionConfig;
+        let config = result.DistributionConfig as DistributionConfig;
         config.Enabled = false;
 
         let params = {
@@ -95,11 +96,11 @@ function promiseDisableCloudfrontDistribution(distroId) {
     });
 }
 
-function promiseUpdateCloudfrontDistributionOriginAndEnable(distroId, s3Origin) {
+function promiseUpdateCloudfrontDistributionOriginAndEnable(distroId:string, s3Origin:string) {
     let maxUpdateRetries = 5;
     return promiseGetCloudfrontDistributionConfig(distroId).then(function(result) {
         console.log("Get Cloudfront Distro Config Success", result);
-        let config = result.DistributionConfig;
+        let config = result.DistributionConfig as DistributionConfig;
         console.log("Origin", config.Origins.Items[0]);
         let originItem = {
             Id: 's3-origin',
@@ -128,7 +129,7 @@ function promiseUpdateCloudfrontDistributionOriginAndEnable(distroId, s3Origin) 
     });
 }
 
-function promiseDeleteCloudfrontDistribution(distroId) {
+function promiseDeleteCloudfrontDistribution(distroId:string) {
     let maxRetries = 5;
     let params = {
         Id: distroId
@@ -136,13 +137,13 @@ function promiseDeleteCloudfrontDistribution(distroId) {
     return addAwsPromiseRetries(() => cloudfront.deleteDistribution(params).promise(), maxRetries);
 }
 
-function promiseListCloudfrontDistributions(marker) {
+function promiseListCloudfrontDistributions(marker:string) {
     let maxRetries = 5;
     let params = marker ? { Marker: marker } : {};
     return addAwsPromiseRetries(() => cloudfront.listDistributions(params).promise(), maxRetries);
 }
 
-function promiseListTagsForCloudfrontDistribution(distroArn) {
+function promiseListTagsForCloudfrontDistribution(distroArn:string) {
     let maxRetries = 5;
     let params = {
         Resource: distroArn
@@ -150,7 +151,7 @@ function promiseListTagsForCloudfrontDistribution(distroArn) {
     return addAwsPromiseRetries(() => cloudfront.listTagsForResource(params).promise(), maxRetries);
 }
 
-function promiseCreateCloudfrontInvalidation(distroId, pathPrefix='/') {
+function promiseCreateCloudfrontInvalidation(distroId:string, pathPrefix:string='/') {
     let maxRetries = 5;
     let params = {
         DistributionId: distroId,
@@ -167,13 +168,20 @@ function promiseCreateCloudfrontInvalidation(distroId, pathPrefix='/') {
     return addAwsPromiseRetries(() => cloudfront.createInvalidation(params).promise(), maxRetries);
 }
 
-async function getConflictingDistribution(dappName, dappDNS) {
+async function getConflictingDistribution(dappDNS:string) {
     let conflictingAlias = dappDNS;
-    let marker = null;
+    let marker = '';
     while (true) {
-        let existingDistroPage = await promiseListCloudfrontDistributions(marker);
+        let existingDistroResult:ListDistributionsResult = await promiseListCloudfrontDistributions(marker);
+        if (!existingDistroResult.DistributionList){
+            return null;
+        }
+        let existingDistroPage = existingDistroResult.DistributionList;
+        if (!existingDistroPage.Items){
+            return null;
+        }
         let existingDistrosMatchingAlias = existingDistroPage.Items.filter(item => item.Aliases.Quantity === 1)
-                                                                   .filter(item => item.Aliases.Items[0] === conflictingAlias);
+                                                                   .filter(item => (item.Aliases.Items as AliasList)[0] === conflictingAlias);
         assert(existingDistrosMatchingAlias.length <= 1, `Found ${existingDistrosMatchingAlias.length} distribution with matching CNAME instead of at most 1. This must be a bug!`);
 
         if (existingDistrosMatchingAlias.length == 1) {
@@ -188,15 +196,15 @@ async function getConflictingDistribution(dappName, dappDNS) {
     }
 }
 
-async function getDistributionOwner(distroArn) {
+async function getDistributionOwner(distroArn:string) {
     let listTagsResponse = await promiseListTagsForCloudfrontDistribution(distroArn);
-    let distroTags = listTagsResponse.Tags.Items;
+    let distroTags = listTagsResponse.Tags.Items || [];
     let dappOwnerTagList = distroTags.filter(tag => tag.Key === 'DappOwner');
     assert(dappOwnerTagList.length == 1, `Found ${dappOwnerTagList.length} tags with Key 'DappOwner' instead of exactly 1. This must be a bug!`);
     return dappOwnerTagList[0].Value;
 }
 
-module.exports = {
+export default {
     createDistro : promiseCreateCloudfrontDistribution,
     getDistroConfig : promiseGetCloudfrontDistributionConfig,
     disableDistro : promiseDisableCloudfrontDistribution,

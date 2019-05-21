@@ -2,7 +2,7 @@ const { addAwsPromiseRetries } = require('../common');
 const { AWS, r53HostedZoneId, dnsRoot } = require('../env');
 const route53 = new AWS.Route53({apiVersion: '2013-04-01'});
 
-function promiseCreateDnsRecord(dnsName, cloudfrontDns) {
+function promiseCreateDnsRecord(dnsName:string, cloudfrontDns:string) {
     let maxRetries = 5;
     let params = {
         HostedZoneId: r53HostedZoneId,
@@ -24,7 +24,7 @@ function promiseCreateDnsRecord(dnsName, cloudfrontDns) {
     return addAwsPromiseRetries(() => route53.changeResourceRecordSets(params).promise(), maxRetries);
 }
 
-function promiseDeleteDnsRecord(dnsName, cloudfrontDns) {
+function promiseDeleteDnsRecord(dnsName:string, cloudfrontDns:string) {
     let maxRetries = 5;
     let params = {
         HostedZoneId: r53HostedZoneId,
@@ -46,7 +46,7 @@ function promiseDeleteDnsRecord(dnsName, cloudfrontDns) {
     return addAwsPromiseRetries(() => route53.changeResourceRecordSets(params).promise(), maxRetries);
 }
 
-module.exports = {
+export default {
     createRecord : promiseCreateDnsRecord,
     deleteRecord : promiseDeleteDnsRecord
 }

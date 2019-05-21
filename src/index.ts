@@ -1,12 +1,16 @@
 'use strict';
-const processor = require('./processor');
-const cleanup = require('./services/cleanup');
+import processor from './processor';
+import cleanup from './services/cleanup';
+import { SQSEvent, CodePipelineEvent } from './lambda-event-types';
+import { ResponseOptions } from './common';
 
-exports.handler = async (event) => {
+type Event = SQSEvent | CodePipelineEvent;
+
+exports.handler = async (event:Event) => {
     console.log("request: " + JSON.stringify(event));
 
     // Pass CodePipeline events straight to cleanup function
-    if (event['CodePipeline.job']){
+    if ('CodePipeline.job' in event){
         return cleanup.postPipelineCleanup(event['CodePipeline.job']);
     }
 
@@ -27,7 +31,7 @@ exports.handler = async (event) => {
             case 'delete':
                 return processor.delete(dappName);
             default:
-                return Promise.reject({message: "Unrecognized method name ".concat(method)});
+                return Promise.reject({message: `Unrecognized method name ${method}`});
         }
     })(method);
 
@@ -39,7 +43,7 @@ exports.handler = async (event) => {
     }
 };
 
-function response(result, opts) {
+function response(result:any, opts:ResponseOptions) {
     if (opts.isErr) {
         console.log("Returning Error Response for result", result);
         throw {};
@@ -49,13 +53,13 @@ function response(result, opts) {
     }
 }
 
-function successResponse(result, opts={isCreate: false}) {
+function successResponse(result:any, opts:ResponseOptions={isCreate: false}) {
     let successOpt = {isErr: false};
     let callOpts = {...opts, ...successOpt};
     return response(result, callOpts);
 }
 
-function errorResponse(result, opts={isCreate: false}) {
+function errorResponse(result:any, opts:ResponseOptions={isCreate: false}) {
     let errorOpt = {isErr: true};
     let callOpts = {...opts, ...errorOpt};
     return response(result, callOpts);

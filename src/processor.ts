@@ -1,11 +1,14 @@
-const { dynamoDB, route53, cloudfront, s3, codepipeline } = require('./services');
-const validate = require('./validate');
+import services from './services';
+import { StateValidationError, InternalProcessingError } from './errors';
+const { dynamoDB, route53, cloudfront, s3, codepipeline } = services;
+import validate from './validate';
+import { Distribution } from 'aws-sdk/clients/cloudfront';
 
-const logErr = (stage, err) => { console.log(`Error on ${stage}: `, err) }
-const logNonFatalErr = (stage, reason) => { console.log(`Ignoring non-fatal error during ${stage}: ${reason}`) }
-const logSuccess = (stage, res) => { console.log(`Successfully completed ${stage}; result: `, res) }
+const logErr = (stage:string, err:any) => { console.log(`Error on ${stage}: `, err) }
+const logNonFatalErr = (stage:string, reason:string) => { console.log(`Ignoring non-fatal error during ${stage}: ${reason}`) }
+const logSuccess = (stage:string, res:any) => { console.log(`Successfully completed ${stage}; result: `, res) }
 
-async function callAndLog(stage, promise) {
+async function callAndLog<ReturnType>(stage:string, promise:Promise<ReturnType>) {
     try {
         let res = await promise;
         logSuccess(stage, res);
@@ -16,18 +19,20 @@ async function callAndLog(stage, promise) {
     }
 }
 
-async function processorCreate(dappName) {
+async function processorCreate(dappName:string) {
     const dbItem = await callAndLog('Get DynamoDB Item', dynamoDB.getItem(dappName));
+    // Adding a throw within this fxn to tell Typescript what's up
+    if (!dbItem.Item) throw new StateValidationError('Create error: Corresponding DynamoDB record could not be found.');
     validate.stateCreate(dbItem);
 
-    let abi = dbItem.Item.Abi.S;
-    let addr = dbItem.Item.ContractAddr.S;
-    let web3URL = dbItem.Item.Web3URL.S;
-    let guardianURL = dbItem.Item.GuardianURL.S;
-    let bucketName = dbItem.Item.S3BucketName.S;
-    let owner = dbItem.Item.OwnerEmail.S;
-    let pipelineName = dbItem.Item.PipelineName.S;
-    let dnsName = dbItem.Item.DnsName.S;
+    let abi = dbItem.Item.Abi.S as string;
+    let addr = dbItem.Item.ContractAddr.S as string;
+    let web3URL = dbItem.Item.Web3URL.S as string;
+    let guardianURL = dbItem.Item.GuardianURL.S as string;
+    let bucketName = dbItem.Item.S3BucketName.S as string;
+    let owner = dbItem.Item.OwnerEmail.S as string;
+    let pipelineName = dbItem.Item.PipelineName.S as string;
+    let dnsName = dbItem.Item.DnsName.S as string;
     let s3Dns = s3.bucketEndpoint(bucketName);
 
     await callAndLog('Create S3 Bucket', s3.createBucketWithTags(bucketName, dappName, owner));
@@ -40,17 +45,19 @@ async function processorCreate(dappName) {
     // dappseed.zip information for use at cleanup time.
     let cloudfrontDistroId, cloudfrontDns;
     try {
-        let newDistro = await callAndLog('Create Cloudfront Distro', cloudfront.createDistro(dappName, owner, s3Dns, dnsName));
-
-        cloudfrontDistroId = newDistro.Distribution.Id;
-        cloudfrontDns = newDistro.Distribution.DomainName;
+        let newDistroResult = await callAndLog('Create Cloudfront Distro', cloudfront.createDistro(dappName, owner, s3Dns, dnsName));
+        let newDistro = newDistroResult.Distribution as Distribution;
+        cloudfrontDistroId = newDistro.Id;
+        cloudfrontDns = newDistro.DomainName;
     } catch (err) {
         switch(err.code) {
             case 'CNAMEAlreadyExists':
                 try {
-                    let conflictingDistro = await callAndLog('Get Conflicting Cloudfront Distro', cloudfront.getConflictingDistro(dappName, dnsName));
+                    let conflictingDistro = await callAndLog('Get Conflicting Cloudfront Distro', cloudfront.getConflictingDistro(dnsName));
                     await validate.conflictingDistroRepurposable(conflictingDistro, owner);
 
+                    // Perform existence check within this function let tip off Typescript
+                    if (!conflictingDistro) throw new InternalProcessingError("Got CNAMEAlreadyExists, but no conflicting distributions were found.  Bug!");
                     // Required vars to exit the block without errors
                     cloudfrontDistroId = conflictingDistro.Id;
                     cloudfrontDns = conflictingDistro.DomainName;
@@ -75,15 +82,16 @@ async function processorCreate(dappName) {
     return {};
 }
 
-async function processorUpdate(dappName) {
+async function processorUpdate(dappName:string) {
     const dbItem = await callAndLog('Get DynamoDB Item', dynamoDB.getItem(dappName));
+    if (!dbItem.Item) throw new StateValidationError('Update error: Corresponding DynamoDB record could not be found.');
     validate.stateUpdate(dbItem);
 
-    let abi = dbItem.Item.Abi.S;
-    let addr = dbItem.Item.ContractAddr.S;
-    let web3URL = dbItem.Item.Web3URL.S;
-    let guardianURL = dbItem.Item.GuardianURL.S;
-    let cdnURL = dbItem.Item.CloudfrontDnsName.S;
+    let abi = dbItem.Item.Abi.S as string;
+    let addr = dbItem.Item.ContractAddr.S as string;
+    let web3URL = dbItem.Item.Web3URL.S as string;
+    let guardianURL = dbItem.Item.GuardianURL.S as string;
+    let cdnURL = dbItem.Item.CloudfrontDnsName.S as string;
 
     await callAndLog('Update DappSeed', s3.putDappseed({ dappName, web3URL, guardianURL, abi, addr, cdnURL }));
     await callAndLog('Set DynamoDB item BUILDING_DAPP', dynamoDB.setItemBuilding(dbItem.Item));
@@ -91,15 +99,16 @@ async function processorUpdate(dappName) {
     return {};
 }
 
-async function processorDelete(dappName) {
+async function processorDelete(dappName:string) {
     const dbItem = await callAndLog('Get Dapp DynamoDb Item', dynamoDB.getItem(dappName));
+    if (!dbItem.Item) throw new StateValidationError('Delete error: Corresponding DynamoDB record could not be found.');
     validate.stateDelete(dbItem);
 
-    let bucketName = dbItem.Item.S3BucketName.S;
-    let cloudfrontDistroId = dbItem.Item.CloudfrontDistributionId.S;
-    let cloudfrontDns = dbItem.Item.CloudfrontDnsName.S;
-    let pipelineName = dbItem.Item.PipelineName.S;
-    let dnsName = dbItem.Item.DnsName.S;
+    let bucketName = dbItem.Item.S3BucketName.S as string;
+    let cloudfrontDistroId = dbItem.Item.CloudfrontDistributionId.S as string;
+    let cloudfrontDns = dbItem.Item.CloudfrontDnsName.S as string;
+    let pipelineName = dbItem.Item.PipelineName.S as string;
+    let dnsName = dbItem.Item.DnsName.S as string;
         
     try {
         await callAndLog('Disable Cloudfront distro', cloudfront.disableDistro(cloudfrontDistroId));
@@ -107,7 +116,7 @@ async function processorDelete(dappName) {
     } catch (err) {
         switch(err.code) {
             case 'NoSuchDistribution':
-                logNonFatalErr("Distribution already deleted.")
+                logNonFatalErr('Disable Cloudfront distro', "Distribution already deleted.")
                 break;
             default:
                 throw err;
@@ -122,7 +131,7 @@ async function processorDelete(dappName) {
     } catch (err) {
         switch(err.code) {
             case 'NoSuchBucket':
-                logNonFatalErr(stage, 'Bucket already deleted.');
+                logNonFatalErr('Empty S3 Bucket', 'Bucket already deleted.');
                 break;
             default:
                 throw err;
@@ -135,8 +144,8 @@ async function processorDelete(dappName) {
     return {};
 }
 
-module.exports = {
-  create : processorCreate,
-  update : processorUpdate,
-  delete : processorDelete
+export default {
+    create : processorCreate,
+    update : processorUpdate,
+    delete : processorDelete
 }

@@ -1,4 +1,9 @@
-const defaultTags = [
+export interface ResourceTag {
+    Key : string
+    Value : string
+}
+
+export const defaultTags:ResourceTag[] = [
     {
         Key: "Application",
         Value: "AbiClerk"
@@ -9,14 +14,14 @@ const defaultTags = [
     }
 ];
 
-function dappNameTag(dappName) {
+export function dappNameTag(dappName:string):ResourceTag {
     return {
         Key: "DappName",
         Value: dappName
     }
 }
 
-function dappOwnerTag(dappOwner) {
+export function dappOwnerTag(dappOwner:string):ResourceTag {
     return {
         Key: "DappOwner",
         Value: dappOwner
@@ -26,7 +31,7 @@ function dappOwnerTag(dappOwner) {
 /*
 Returns a Promise that rejects with reason after msDelay milliseconds
 */
-function rejectDelay(reason) {
+export function rejectDelay(reason:string) {
     let msDelay = 700;
     return new Promise(function(resolve, reject) {
         setTimeout(reject.bind(null, reason), msDelay); 
@@ -37,9 +42,9 @@ function rejectDelay(reason) {
 Retries a promise returned by promiseGenerator up to maxRetries times as long as the error is retryable
 Based on https://stackoverflow.com/questions/38213668/promise-retry-design-patterns
 */
-function addAwsPromiseRetries(promiseGenerator, maxRetries) {
+export function addAwsPromiseRetries<ReturnType>(promiseGenerator:()=>Promise<ReturnType>, maxRetries:number) {
     // Ensure we call promiseGenerator on the first iteration
-    let p = Promise.reject({retryable: true});
+    let p:Promise<ReturnType> = Promise.reject({retryable: true});
 
     /*
     Appends maxRetries number of retry and delay promises to an AWS promise, returning once a retry promise resolves.
@@ -50,12 +55,44 @@ function addAwsPromiseRetries(promiseGenerator, maxRetries) {
        retries or delays since all catch blocks will simply return Promise.reject(err)
     */
     for(var i=0; i<maxRetries; i++) {
+        // @ts-ignore TS doesn't like that these could technically reject with
+        // an error.  Rather than force (* as ReturnType) every place we await
+        // this, just have the compiler assume this function succeeds.
         p = p.catch(err => err.retryable ? promiseGenerator() : Promise.reject(err))
              .catch(err => err.retryable ? rejectDelay(err) : Promise.reject(err));
     }
     return p;
 }
 
-module.exports = { 
+export interface ResponseOptions {
+    isErr? : boolean
+    isCreate? : boolean
+}
+
+export enum DappOperations {
+    create = 'create',
+    update = 'update',
+    delete = 'delete'
+}
+
+export enum DappStates {
+    CREATING = 'CREATING',
+    BUILDING_DAPP = 'BUILDING_DAPP',
+    AVAILABLE = 'AVAILABLE',
+    DELETING = 'DELETING',
+    FAILED = 'FAILED',
+    DEPOSED = 'DEPOSED'
+}
+
+export interface DappSeedArgs {
+    dappName: string
+    web3URL: string
+    guardianURL: string 
+    abi:string
+    addr:string
+    cdnURL:string
+}
+
+export default { 
     defaultTags, dappNameTag, dappOwnerTag, addAwsPromiseRetries
 };
