@@ -23,7 +23,11 @@ async function processorCreate(dappName:string) {
     const dbItem = await callAndLog('Get DynamoDB Item', dynamoDB.getItem(dappName));
     // Adding a throw within this fxn to tell Typescript what's up
     if (!dbItem.Item) throw new StateValidationError('Create error: Corresponding DynamoDB record could not be found.');
-    validate.stateCreate(dbItem);
+    let processOp = validate.stateCreate(dbItem);
+    if (!processOp) {
+        console.log("Ignoring operation 'create'");
+        return {};
+    }
 
     let abi = dbItem.Item.Abi.S as string;
     let addr = dbItem.Item.ContractAddr.S as string;
@@ -36,10 +40,13 @@ async function processorCreate(dappName:string) {
     let s3Dns = s3.bucketEndpoint(bucketName);
 
     await callAndLog('Create S3 Bucket', s3.createBucketWithTags(bucketName, dappName, owner));
+
     await callAndLog('Set Bucket Readable', s3.setBucketPublic(bucketName));
     await callAndLog('Configure Bucket Website', s3.configureBucketWebsite(bucketName));
-    await callAndLog('Enable Bucket CORS', s3.enableBucketCors(bucketName, dnsName));
-    await callAndLog('Put Loading Page', s3.putLoadingPage(bucketName));
+    let enableCORSPromise = callAndLog('Enable Bucket CORS', s3.enableBucketCors(bucketName, dnsName));
+    let putLoadingPagePromise = callAndLog('Put Loading Page', s3.putLoadingPage(bucketName));
+
+    await Promise.all([enableCORSPromise, putLoadingPagePromise]);
 
     // Making Cloudfront Distribution first because we now want to incorporate its ID into the
     // dappseed.zip information for use at cleanup time.
@@ -75,8 +82,11 @@ async function processorCreate(dappName:string) {
     }
 
     await callAndLog('Put DappSeed', s3.putDappseed({ dappName, web3URL, guardianURL, abi, addr, cdnURL: cloudfrontDns }));
-    await callAndLog('Create CodePipeline', codepipeline.create(dappName, pipelineName, bucketName, owner));
-    await callAndLog('Create Route 53 record', route53.createRecord(dnsName, cloudfrontDns));
+
+    let createPipelinePromise = callAndLog('Create CodePipeline', codepipeline.create(dappName, pipelineName, bucketName, owner));
+    let createDnsRecordPromise = callAndLog('Create Route 53 record', route53.createRecord(dnsName, cloudfrontDns));
+    await Promise.all([createPipelinePromise, createDnsRecordPromise]);
+
     await callAndLog('Set DynamoDB item BUILDING_DAPP', dynamoDB.setItemBuilding(dbItem.Item, cloudfrontDistroId, cloudfrontDns));
 
     return {};
@@ -85,7 +95,11 @@ async function processorCreate(dappName:string) {
 async function processorUpdate(dappName:string) {
     const dbItem = await callAndLog('Get DynamoDB Item', dynamoDB.getItem(dappName));
     if (!dbItem.Item) throw new StateValidationError('Update error: Corresponding DynamoDB record could not be found.');
-    validate.stateUpdate(dbItem);
+    let processOp = validate.stateUpdate(dbItem);
+    if (!processOp) {
+        console.log("Ignoring operation 'update'");
+        return {};
+    }
 
     let abi = dbItem.Item.Abi.S as string;
     let addr = dbItem.Item.ContractAddr.S as string;
@@ -102,13 +116,21 @@ async function processorUpdate(dappName:string) {
 async function processorDelete(dappName:string) {
     const dbItem = await callAndLog('Get Dapp DynamoDb Item', dynamoDB.getItem(dappName));
     if (!dbItem.Item) throw new StateValidationError('Delete error: Corresponding DynamoDB record could not be found.');
-    validate.stateDelete(dbItem);
+    let processOp = validate.stateDelete(dbItem);
+    if (!processOp) {
+        console.log("Ignoring operation 'delete'");
+        return {};
+    }
 
     let bucketName = dbItem.Item.S3BucketName.S as string;
     let cloudfrontDistroId = dbItem.Item.CloudfrontDistributionId.S as string;
     let cloudfrontDns = dbItem.Item.CloudfrontDnsName.S as string;
     let pipelineName = dbItem.Item.PipelineName.S as string;
     let dnsName = dbItem.Item.DnsName.S as string;
+
+    let deleteDnsRecordPromise = callAndLog('Delete Route53 Record', route53.deleteRecord(dnsName, cloudfrontDns));
+    let deletePipelinePromise = callAndLog('Delete CodePipeline', codepipeline.delete(pipelineName));
+    await Promise.all([deleteDnsRecordPromise, deletePipelinePromise]);
         
     try {
         await callAndLog('Disable Cloudfront distro', cloudfront.disableDistro(cloudfrontDistroId));
@@ -123,8 +145,6 @@ async function processorDelete(dappName:string) {
         }
     }
 
-    await callAndLog('Delete Route53 Record', route53.deleteRecord(dnsName, cloudfrontDns));
-
     try {
         await callAndLog('Empty S3 Bucket', s3.emptyBucket(bucketName));
         await callAndLog('Delete S3 Bucket', s3.deleteBucket(bucketName));
@@ -138,7 +158,6 @@ async function processorDelete(dappName:string) {
         }
     }
 
-    await callAndLog('Delete CodePipeline', codepipeline.delete(pipelineName));
     await callAndLog('Delete DynamoDB item', dynamoDB.deleteItem(dappName));
 
     return {};

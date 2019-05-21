@@ -84,6 +84,8 @@ export enum DappStates {
     DEPOSED = 'DEPOSED'
 }
 
+export type ProcessorResponses = 'process' | 'ignore' | 'retry';
+
 export interface DappSeedArgs {
     dappName: string
     web3URL: string

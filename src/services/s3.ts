@@ -1,4 +1,3 @@
-import uuidv4 from 'uuid';
 import shell from 'shelljs';
 import fs from 'fs';
 // @ts-ignore Alas, there are no published bindings for node-zip.
@@ -12,7 +11,6 @@ import { AWS, awsRegion, dappseedBucket } from '../env';
 import { loadingPageHtml } from './loadingPageHtml';
 import { ListObjectsOutput, ObjectKey } from 'aws-sdk/clients/s3';
 const s3 = new AWS.S3({apiVersion: '2006-03-01'});
-const s3BucketPrefix = "exim-abi-clerk-";
 
 function promiseCreateS3Bucket(bucketName:string) {
     let maxRetries = 5;
@@ -210,10 +208,6 @@ function promiseGetS3Object(bucketName:string, objectKey:string) {
         Key : objectKey
     }
     return addAwsPromiseRetries(() => s3.getObject(params).promise(), maxRetries);
-}
-
-function createBucketName() {
-    return s3BucketPrefix.concat(uuidv4());
 }
 
 function getS3BucketEndpoint(bucketName:string) {

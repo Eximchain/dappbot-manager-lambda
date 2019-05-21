@@ -1,20 +1,59 @@
 import { assertStateValid, assertPermission, throwInternalValidationError } from './errors';
-import { DappOperations as dappOps, DappStates } from './common';
+import { DappOperations as dappOps, DappStates, ProcessorResponses } from './common';
 import cloudfront from './services/cloudfront';
 import { GetItemOutput } from 'aws-sdk/clients/dynamodb';
 import { DistributionSummary } from 'aws-sdk/clients/cloudfront';
 
-const ALLOWED_OPERATIONS_BY_STATE = {
-    CREATING: [dappOps.create, dappOps.update, dappOps.delete],
-    BUILDING_DAPP: [dappOps.update, dappOps.delete],
-    AVAILABLE: [dappOps.update, dappOps.delete],
-    DELETING: [dappOps.delete],
-    FAILED: [dappOps.update, dappOps.delete],
-    DEPOSED: [dappOps.delete]
+interface OperationHandlerKey {
+    [DappStates.CREATING] : { [opKey in dappOps] : ProcessorResponses }
+    [DappStates.BUILDING_DAPP] : { [opKey in dappOps] : ProcessorResponses }
+    [DappStates.AVAILABLE] : { [opKey in dappOps] : ProcessorResponses }
+    [DappStates.DELETING] : { [opKey in dappOps] : ProcessorResponses }
+    [DappStates.FAILED] : { [opKey in dappOps] : ProcessorResponses }
+    [DappStates.DEPOSED] : { [opKey in dappOps] : ProcessorResponses }
+}
+const OPERATION_HANDLING_BY_STATE:OperationHandlerKey = {
+    CREATING: {
+        'create': 'process',
+        'update': 'retry',
+        'delete': 'process'
+    },
+    BUILDING_DAPP: {
+        'create': 'ignore',
+        'update': 'process',
+        'delete': 'process'
+    },
+    AVAILABLE: {
+        'create': 'ignore',
+        'update': 'process',
+        'delete': 'process'
+    },
+    DELETING: {
+        'create': 'ignore',
+        'update': 'ignore',
+        'delete': 'process'
+    },
+    FAILED: {
+        'create': 'ignore',
+        'update': 'ignore',
+        'delete': 'process'
+    },
+    DEPOSED: {
+        'create': 'ignore',
+        'update': 'ignore',
+        'delete': 'process'
+    }
 };
 
-function allowedOpFromState(operation:dappOps, state:DappStates) {
-    return ALLOWED_OPERATIONS_BY_STATE[state].includes(operation);
+/*
+- This function throws an error if processing should be delayed but retried
+- Returns true if the operation should be processed
+- Returns false otherwise
+*/
+function processOpFromState(operation:dappOps, state:DappStates) {
+    let directive = OPERATION_HANDLING_BY_STATE[state][operation];
+    assertPermission(directive !== 'retry', `'${operation}' operation prohibited from state '${state}'. Failing processing and retrying after visibility timeout.`);
+    return directive == 'process';
 }
 
 function validateStateCreate(dbResponse:GetItemOutput) {
@@ -46,7 +85,7 @@ function validateStateCreate(dbResponse:GetItemOutput) {
     assertStateValid(dbItem.State.hasOwnProperty('S'), "dbItem: required attribute 'State' has wrong shape");
 
     let state = dbItem.State.S as DappStates;
-    assertPermission(allowedOpFromState(operation, state), `'${operation}' operation prohibited from state '${state}'`);
+    return processOpFromState(operation, state);
 }
 
 function validateStateUpdate(dbResponse:GetItemOutput) {
@@ -78,7 +117,7 @@ function validateStateUpdate(dbResponse:GetItemOutput) {
     assertStateValid(dbItem.State.hasOwnProperty('S'), "dbItem: required attribute 'State' has wrong shape");
 
     let state = dbItem.State.S as DappStates;
-    assertPermission(allowedOpFromState(operation, state), `'${operation}' operation prohibited from state '${state}'`);
+    return processOpFromState(operation, state);
 }
 
 function validateStateDelete(dbResponse:GetItemOutput) {
@@ -106,7 +145,7 @@ function validateStateDelete(dbResponse:GetItemOutput) {
     assertStateValid(dbItem.State.hasOwnProperty('S'), "dbItem: required attribute 'State' has wrong shape");
 
     let state = dbItem.State.S as DappStates;
-    assertPermission(allowedOpFromState(operation, state), `'${operation}' operation prohibited from state '${state}'`);
+    return processOpFromState(operation, state);
 }
 
 type MaybeDistro = DistributionSummary | null;
