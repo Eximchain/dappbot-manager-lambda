@@ -1,16 +1,12 @@
 const { addAwsPromiseRetries } = require('../common');
-const { AWS, codebuildId, pipelineRoleArn, dnsRoot, artifactBucket, dappseedBucket, lambdaFxnName } = require('../env');
+const { AWS, codebuildId, pipelineRoleArn, artifactBucket, dappseedBucket, lambdaFxnName } = require('../env');
 
 const codepipeline = new AWS.CodePipeline();
 
-function pipelineName(dappName) {
-  return `${dappName}${dnsRoot}`
-}
-
-function pipelineParams(dappName, destBucket, owner) {
+function pipelineParams(dappName, pipelineName, destBucket, owner) {
     return {
         pipeline: {
-            name: pipelineName(dappName),
+            name: pipelineName,
             roleArn: pipelineRoleArn,
             version: 1,
             artifactStore: {
@@ -117,24 +113,24 @@ function pipelineParams(dappName, destBucket, owner) {
     }
 }
 
-function promiseCreatePipeline(dappName, destBucket, owner) {
+function promiseCreatePipeline(dappName, pipelineName, destBucket, owner) {
     let maxRetries = 5;
-    let params = pipelineParams(dappName, destBucket, owner);
+    let params = pipelineParams(dappName, pipelineName, destBucket, owner);
     return addAwsPromiseRetries(() => codepipeline.createPipeline(params).promise(), maxRetries);
 }
 
-function promiseRunPipeline(dappName) {
+function promiseRunPipeline(pipelineName) {
     let maxRetries = 5;
     let params = {
-        name: pipelineName(dappName)
+        name: pipelineName
     };
     return addAwsPromiseRetries(() => codepipeline.startPipelineExecution(params).promise(), maxRetries);
 }
 
-function promiseDeletePipeline(dappName) {
+function promiseDeletePipeline(pipelineName) {
     let maxRetries = 5;
     let params = {
-        name: pipelineName(dappName)
+        name: pipelineName
     };
     return addAwsPromiseRetries(() => codepipeline.deletePipeline(params).promise(), maxRetries);
 }
@@ -147,10 +143,14 @@ function promiseCompleteJob(jobId) {
     return addAwsPromiseRetries(() => codepipeline.putJobSuccessResult(params).promise(), maxRetries);
 }
 
-function promiseFailJob(jobId) {
+function promiseFailJob(jobId, err) {
     let maxRetries = 5;
     let params = {
-        jobId : jobId
+        jobId : jobId,
+        failureDetails : {
+            type : 'JobFailed',
+            message : JSON.stringify(err)
+        }
     }
     return addAwsPromiseRetries(() => codepipeline.putJobFailureResult(params).promise(), maxRetries);
 }
@@ -159,7 +159,6 @@ module.exports = {
     create: promiseCreatePipeline,
     run: promiseRunPipeline,
     delete: promiseDeletePipeline,
-    pipelineName: pipelineName,
     completeJob: promiseCompleteJob,
     failJob : promiseFailJob
 }

@@ -1,7 +1,28 @@
 'use strict';
-const api = require('./api');
+const processor = require('./processor');
 const cleanup = require('./services/cleanup');
-const validate = require('./validate');
+
+function methodProcessor(method) {
+    switch(method) {
+        case 'create':
+            return processor.create;
+        case 'update':
+            return processor.update;
+        case 'delete':
+            return processor.delete;
+        default:
+            return (dappName) => Promise.reject({message: `Unrecognized method name ${method} for processing '${dappName}'`});
+    }
+}
+
+async function processRecord(record) {
+    let method = record.messageAttributes.Method.stringValue;
+    let body = JSON.parse(record.body);
+    let dappName = body.DappName;
+
+    let recordProcessor = methodProcessor(method);
+    return recordProcessor(dappName);
+}
 
 exports.handler = async (event) => {
     console.log("request: " + JSON.stringify(event));
@@ -11,50 +32,35 @@ exports.handler = async (event) => {
         return cleanup.postPipelineCleanup(event['CodePipeline.job']);
     }
 
-    // All other requests here should be from API Gateway
-    if (!event.httpMethod){
-        return api.errorResponse(`Lambda received an event it did not know how to parse: ${JSON.stringify(event, undefined, 2)}`);
-    }
+    let records = event.Records;
+    let processRecordsPromise = Promise.all(records.map(processRecord));
 
-    // Auto-return success for CORS pre-flight OPTIONS requests
-    if (event.httpMethod.toLowerCase() == 'options'){
-        return api.successResponse({});
-    }
-
-    let method = event.pathParameters.proxy;
-    let body;
-    if (event.body) {
-        body = JSON.parse(event.body);
-    }
-    let authorizedUser = event.requestContext.authorizer.claims["cognito:username"];
-    let email = event.requestContext.authorizer.claims.email;
-    let responsePromise = (async function(method) {
-        switch(method) {
-            case 'create':
-                await validate.create(body, authorizedUser, email);
-                console.log("Create validation passed");
-                return api.create(body, email);
-            case 'read':
-                await validate.read(body);
-                return api.read(body, email);
-            case 'update':
-                await validate.update(body);
-                return api.update(body, email);
-            case 'delete':
-                await validate.delete(body);
-                return api.delete(body, email);
-            case 'list':
-                return api.list(email);
-            default:
-                return Promise.reject({message: "Unrecognized method name ".concat(method)});
-        }
-    })(method);
-
-    let response;
     try {
-        response = await responsePromise;
+        let result = await processRecordsPromise;
+        return successResponse(result);
     } catch (err) {
-        response = api.errorResponse(err);
+        throw errorResponse(err);
     }
-    return response;
 };
+
+function response(result, opts) {
+    if (opts.isErr) {
+        console.log("Returning Error Response for result", result);
+        throw {};
+    } else {
+        console.log("Returning Success Response for result", result);
+        return {};
+    }
+}
+
+function successResponse(result, opts={isCreate: false}) {
+    let successOpt = {isErr: false};
+    let callOpts = {...opts, ...successOpt};
+    return response(result, callOpts);
+}
+
+function errorResponse(result, opts={isCreate: false}) {
+    let errorOpt = {isErr: true};
+    let callOpts = {...opts, ...errorOpt};
+    return response(result, callOpts);
+}

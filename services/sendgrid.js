@@ -1,6 +1,5 @@
 const sgMail = require('@sendgrid/mail');
 const { sendgridApiKey } = require('../env');
-const { dappDNS } = require('./route53');
 
 let USING_SENDGRID = false;
 
@@ -12,12 +11,12 @@ if (sendgridApiKey && sendgridApiKey !== ""){
 const FROM_ADDRESS = 'dappbot@eximchain.com';
 
 
-function sendConfirmationMail(owner, dappname) {
+function sendConfirmationMail(owner, dappname, dappDNS) {
   let confirmationParam = {
     from : FROM_ADDRESS,
     to : owner,
     subject : `${dappname} generation complete!`,
-    text : `${dappname} generation has completed!  You may now view your dapp at ${dappDNS(dappname)}.`
+    text : `${dappname} generation has completed!  You may now view your dapp at ${dappDNS}.`
   }
   if (USING_SENDGRID){
     return sgMail.send(confirmationParam);

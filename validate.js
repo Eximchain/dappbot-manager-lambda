@@ -1,155 +1,162 @@
-const { cognito, dynamoDB } = require('./services');
-const assert = require('assert');
+const { assertStateValid, assertPermission, throwInternalValidationError } = require('./errors');
+const { cloudfront } = require('./services');
 
-const dappLimitAttrName = 'custom:num_dapps';
-
-// Names that should be disallowed for DappName values
-const reservedDappNames = new Set([
-    'abi',
-    'abiclerk',
-    'abi-clerk',
-    'admin',
-    'administrator',
-    'api',
-    'app',
-    'automate',
-    'blockvote',
-    'blockvoting',
-    'community',
-    'conference',
-    'console',
-    'dashboard',
-    'dapp',
-    'dappbot',
-    'dapp-bot',
-    'dapperator',
-    'dappname',
-    'dapp-name',
-    'dappsmith',
-    'dapp-smith',
-    'deploy',
-    'directory',
-    'exim',
-    'eximchain',
-    'forum',
-    'guard',
-    'guardian',
-    'help',
-    'home',
-    'marketplace',
-    'quadraticvote',
-    'quadraticvoting',
-    'root',
-    'support',
-    'vault',
-    'wallet',
-    'weyl',
-    'weylgov',
-    'weylgovern',
-    'weylgovernance'
-]);
-
-function validateBodyDelete(body) {
-    assert(body.hasOwnProperty('DappName'), "delete: required argument 'DappName' not found");
-}
-
-function validateBodyRead(body) {
-    assert(body.hasOwnProperty('DappName'), "read: required argument 'DappName' not found");
-}
-
-function validateBodyUpdate(body) {
-    assert(body.hasOwnProperty('DappName'), "update: required argument 'DappName' not found");
-}
-
-function validateBodyCreate(body) {
-    assert(body.hasOwnProperty('DappName'), "create: required argument 'DappName' not found");
-    assert(body.hasOwnProperty('Abi'), "create: required argument 'Abi' not found");
-    assert(body.hasOwnProperty('ContractAddr'), "create: required argument 'ContractAddr' not found");
-    assert(body.hasOwnProperty('Web3URL'), "create: required argument 'Web3URL' not found");
-    assert(body.hasOwnProperty('GuardianURL'), "create: required argument 'GuardianURL' not found");
-}
-
-async function validateLimitsCreate(cognitoUsername, ownerEmail) {
-    console.log("Validating Limits for User", cognitoUsername);
-    let dappLimit = null;
-    return cognito.getUser(cognitoUsername).then(function(result) {
-        console.log("Found Cognito User", result);
-        let attrList = result.UserAttributes;
-        let dappLimitAttr = attrList.filter(attr => attr.Name === dappLimitAttrName);
-        assert(dappLimitAttr.length === 1);
-        dappLimit = dappLimitAttr[0].Value;
-
-        return dynamoDB.getByOwner(ownerEmail);
-    })
-    .then(function(result) {
-        console.log("Scanned DynamoDB Table", result);
-        let numDappsOwned = result.Items.length;
-        assert(numDappsOwned + 1 <= dappLimit, "User " + ownerEmail + " already at dapp limit: " + dappLimit);
-        return true;
-    })
-    .catch(function(err) {
-        console.log("Error Validating Limit", err);
-        throw err;
-    })
-}
-
-function validateAllowedDappName(dappName, email) {
-    // Admins can use reserved names
-    if (isAdmin(email)) {
-        return true;
+const OPERATION_HANDLING_BY_STATE = {
+    CREATING: {
+        'create': 'process',
+        'update': 'retry',
+        'delete': 'process'
+    },
+    BUILDING_DAPP: {
+        'create': 'ignore',
+        'update': 'process',
+        'delete': 'process'
+    },
+    AVAILABLE: {
+        'create': 'ignore',
+        'update': 'process',
+        'delete': 'process'
+    },
+    DELETING: {
+        'create': 'ignore',
+        'update': 'ignore',
+        'delete': 'process'
+    },
+    FAILED: {
+        'create': 'ignore',
+        'update': 'ignore',
+        'delete': 'process'
+    },
+    DEPOSED: {
+        'create': 'ignore',
+        'update': 'ignore',
+        'delete': 'process'
     }
-    assert(!reservedDappNames.has(dappName), `Specified DappName ${dappName} is not an allowed name`);
-    return true;
-}
-
-async function validateCreate(body, cognitoUsername, ownerEmail) {
-    validateBodyCreate(body);
-    let dappName = cleanDappName(body.DappName);
-    validateAllowedDappName(dappName, ownerEmail);
-    try {
-        return await validateLimitsCreate(cognitoUsername, ownerEmail);
-    } catch (err) {
-        throw err;
-    }
-}
-
-async function validateRead(body) {
-    validateBodyRead(body);
-    return true;
-}
-
-async function validateUpdate(body) {
-    validateBodyUpdate(body);
-    return true;
-}
-
-async function validateDelete(body) {
-    validateBodyDelete(body);
-    return true;
-}
+};
 
 /*
-Returns whether an email has Admin rights
-Admins can bypass certain restrictions
-
-- Admins can delete other users' Dapps
-- Admins can read other users' Dapps
-- Admins can create Dapps using a reserved name
+- This function throws an error if processing should be delayed but retried
+- Returns true if the operation should be processed
+- Returns false otherwise
 */
-function isAdmin(email) {
-    let adminEmail = 'louis@eximchain.com';
-    return email === adminEmail;
+function processOpFromState(operation, state) {
+    let directive = OPERATION_HANDLING_BY_STATE[state][operation];
+    assertPermission(directive !== 'retry', `'${operation}' operation prohibited from state '${state}'. Failing processing and retrying after visibility timeout.`);
+    return directive == 'process';
 }
 
-function cleanDappName(name) {
-    return name.toLowerCase().replace(/\s/g, '-').replace(/[^A-Za-z0-9-]/g, '')
+function validateStateCreate(dbResponse) {
+    const operation = 'create';
+
+    let dbItem = dbResponse.Item;
+    assertStateValid(dbItem, `Dapp Not Found for ${operation} operation`);
+
+    assertStateValid(dbItem.hasOwnProperty('DappName'), "dbItem: required attribute 'DappName' not found");
+    assertStateValid(dbItem.hasOwnProperty('OwnerEmail'), "dbItem: required attribute 'OwnerEmail' not found");
+    assertStateValid(dbItem.hasOwnProperty('DnsName'), "dbItem: required attribute 'DnsName' not found");
+    assertStateValid(dbItem.hasOwnProperty('PipelineName'), "dbItem: required attribute 'PipelineName' not found");
+    assertStateValid(dbItem.hasOwnProperty('Abi'), "dbItem: required attribute 'Abi' not found");
+    assertStateValid(dbItem.hasOwnProperty('ContractAddr'), "dbItem: required attribute 'ContractAddr' not found");
+    assertStateValid(dbItem.hasOwnProperty('Web3URL'), "dbItem: required attribute 'Web3URL' not found");
+    assertStateValid(dbItem.hasOwnProperty('GuardianURL'), "dbItem: required attribute 'GuardianURL' not found");
+    assertStateValid(dbItem.hasOwnProperty('State'), "dbItem: required attribute 'State' not found");
+
+    assertStateValid(dbItem.DappName.hasOwnProperty('S'), "dbItem: required attribute 'DappName' has wrong shape");
+    assertStateValid(dbItem.OwnerEmail.hasOwnProperty('S'), "dbItem: required attribute 'OwnerEmail' has wrong shape");
+    assertStateValid(dbItem.DnsName.hasOwnProperty('S'), "dbItem: required attribute 'DnsName' has wrong shape");
+    assertStateValid(dbItem.PipelineName.hasOwnProperty('S'), "dbItem: required attribute 'PipelineName' has wrong shape");
+    assertStateValid(dbItem.Abi.hasOwnProperty('S'), "dbItem: required attribute 'Abi' has wrong shape");
+    assertStateValid(dbItem.ContractAddr.hasOwnProperty('S'), "dbItem: required attribute 'ContractAddr' has wrong shape");
+    assertStateValid(dbItem.Web3URL.hasOwnProperty('S'), "dbItem: required attribute 'Web3URL' has wrong shape");
+    assertStateValid(dbItem.GuardianURL.hasOwnProperty('S'), "dbItem: required attribute 'GuardianURL' has wrong shape");
+    assertStateValid(dbItem.State.hasOwnProperty('S'), "dbItem: required attribute 'State' has wrong shape");
+
+    let state = dbItem.State.S;
+    return processOpFromState(operation, state);
+}
+
+function validateStateUpdate(dbResponse) {
+    const operation = 'update';
+
+    let dbItem = dbResponse.Item;
+    assertStateValid(dbItem, `Dapp Not Found for ${operation} operation`);
+
+    assertStateValid(dbItem.hasOwnProperty('DappName'), "dbItem: required attribute 'DappName' not found");
+    assertStateValid(dbItem.hasOwnProperty('OwnerEmail'), "dbItem: required attribute 'OwnerEmail' not found");
+    assertStateValid(dbItem.hasOwnProperty('DnsName'), "dbItem: required attribute 'DnsName' not found");
+    assertStateValid(dbItem.hasOwnProperty('CloudfrontDnsName'), "dbItem: required attribute 'CloudfrontDnsName' not found");
+    assertStateValid(dbItem.hasOwnProperty('PipelineName'), "dbItem: required attribute 'PipelineName' not found");
+    assertStateValid(dbItem.hasOwnProperty('Abi'), "dbItem: required attribute 'Abi' not found");
+    assertStateValid(dbItem.hasOwnProperty('ContractAddr'), "dbItem: required attribute 'ContractAddr' not found");
+    assertStateValid(dbItem.hasOwnProperty('Web3URL'), "dbItem: required attribute 'Web3URL' not found");
+    assertStateValid(dbItem.hasOwnProperty('GuardianURL'), "dbItem: required attribute 'GuardianURL' not found");
+    assertStateValid(dbItem.hasOwnProperty('State'), "dbItem: required attribute 'State' not found");
+
+    assertStateValid(dbItem.DappName.hasOwnProperty('S'), "dbItem: required attribute 'DappName' has wrong shape");
+    assertStateValid(dbItem.OwnerEmail.hasOwnProperty('S'), "dbItem: required attribute 'OwnerEmail' has wrong shape");
+    assertStateValid(dbItem.DnsName.hasOwnProperty('S'), "dbItem: required attribute 'DnsName' has wrong shape");
+    assertStateValid(dbItem.CloudfrontDnsName.hasOwnProperty('S'), "dbItem: required attribute 'CloudfrontDnsName' has wrong shape");
+    assertStateValid(dbItem.PipelineName.hasOwnProperty('S'), "dbItem: required attribute 'PipelineName' has wrong shape");
+    assertStateValid(dbItem.Abi.hasOwnProperty('S'), "dbItem: required attribute 'Abi' has wrong shape");
+    assertStateValid(dbItem.ContractAddr.hasOwnProperty('S'), "dbItem: required attribute 'ContractAddr' has wrong shape");
+    assertStateValid(dbItem.Web3URL.hasOwnProperty('S'), "dbItem: required attribute 'Web3URL' has wrong shape");
+    assertStateValid(dbItem.GuardianURL.hasOwnProperty('S'), "dbItem: required attribute 'GuardianURL' has wrong shape");
+    assertStateValid(dbItem.State.hasOwnProperty('S'), "dbItem: required attribute 'State' has wrong shape");
+
+    let state = dbItem.State.S;
+    return processOpFromState(operation, state);
+}
+
+function validateStateDelete(dbResponse) {
+    const operation = 'delete';
+
+    let dbItem = dbResponse.Item;
+    assertStateValid(dbItem, `Dapp Not Found for ${operation} operation`);
+
+    assertStateValid(dbItem.hasOwnProperty('DappName'), "dbItem: required attribute 'DappName' not found");
+    assertStateValid(dbItem.hasOwnProperty('OwnerEmail'), "dbItem: required attribute 'OwnerEmail' not found");
+    assertStateValid(dbItem.hasOwnProperty('DnsName'), "dbItem: required attribute 'DnsName' not found");
+    assertStateValid(dbItem.hasOwnProperty('CloudfrontDnsName'), "dbItem: required attribute 'CloudfrontDnsName' not found");
+    assertStateValid(dbItem.hasOwnProperty('PipelineName'), "dbItem: required attribute 'PipelineName' not found");
+    assertStateValid(dbItem.hasOwnProperty('CloudfrontDistributionId'), "dbItem: required attribute 'CloudfrontDistributionId' not found");
+    assertStateValid(dbItem.hasOwnProperty('S3BucketName'), "dbItem: required attribute 'S3BucketName' not found");
+    assertStateValid(dbItem.hasOwnProperty('State'), "dbItem: required attribute 'State' not found");
+
+    assertStateValid(dbItem.DappName.hasOwnProperty('S'), "dbItem: required attribute 'DappName' has wrong shape");
+    assertStateValid(dbItem.OwnerEmail.hasOwnProperty('S'), "dbItem: required attribute 'OwnerEmail' has wrong shape");
+    assertStateValid(dbItem.DnsName.hasOwnProperty('S'), "dbItem: required attribute 'DnsName' has wrong shape");
+    assertStateValid(dbItem.CloudfrontDnsName.hasOwnProperty('S'), "dbItem: required attribute 'CloudfrontDnsName' has wrong shape");
+    assertStateValid(dbItem.PipelineName.hasOwnProperty('S'), "dbItem: required attribute 'PipelineName' has wrong shape");
+    assertStateValid(dbItem.CloudfrontDistributionId.hasOwnProperty('S'), "dbItem: required attribute 'CloudfrontDistributionId' has wrong shape");
+    assertStateValid(dbItem.S3BucketName.hasOwnProperty('S'), "dbItem: required attribute 'S3BucketName' has wrong shape");
+    assertStateValid(dbItem.State.hasOwnProperty('S'), "dbItem: required attribute 'State' has wrong shape");
+
+    let state = dbItem.State.S;
+    return processOpFromState(operation, state);
+}
+
+async function validateConflictingDistributionRepurposable(conflictingDistro, owner) {
+    if (!conflictingDistro) {
+        console.log("UNEXPECTED ERROR: Conflicting distro not found despite 'CNAMEAlreadyExists' error");
+        throwInternalValidationError();
+    }
+
+    let conflictingDistroArn = conflictingDistro.ARN;
+    let existingDappOwner;
+    try {
+        existingDappOwner = await cloudfront.getDistroOwner(conflictingDistroArn);
+    } catch (err) {
+        console.log("UNEXPECTED ERROR: Conuld not retrieve owner of existing Dapp");
+        throwInternalValidationError();
+    }
+                        
+    // Don't let the caller take someone else's distribution
+    assertPermission(owner === existingDappOwner, "Cannot repurpose distribution that belongs to another user");
 }
 
 module.exports = {
-    delete : validateDelete,
-    create : validateCreate,
-    read : validateRead,
-    update : validateUpdate,
-    cleanName : cleanDappName,
-    isAdmin : isAdmin
+    stateCreate : validateStateCreate,
+    stateUpdate : validateStateUpdate,
+    stateDelete : validateStateDelete,
+    conflictingDistroRepurposable : validateConflictingDistributionRepurposable
 }

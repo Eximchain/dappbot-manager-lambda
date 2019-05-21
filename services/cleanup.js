@@ -1,5 +1,6 @@
-const zip = require('node-zip');
-const { getObject, makeObjectNoCache } = require('./s3'); 
+const { dnsRoot } = require('../env');
+const { setDappAvailable, setDappFailed } = require('./dynamoDB');
+const { makeObjectNoCache } = require('./s3'); 
 const { completeJob, failJob } = require('./codepipeline');
 const { sendConfirmation } = require('./sendgrid');
 
@@ -10,6 +11,7 @@ const { sendConfirmation } = require('./sendgrid');
 // Below function is called by index, it receives the event["CodePipeline.job"] field.
 async function postPipelineCleanup({ data, id }){
   const { actionConfiguration } = data;
+  // TODO: Get Dapp DNS from here
   const { OwnerEmail, DestinationBucket, DappName } = JSON.parse(actionConfiguration.configuration.UserParameters) 
 
   console.log("Successfully loaded all info to the clean function:");
@@ -17,19 +19,19 @@ async function postPipelineCleanup({ data, id }){
 
   try {
     await makeObjectNoCache(DestinationBucket, 'index.html');
-    await sendConfirmation(OwnerEmail, DappName);
+    await setDappAvailable(DappName);
+    await sendConfirmation(OwnerEmail, DappName, dnsNameFromDappName(DappName));
     console.log("Successfully completed all CodePipeline cleanup steps!");
     return await completeJob(id);
   } catch (err) {
-    console.log("Error cleaning up the CodePipeline execution: ",err);
-    return await failJob({
-      jobId : id,
-      failureParams : {
-        type : 'JobFailed',
-        message : JSON.stringify(err)
-      }
-    });
+    console.log("Error cleaning up the CodePipeline execution: ", err);
+    await failJob(id, err);
+    return await setDappFailed(DappName);
   }
+}
+
+function dnsNameFromDappName(dappName) {
+  return dappName.concat(dnsRoot);
 }
 
 module.exports = {

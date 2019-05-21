@@ -1,8 +1,5 @@
 const { addAwsPromiseRetries } = require('../common');
 const { AWS, tableName } = require('../env');
-const { dappDNS } = require('./route53');
-const { pipelineName } = require('./codepipeline');
-const assert = require('assert');
 const ddb = new AWS.DynamoDB({apiVersion: '2012-08-10'});
 
 function serializeDdbKey(dappName) {
@@ -12,61 +9,33 @@ function serializeDdbKey(dappName) {
     return keyItem;
 }
 
-function serializeDdbItem(dappName, ownerEmail, abi, bucketName, cloudfrontDns, cloudfrontDistroId, contractAddr, web3Url, guardianUrl) {
-    let creationTime = new Date().toISOString();
-    let item = {
-        'DappName' : {S: dappName},
-        'OwnerEmail' : {S: ownerEmail},
-        'CreationTime' : {S: creationTime},
-        'Abi' : {S: abi},
-        'ContractAddr' : {S: contractAddr},
-        'Web3URL' : {S: web3Url},
-        'GuardianURL' : {S: guardianUrl},
-        'S3BucketName' : {S: bucketName},
-        'CloudfrontDistributionId' : {S: cloudfrontDistroId},
-        'CloudfrontDnsName' : {S: cloudfrontDns},
-        'PipelineName' : {S: pipelineName(dappName)},
-        'DnsName' : {S: dappDNS(dappName)}
-    };
-    return item;
+async function promiseSetDappAvailable(dappName) {
+    let dbResponse = await promiseGetDappItem(dappName);
+    let dbItem = dbResponse.Item;
+    dbItem.State.S = 'AVAILABLE';
+
+    return promisePutRawDappItem(dbItem);
 }
 
-function dbItemToApiRepresentation(dbItem) {
-    if (!dbItem) {
-        return {};
+async function promiseSetDappFailed(dappName) {
+    let dbResponse = await promiseGetDappItem(dappName);
+    let dbItem = dbResponse.Item;
+    dbItem.State.S = 'FAILED';
+
+    return promisePutRawDappItem(dbItem);
+}
+
+function promiseSetItemBuilding(dbItem, cloudfrontDistroId, cloudfrontDns) {
+    if (cloudfrontDistroId) {
+        dbItem.CloudfrontDistributionId = {S: cloudfrontDistroId};
     }
-    validateDbItemForOutput(dbItem);
-    
-    let dappName = dbItem.DappName.S;
-    let ownerEmail = dbItem.OwnerEmail.S;
-    let creationTime = dbItem.CreationTime.S;
-    let dnsName = dbItem.DnsName.S;
-    let abi = dbItem.Abi.S;
-    let contractAddr = dbItem.ContractAddr.S;
-    let web3Url = dbItem.Web3URL.S;
-    let guardianUrl = dbItem.GuardianURL.S;
+    if (cloudfrontDns) {
+        dbItem.CloudfrontDnsName = {S: cloudfrontDns};
+    }
 
-    let apiItem = {
-        "DappName": dappName,
-        "OwnerEmail": ownerEmail,
-        "CreationTime": creationTime,
-        "DnsName": dnsName,
-        "Abi": abi,
-        "ContractAddr": contractAddr,
-        "Web3URL": web3Url,
-        "GuardianURL": guardianUrl
-    };
-    return apiItem;
-}
+    dbItem.State.S = 'BUILDING_DAPP';
 
-function promisePutDappItem(dappName, owner, abi, bucketName, cloudfrontDistroId, cloudfrontDns, contractAddr, web3Url, guardianUrl) {
-    let maxRetries = 5;
-    let putItemParams = {
-        TableName: tableName,
-        Item: serializeDdbItem(dappName, owner, abi, bucketName, cloudfrontDns, cloudfrontDistroId, contractAddr, web3Url, guardianUrl)
-    };
-
-    return addAwsPromiseRetries(() => ddb.putItem(putItemParams).promise(), maxRetries);
+    return promisePutRawDappItem(dbItem);
 }
 
 function promisePutRawDappItem(item) {
@@ -119,31 +88,11 @@ function promiseGetItemsByOwner(ownerEmail) {
     return addAwsPromiseRetries(() => ddb.query(getItemParams).promise(), maxRetries);
 }
 
-function validateDbItemForOutput(dbItem) {
-    assert(dbItem.hasOwnProperty('DappName'), "dbItem: required attribute 'DappName' not found");
-    assert(dbItem.hasOwnProperty('OwnerEmail'), "dbItem: required attribute 'OwnerEmail' not found");
-    assert(dbItem.hasOwnProperty('CreationTime'), "dbItem: required attribute 'CreationTime' not found");
-    assert(dbItem.hasOwnProperty('DnsName'), "dbItem: required attribute 'DnsName' not found");
-    assert(dbItem.hasOwnProperty('Abi'), "dbItem: required attribute 'Abi' not found");
-    assert(dbItem.hasOwnProperty('ContractAddr'), "dbItem: required attribute 'ContractAddr' not found");
-    assert(dbItem.hasOwnProperty('Web3URL'), "dbItem: required attribute 'Web3URL' not found");
-    assert(dbItem.hasOwnProperty('GuardianURL'), "dbItem: required attribute 'GuardianURL' not found");
-
-    assert(dbItem.DappName.hasOwnProperty('S'), "dbItem: required attribute 'DappName' has wrong shape");
-    assert(dbItem.OwnerEmail.hasOwnProperty('S'), "dbItem: required attribute 'OwnerEmail' has wrong shape");
-    assert(dbItem.CreationTime.hasOwnProperty('S'), "dbItem: required attribute 'CreationTime' has wrong shape");
-    assert(dbItem.DnsName.hasOwnProperty('S'), "dbItem: required attribute 'DnsName' has wrong shape");
-    assert(dbItem.Abi.hasOwnProperty('S'), "dbItem: required attribute 'Abi' has wrong shape");
-    assert(dbItem.ContractAddr.hasOwnProperty('S'), "dbItem: required attribute 'ContractAddr' has wrong shape");
-    assert(dbItem.Web3URL.hasOwnProperty('S'), "dbItem: required attribute 'Web3URL' has wrong shape");
-    assert(dbItem.GuardianURL.hasOwnProperty('S'), "dbItem: required attribute 'GuardianURL' has wrong shape");
-}
-
 module.exports = {
-    putItem : promisePutDappItem,
-    putRawItem : promisePutRawDappItem,
     getItem : promiseGetDappItem,
     deleteItem : promiseDeleteDappItem,
     getByOwner : promiseGetItemsByOwner,
-    toApiRepresentation : dbItemToApiRepresentation
+    setDappAvailable : promiseSetDappAvailable,
+    setDappFailed : promiseSetDappFailed,
+    setItemBuilding : promiseSetItemBuilding
 }

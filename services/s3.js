@@ -1,14 +1,11 @@
-const uuidv4 = require('uuid/v4');
 const shell = require('shelljs');
 const fs = require('fs');
 const zip = require('node-zip');
 
 const { AWS, awsRegion, dappseedBucket } = require('../env');
 const s3 = new AWS.S3({apiVersion: '2006-03-01'});
-const { dappDNS } = require('./route53');
 const { defaultTags, dappNameTag, dappOwnerTag, addAwsPromiseRetries } = require('../common');
 const { loadingPageHTML } = require('./loadingPageHtml');
-const s3BucketPrefix = "exim-abi-clerk-";
 
 function promiseCreateS3Bucket(bucketName) {
     let maxRetries = 5;
@@ -94,7 +91,7 @@ function promiseConfigureS3BucketStaticWebsite(bucketName) {
     return addAwsPromiseRetries(() => s3.putBucketWebsite(params).promise(), maxRetries);
 }
 
-function promiseEnableS3BucketCORS(bucketName, dappName){
+function promiseEnableS3BucketCORS(bucketName, dappDNS){
     let maxRetries = 5;
     let params = {
         Bucket : bucketName,
@@ -102,7 +99,7 @@ function promiseEnableS3BucketCORS(bucketName, dappName){
             CORSRules : [
                 {
                     "AllowedHeaders": ["Authorization"],
-                    "AllowedOrigins": [`https://${dappDNS(dappName)}`],
+                    "AllowedOrigins": [`https://${dappDNS}`],
                     "AllowedMethods": ["GET"],
                     MaxAgeSeconds   : 3000
                 }
@@ -206,10 +203,6 @@ function promiseGetS3Object(bucketName, objectKey) {
     return addAwsPromiseRetries(() => s3.getObject(params).promise(), maxRetries);
 }
 
-function createBucketName() {
-    return s3BucketPrefix.concat(uuidv4());
-}
-
 function getS3BucketEndpoint(bucketName) {
     return bucketName.concat(".s3.").concat(awsRegion).concat(".amazonaws.com");
 }
@@ -227,6 +220,5 @@ module.exports = {
     getObject : promiseGetS3Object,
     makeObjectNoCache : promiseMakeObjectNoCache,
     enableBucketCors : promiseEnableS3BucketCORS,
-    newBucketName : createBucketName,
     bucketEndpoint : getS3BucketEndpoint
 }
