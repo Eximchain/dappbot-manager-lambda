@@ -1,60 +1,40 @@
-// API Gateway "event" request context
-export interface APIGatewayEventRequestContext {
-  accountId: string;
-  apiId: string;
-  authorizer?: AuthResponseContext | null;
-  connectedAt?: number;
-  connectionId?: string;
-  domainName?: string;
-  eventType?: string;
-  extendedRequestId?: string;
-  httpMethod: string;
-  identity: {
-      accessKey: string | null;
-      accountId: string | null;
-      apiKey: string | null;
-      apiKeyId: string | null;
-      caller: string | null;
-      cognitoAuthenticationProvider: string | null;
-      cognitoAuthenticationType: string | null;
-      cognitoIdentityId: string | null;
-      cognitoIdentityPoolId: string | null;
-      sourceIp: string;
-      user: string | null;
-      userAgent: string | null;
-      userArn: string | null;
-  };
-  messageDirection?: string;
-  messageId?: string | null;
-  path: string;
-  stage: string;
-  requestId: string;
-  requestTime?: string;
-  requestTimeEpoch: number;
-  resourceId: string;
-  resourcePath: string;
-  routeKey?: string;
+// SQS
+// https://docs.aws.amazon.com/lambda/latest/dg/invoking-lambda-function.html#supported-event-source-sqs
+export interface SQSRecord {
+  messageId: string;
+  receiptHandle: string;
+  body: string;
+  attributes: SQSRecordAttributes;
+  messageAttributes: SQSMessageAttributes;
+  md5OfBody: string;
+  eventSource: string;
+  eventSourceARN: string;
+  awsRegion: string;
 }
 
-// API Gateway "event"
-export interface APIGatewayProxyEvent {
-  body: string | null;
-  headers: { [name: string]: string };
-  multiValueHeaders: { [name: string]: string[] };
-  httpMethod: string;
-  isBase64Encoded: boolean;
-  path: string;
-  pathParameters: { [name: string]: string } | null;
-  queryStringParameters: { [name: string]: string } | null;
-  multiValueQueryStringParameters: { [name: string]: string[] } | null;
-  stageVariables: { [name: string]: string } | null;
-  requestContext: APIGatewayEventRequestContext;
-  resource: string;
+export interface SQSEvent {
+  Records: SQSRecord[];
 }
-export type APIGatewayEvent = APIGatewayProxyEvent; // Old name
 
-export interface AuthResponseContext {
-  [name: string]: any;
+export interface SQSRecordAttributes {
+  ApproximateReceiveCount: string;
+  SentTimestamp: string;
+  SenderId: string;
+  ApproximateFirstReceiveTimestamp: string;
+}
+
+export type SQSMessageAttributeDataType = 'String' | 'Number' | 'Binary' | string;
+
+export interface SQSMessageAttribute {
+  stringValue?: string;
+  binaryValue?: string;
+  stringListValues: never[]; // Not implemented. Reserved for future use.
+  binaryListValues: never[]; // Not implemented. Reserved for future use.
+  dataType: SQSMessageAttributeDataType;
+}
+
+export interface SQSMessageAttributes {
+  [name: string]: SQSMessageAttribute;
 }
 
 /**
@@ -110,3 +90,4 @@ export interface CodePipelineJob {
 export interface CodePipelineEvent {
   "CodePipeline.job": CodePipelineJob
 };
+
