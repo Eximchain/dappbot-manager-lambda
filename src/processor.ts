@@ -21,13 +21,15 @@ async function callAndLog<ReturnType>(stage:string, promise:Promise<ReturnType>)
 
 async function processorCreate(dappName:string) {
     const dbItem = await callAndLog('Get DynamoDB Item', dynamoDB.getItem(dappName));
-    // Adding a throw within this fxn to tell Typescript what's up
-    if (!dbItem.Item) throw new StateValidationError('Create error: Corresponding DynamoDB record could not be found.');
+    
     let processOp = validate.stateCreate(dbItem);
     if (!processOp) {
         console.log("Ignoring operation 'create'");
         return {};
     }
+
+    // Check if the dbItem exists so the compiler knows the object can be referenced below
+    if (!dbItem.Item) throw new StateValidationError('Create error: Corresponding DynamoDB record could not be found.');
 
     let abi = dbItem.Item.Abi.S as string;
     let addr = dbItem.Item.ContractAddr.S as string;
@@ -63,8 +65,9 @@ async function processorCreate(dappName:string) {
                     let conflictingDistro = await callAndLog('Get Conflicting Cloudfront Distro', cloudfront.getConflictingDistro(dnsName));
                     await validate.conflictingDistroRepurposable(conflictingDistro, owner);
 
-                    // Perform existence check within this function let tip off Typescript
+                    // Check if the distro exists so the compiler knows the object can be referenced below
                     if (!conflictingDistro) throw new InternalProcessingError("Got CNAMEAlreadyExists, but no conflicting distributions were found.  Bug!");
+
                     // Required vars to exit the block without errors
                     cloudfrontDistroId = conflictingDistro.Id;
                     cloudfrontDns = conflictingDistro.DomainName;
