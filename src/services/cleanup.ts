@@ -11,7 +11,7 @@ import sendgrid from './sendgrid';
 //
 // Below function is called by index, it receives the event["CodePipeline.job"] field.
 
-async function postPipelineCleanup({ data, id }:CodePipelineJob){
+async function postPipelineCleanup({ data, id }:CodePipelineJob) {
   const { actionConfiguration } = data;
   // TODO: Get Dapp DNS from here
   const { OwnerEmail, DestinationBucket, DappName } = JSON.parse(actionConfiguration.configuration.UserParameters) 

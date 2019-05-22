@@ -62,7 +62,7 @@ function promiseEmptyS3Bucket(bucketName:string) {
     });
 }
 
-function promiseSetS3BucketPublicReadable(bucketName:string){
+function promiseSetS3BucketPublicReadable(bucketName:string) {
     let maxRetries = 5;
     let params = {
         Bucket: bucketName,
@@ -98,7 +98,7 @@ function promiseConfigureS3BucketStaticWebsite(bucketName:string) {
     return addAwsPromiseRetries(() => s3.putBucketWebsite(params).promise(), maxRetries);
 }
 
-function promiseEnableS3BucketCORS(bucketName:string, dappDNS:string){
+function promiseEnableS3BucketCORS(bucketName:string, dappDNS:string) {
     let maxRetries = 5;
     let params = {
         Bucket : bucketName,
