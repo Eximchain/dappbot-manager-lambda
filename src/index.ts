@@ -1,8 +1,10 @@
 'use strict';
-const processor = require('./processor');
-const cleanup = require('./services/cleanup');
+import processor from './processor';
+import cleanup from './services/cleanup';
+import { SQSEvent, CodePipelineEvent, SQSRecord } from './lambda-event-types';
+import { ResponseOptions, DappOperations } from './common';
 
-function methodProcessor(method) {
+function methodProcessor(method:DappOperations) {
     switch(method) {
         case 'create':
             return processor.create;
@@ -11,12 +13,12 @@ function methodProcessor(method) {
         case 'delete':
             return processor.delete;
         default:
-            return (dappName) => Promise.reject({message: `Unrecognized method name ${method} for processing '${dappName}'`});
+            return (dappName:string) => Promise.reject({message: `Unrecognized method name ${method} for processing '${dappName}'`});
     }
 }
 
-async function processRecord(record) {
-    let method = record.messageAttributes.Method.stringValue;
+async function processRecord(record:SQSRecord) {
+    let method = record.messageAttributes.Method.stringValue as DappOperations;
     let body = JSON.parse(record.body);
     let dappName = body.DappName;
 
@@ -24,11 +26,12 @@ async function processRecord(record) {
     return recordProcessor(dappName);
 }
 
-exports.handler = async (event) => {
+type Event = SQSEvent | CodePipelineEvent;
+exports.handler = async (event:Event) => {
     console.log("request: " + JSON.stringify(event));
 
     // Pass CodePipeline events straight to cleanup function
-    if (event['CodePipeline.job']){
+    if ('CodePipeline.job' in event){
         return cleanup.postPipelineCleanup(event['CodePipeline.job']);
     }
 
@@ -43,7 +46,7 @@ exports.handler = async (event) => {
     }
 };
 
-function response(result, opts) {
+function response(result:any, opts:ResponseOptions) {
     if (opts.isErr) {
         console.log("Returning Error Response for result", result);
         throw {};
@@ -53,13 +56,13 @@ function response(result, opts) {
     }
 }
 
-function successResponse(result, opts={isCreate: false}) {
+function successResponse(result:any, opts:ResponseOptions={isCreate: false}) {
     let successOpt = {isErr: false};
     let callOpts = {...opts, ...successOpt};
     return response(result, callOpts);
 }
 
-function errorResponse(result, opts={isCreate: false}) {
+function errorResponse(result:any, opts:ResponseOptions={isCreate: false}) {
     let errorOpt = {isErr: true};
     let callOpts = {...opts, ...errorOpt};
     return response(result, callOpts);

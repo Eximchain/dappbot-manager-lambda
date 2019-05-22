@@ -1,5 +1,5 @@
-const sgMail = require('@sendgrid/mail');
-const { sendgridApiKey } = require('../env');
+import sgMail from '@sendgrid/mail';
+import { sendgridApiKey } from '../env';
 
 let USING_SENDGRID = false;
 
@@ -11,7 +11,7 @@ if (sendgridApiKey && sendgridApiKey !== ""){
 const FROM_ADDRESS = 'dappbot@eximchain.com';
 
 
-function sendConfirmationMail(owner, dappname, dappDNS) {
+function sendConfirmationMail(owner:string, dappname:string, dappDNS:string) {
   let confirmationParam = {
     from : FROM_ADDRESS,
     to : owner,
@@ -28,6 +28,6 @@ function sendConfirmationMail(owner, dappname, dappDNS) {
   
 }
 
-module.exports = {
+export default {
   sendConfirmation : sendConfirmationMail
 }
