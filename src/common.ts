@@ -84,6 +84,13 @@ export enum DappStates {
     DEPOSED = 'DEPOSED'
 }
 
+export enum DappTiers {
+    POC = 'POC', // TODO: Remove this legacy tier
+    STANDARD = 'STANDARD',
+    PROFESSIONAL = 'PROFESSIONAL',
+    ENTERPRISE = 'ENTERPRISE'
+}
+
 export type ProcessorResponses = 'process' | 'ignore' | 'retry';
 
 export interface DappSeedArgs {
