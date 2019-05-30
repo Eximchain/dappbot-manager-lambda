@@ -1,5 +1,5 @@
 import { PutItemInputAttributeMap, AttributeMap } from "aws-sdk/clients/dynamodb";
-import { addAwsPromiseRetries } from '../common';
+import { addAwsPromiseRetries, DappStates } from '../common';
 import { AWS, tableName } from '../env';
 const ddb = new AWS.DynamoDB({apiVersion: '2012-08-10'});
 
@@ -13,7 +13,7 @@ function serializeDdbKey(dappName:string) {
 async function promiseSetDappAvailable(dappName:string) {
     let dbResponse = await promiseGetDappItem(dappName);
     let dbItem = dbResponse.Item as AttributeMap;
-    dbItem.State.S = 'AVAILABLE';
+    dbItem.State.S = DappStates.AVAILABLE;
 
     return promisePutRawDappItem(dbItem);
 }
@@ -21,7 +21,7 @@ async function promiseSetDappAvailable(dappName:string) {
 async function promiseSetDappFailed(dappName:string) {
     let dbResponse = await promiseGetDappItem(dappName);
     let dbItem = dbResponse.Item as AttributeMap;
-    dbItem.State.S = 'FAILED';
+    dbItem.State.S = DappStates.FAILED;
 
     return promisePutRawDappItem(dbItem);
 }
@@ -34,7 +34,7 @@ function promiseSetItemBuilding(dbItem:PutItemInputAttributeMap, cloudfrontDistr
         dbItem.CloudfrontDnsName = {S: cloudfrontDns};
     }
 
-    dbItem.State.S = 'BUILDING_DAPP';
+    dbItem.State.S = DappStates.BUILDING_DAPP;
 
     return promisePutRawDappItem(dbItem);
 }
