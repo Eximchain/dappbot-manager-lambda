@@ -39,6 +39,13 @@ function promiseSetItemBuilding(dbItem:PutItemInputAttributeMap, cloudfrontDistr
     return promisePutRawDappItem(dbItem);
 }
 
+// TODO: Combine with SetDapp method
+function promiseSetItemAvailable(dbItem:PutItemInputAttributeMap) {
+    dbItem.State.S = DappStates.AVAILABLE;
+
+    return promisePutRawDappItem(dbItem);
+}
+
 function promisePutRawDappItem(item:PutItemInputAttributeMap) {
     let maxRetries = 5;
     let putItemParams = {
@@ -95,5 +102,6 @@ export default {
     getByOwner : promiseGetItemsByOwner,
     setDappAvailable : promiseSetDappAvailable,
     setDappFailed : promiseSetDappFailed,
-    setItemBuilding : promiseSetItemBuilding
+    setItemBuilding : promiseSetItemBuilding,
+    setItemAvailable : promiseSetItemAvailable
 }

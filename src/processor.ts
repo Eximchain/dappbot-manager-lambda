@@ -26,7 +26,7 @@ function createProcessorForTier(tier:string) {
         case DappTiers.POC:
             return createLegacyPoc;
         case DappTiers.STANDARD:
-            throw new StateValidationError("STANDARD tier not yet implemented for 'create'");
+            return createStandardDapp;
         case DappTiers.PROFESSIONAL:
             throw new StateValidationError("PROFESSIONAL tier not yet implemented for 'create'");
         case DappTiers.ENTERPRISE:
@@ -119,12 +119,18 @@ async function createLegacyPoc(dappName:string, dappItem:AttributeMap) {
     return {};
 }
 
+async function createStandardDapp(dappName:string, dappItem:AttributeMap) {
+    await callAndLog('Set DynamoDB item AVAILABLE', dynamoDB.setItemAvailable(dappItem));
+
+    return {};
+}
+
 function updateProcessorForTier(tier:string | undefined) {
     switch(tier) {
         case DappTiers.POC:
             return updateLegacyPoc;
         case DappTiers.STANDARD:
-            throw new StateValidationError("STANDARD tier not yet implemented for 'update'");
+            return updateStandardDapp;
         case DappTiers.PROFESSIONAL:
             throw new StateValidationError("PROFESSIONAL tier not yet implemented for 'update'");
         case DappTiers.ENTERPRISE:
@@ -164,12 +170,18 @@ async function updateLegacyPoc(dappName:string, dappItem:AttributeMap) {
     return {};
 }
 
+async function updateStandardDapp(dappName:string, dappItem:AttributeMap) {
+    await callAndLog('Set DynamoDB item AVAILABLE', dynamoDB.setItemAvailable(dappItem));
+
+    return {};
+}
+
 function deleteProcessorForTier(tier:string | undefined) {
     switch(tier) {
         case DappTiers.POC:
             return deleteLegacyPoc;
         case DappTiers.STANDARD:
-            throw new StateValidationError("STANDARD tier not yet implemented for 'delete'");
+            return deleteStandardDapp;
         case DappTiers.PROFESSIONAL:
             throw new StateValidationError("PROFESSIONAL tier not yet implemented for 'delete'");
         case DappTiers.ENTERPRISE:
@@ -233,6 +245,12 @@ async function deleteLegacyPoc(dappName:string, dappItem:AttributeMap) {
         }
     }
 
+    await callAndLog('Delete DynamoDB item', dynamoDB.deleteItem(dappName));
+
+    return {};
+}
+
+async function deleteStandardDapp(dappName:string, dappItem:AttributeMap) {
     await callAndLog('Delete DynamoDB item', dynamoDB.deleteItem(dappName));
 
     return {};
