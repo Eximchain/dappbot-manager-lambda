@@ -1,5 +1,6 @@
 import services from './services';
 import { StateValidationError, InternalProcessingError } from './errors';
+import { DappTiers } from './common';
 const { dynamoDB, route53, cloudfront, s3, codepipeline } = services;
 import validate from './validate';
 import { AttributeMap } from "aws-sdk/clients/dynamodb";
@@ -20,6 +21,21 @@ async function callAndLog<ReturnType>(stage:string, promise:Promise<ReturnType>)
     }
 }
 
+function createProcessorForTier(tier:string | undefined) {
+    switch(tier) {
+        case DappTiers.POC:
+            return createLegacyPoc;
+        case DappTiers.STANDARD:
+            throw new StateValidationError("STANDARD tier not yet implemented for 'create'");
+        case DappTiers.PROFESSIONAL:
+            throw new StateValidationError("PROFESSIONAL tier not yet implemented for 'create'");
+        case DappTiers.ENTERPRISE:
+            throw new StateValidationError("ENTERPRISE tier not yet implemented for 'create'");
+        default:
+            throw new StateValidationError(`No 'create' processor exists for invalid tier '${tier}'`);
+    }   
+}
+
 async function processorCreate(dappName:string) {
     const dbItem = await callAndLog('Get DynamoDB Item', dynamoDB.getItem(dappName));
 
@@ -32,8 +48,10 @@ async function processorCreate(dappName:string) {
         return {};
     }
 
-    // TODO: Create appropriate tier
-    return createLegacyPoc(dappName, dbItem.Item);
+    let tier = dbItem.Item.Tier.S;
+    let tierProcessor = createProcessorForTier(tier);
+
+    return tierProcessor(dappName, dbItem.Item);
 }
 
 async function createLegacyPoc(dappName:string, dappItem:AttributeMap) {
@@ -101,6 +119,21 @@ async function createLegacyPoc(dappName:string, dappItem:AttributeMap) {
     return {};
 }
 
+function updateProcessorForTier(tier:string | undefined) {
+    switch(tier) {
+        case DappTiers.POC:
+            return updateLegacyPoc;
+        case DappTiers.STANDARD:
+            throw new StateValidationError("STANDARD tier not yet implemented for 'update'");
+        case DappTiers.PROFESSIONAL:
+            throw new StateValidationError("PROFESSIONAL tier not yet implemented for 'update'");
+        case DappTiers.ENTERPRISE:
+            throw new StateValidationError("ENTERPRISE tier not yet implemented for 'update'");
+        default:
+            throw new StateValidationError(`No 'update' processor exists for invalid tier '${tier}'`);
+    }   
+}
+
 async function processorUpdate(dappName:string) {
     const dbItem = await callAndLog('Get DynamoDB Item', dynamoDB.getItem(dappName));
 
@@ -112,7 +145,10 @@ async function processorUpdate(dappName:string) {
         return {};
     }
 
-    return updateLegacyPoc(dappName, dbItem.Item);
+    let tier = dbItem.Item.Tier.S;
+    let tierProcessor = updateProcessorForTier(tier);
+
+    return tierProcessor(dappName, dbItem.Item);
 }
 
 async function updateLegacyPoc(dappName:string, dappItem:AttributeMap) {
@@ -128,6 +164,21 @@ async function updateLegacyPoc(dappName:string, dappItem:AttributeMap) {
     return {};
 }
 
+function deleteProcessorForTier(tier:string | undefined) {
+    switch(tier) {
+        case DappTiers.POC:
+            return deleteLegacyPoc;
+        case DappTiers.STANDARD:
+            throw new StateValidationError("STANDARD tier not yet implemented for 'delete'");
+        case DappTiers.PROFESSIONAL:
+            throw new StateValidationError("PROFESSIONAL tier not yet implemented for 'delete'");
+        case DappTiers.ENTERPRISE:
+            throw new StateValidationError("ENTERPRISE tier not yet implemented for 'delete'");
+        default:
+            throw new StateValidationError(`No 'delete' processor exists for invalid tier '${tier}'`);
+    }   
+}
+
 async function processorDelete(dappName:string) {
     const dbItem = await callAndLog('Get Dapp DynamoDb Item', dynamoDB.getItem(dappName));
 
@@ -139,7 +190,10 @@ async function processorDelete(dappName:string) {
         return {};
     }
 
-    return deleteLegacyPoc(dappName, dbItem.Item)
+    let tier = dbItem.Item.Tier.S;
+    let tierProcessor = deleteProcessorForTier(tier);
+
+    return tierProcessor(dappName, dbItem.Item);
 }
 
 async function deleteLegacyPoc(dappName:string, dappItem:AttributeMap) {
