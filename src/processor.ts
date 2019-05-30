@@ -21,7 +21,7 @@ async function callAndLog<ReturnType>(stage:string, promise:Promise<ReturnType>)
     }
 }
 
-function createProcessorForTier(tier:string | undefined) {
+function createProcessorForTier(tier:string) {
     switch(tier) {
         case DappTiers.POC:
             return createLegacyPoc;
@@ -48,7 +48,7 @@ async function processorCreate(dappName:string) {
         return {};
     }
 
-    let tier = dbItem.Item.Tier.S;
+    let tier = dbItem.Item.Tier.S as string;
     let tierProcessor = createProcessorForTier(tier);
 
     return tierProcessor(dappName, dbItem.Item);
@@ -145,7 +145,7 @@ async function processorUpdate(dappName:string) {
         return {};
     }
 
-    let tier = dbItem.Item.Tier.S;
+    let tier = dbItem.Item.Tier.S as string;
     let tierProcessor = updateProcessorForTier(tier);
 
     return tierProcessor(dappName, dbItem.Item);
@@ -190,7 +190,7 @@ async function processorDelete(dappName:string) {
         return {};
     }
 
-    let tier = dbItem.Item.Tier.S;
+    let tier = dbItem.Item.Tier.S as string;
     let tierProcessor = deleteProcessorForTier(tier);
 
     return tierProcessor(dappName, dbItem.Item);
