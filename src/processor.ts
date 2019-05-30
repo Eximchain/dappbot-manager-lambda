@@ -2,6 +2,7 @@ import services from './services';
 import { StateValidationError, InternalProcessingError } from './errors';
 const { dynamoDB, route53, cloudfront, s3, codepipeline } = services;
 import validate from './validate';
+import { AttributeMap } from "aws-sdk/clients/dynamodb";
 import { Distribution } from 'aws-sdk/clients/cloudfront';
 
 const logErr = (stage:string, err:any) => { console.log(`Error on ${stage}: `, err) }
@@ -35,8 +36,7 @@ async function processorCreate(dappName:string) {
     return createLegacyPoc(dappName, dbItem.Item);
 }
 
-// TODO: Real type for dappItem
-async function createLegacyPoc(dappName:string, dappItem:any) {
+async function createLegacyPoc(dappName:string, dappItem:AttributeMap) {
     let abi = dappItem.Abi.S as string;
     let addr = dappItem.ContractAddr.S as string;
     let web3URL = dappItem.Web3URL.S as string;
@@ -115,8 +115,7 @@ async function processorUpdate(dappName:string) {
     return updateLegacyPoc(dappName, dbItem.Item);
 }
 
-// TODO: Real type for dappItem
-async function updateLegacyPoc(dappName:string, dappItem:any) {
+async function updateLegacyPoc(dappName:string, dappItem:AttributeMap) {
     let abi = dappItem.Abi.S as string;
     let addr = dappItem.ContractAddr.S as string;
     let web3URL = dappItem.Web3URL.S as string;
@@ -143,8 +142,7 @@ async function processorDelete(dappName:string) {
     return deleteLegacyPoc(dappName, dbItem.Item)
 }
 
-// TODO: Real type for dappItem
-async function deleteLegacyPoc(dappName:string, dappItem:any) {
+async function deleteLegacyPoc(dappName:string, dappItem:AttributeMap) {
     let bucketName = dappItem.S3BucketName.S as string;
     let cloudfrontDistroId = dappItem.CloudfrontDistributionId.S as string;
     let cloudfrontDns = dappItem.CloudfrontDnsName.S as string;
