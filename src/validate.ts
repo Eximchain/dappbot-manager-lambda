@@ -134,6 +134,7 @@ function validateStateDelete(dbResponse:GetItemOutput) {
     assertStateValid(dbItem.hasOwnProperty('CloudfrontDistributionId'), "dbItem: required attribute 'CloudfrontDistributionId' not found");
     assertStateValid(dbItem.hasOwnProperty('S3BucketName'), "dbItem: required attribute 'S3BucketName' not found");
     assertStateValid(dbItem.hasOwnProperty('State'), "dbItem: required attribute 'State' not found");
+    assertStateValid(dbItem.hasOwnProperty('Tier'), "dbItem: required attribute 'Tier' not found");
 
     assertStateValid(dbItem.DappName.hasOwnProperty('S'), "dbItem: required attribute 'DappName' has wrong shape");
     assertStateValid(dbItem.OwnerEmail.hasOwnProperty('S'), "dbItem: required attribute 'OwnerEmail' has wrong shape");
@@ -143,6 +144,7 @@ function validateStateDelete(dbResponse:GetItemOutput) {
     assertStateValid(dbItem.CloudfrontDistributionId.hasOwnProperty('S'), "dbItem: required attribute 'CloudfrontDistributionId' has wrong shape");
     assertStateValid(dbItem.S3BucketName.hasOwnProperty('S'), "dbItem: required attribute 'S3BucketName' has wrong shape");
     assertStateValid(dbItem.State.hasOwnProperty('S'), "dbItem: required attribute 'State' has wrong shape");
+    assertStateValid(dbItem.Tier.hasOwnProperty('S'), "dbItem: required attribute 'Tier' has wrong shape");
 
     let state = dbItem.State.S as DappStates;
     return processOpFromState(operation, state);
