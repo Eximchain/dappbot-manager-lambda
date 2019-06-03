@@ -1,7 +1,7 @@
 import assert from 'assert';
 import uuidv4 from 'uuid';
 import { defaultTags, dappNameTag, dappOwnerTag, addAwsPromiseRetries } from '../common';
-import { AWS, certArn } from '../env';
+import { AWS, wildcardCertArn } from '../env';
 import { DistributionConfig, ListDistributionsResult, AliasList, Tag } from 'aws-sdk/clients/cloudfront';
 const cloudfront = new AWS.CloudFront({apiVersion: '2018-11-05'});
 
@@ -22,7 +22,7 @@ function promiseCreateCloudfrontDistribution(appName:string, dappOwner:string, s
                     Items: [dappDNS]
                 },
                 ViewerCertificate : {
-                    ACMCertificateArn : certArn,
+                    ACMCertificateArn : wildcardCertArn,
                     SSLSupportMethod : 'sni-only',
                 },
                 Origins: {

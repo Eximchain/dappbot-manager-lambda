@@ -11,7 +11,7 @@ export const pipelineRoleArn = process.env.PIPELINE_ROLE_ARN as string;
 export const kmsKeyName = process.env.KMS_KEY_NAME as string;
 export const artifactBucket = process.env.ARTIFACT_BUCKET as string;
 export const dappseedBucket = process.env.DAPPSEED_BUCKET as string;
-export const certArn = process.env.CERT_ARN as string;
+export const wildcardCertArn = process.env.WILDCARD_CERT_ARN as string;
 export const cognitoUserPoolId = process.env.COGNITO_USER_POOL as string;
 export const sendgridApiKey = process.env.SENDGRID_API_KEY as string;
 
@@ -22,5 +22,5 @@ AWS.config.update({region: awsRegion});
 export default { 
     AWS, awsRegion, tableName, r53HostedZoneId, dnsRoot, codebuildId, 
     lambdaFxnName, pipelineRoleArn, kmsKeyName, artifactBucket, 
-    dappseedBucket, certArn, cognitoUserPoolId, sendgridApiKey
+    dappseedBucket, wildcardCertArn, cognitoUserPoolId, sendgridApiKey
 };
