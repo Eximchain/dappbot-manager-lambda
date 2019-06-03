@@ -1,4 +1,5 @@
-export const dappCreatedEmail = `<!DOCTYPE html>
+export const createDappEmail = (dappname: string, dappDNS: string) => {
+  return `<!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml" xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -48,7 +49,7 @@ width: 100% !important; height: 100%; margin: 0; line-height: 1.4; background-co
                   <tr>
                     <td class="content-cell" style="box-sizing: border-box; font-family: 'Helvetica Neue', Helvetica, sans-serif; padding: 35px; word-break: break-word;">
                       <h1 style="box-sizing: border-box; color: #2b333f; font-family: 'Helvetica Neue', Helvetica, sans-serif; font-size: 19px; font-weight: bold; margin-top: 0;" align="left">Dapp Created!</h1>
-                      <p style="box-sizing: border-box; color: #626b76; font-family: 'Helvetica Neue', Helvetica, sans-serif; font-size: 16px; line-height: 1.5em; margin-top: 0;" align="left">Congratulations! You just created and deployed a Dapp. Use the link below to view and interact with your new Dapp.</p>
+                      <p style="box-sizing: border-box; color: #626b76; font-family: 'Helvetica Neue', Helvetica, sans-serif; font-size: 16px; line-height: 1.5em; margin-top: 0;" align="left">Congratulations! You just created and deployed <strong>${dappname}</strong>. Use the link below to view and interact with your new Dapp.</p>
 
                       <table class="body-action" align="center" width="100%" cellpadding="0" cellspacing="0" style="box-sizing: border-box; font-family: 'Helvetica Neue', Helvetica, sans-serif; margin: 30px auto; padding: 0; text-align: center; width: 100%;">
                         <tr>
@@ -60,7 +61,7 @@ width: 100% !important; height: 100%; margin: 0; line-height: 1.4; background-co
                                   <table border="0" cellspacing="0" cellpadding="0" style="box-sizing: border-box; font-family: 'Helvetica Neue', Helvetica, sans-serif;">
                                     <tr>
                                       <td style="box-sizing: border-box; font-family: 'Helvetica Neue', Helvetica, sans-serif; word-break: break-word;">
-                                        <a href={yourdapp.dapp.bot} class="button button--" style="-webkit-text-size-adjust: none; background: #007ef5; border-color: #007ef5; border-radius: 3px; border-style: solid; border-width: 10px 18px; box-shadow: 0 2px 3px rgba(0, 0, 0, 0.16); box-sizing: border-box; color: #FFF; display: inline-block; font-family: 'Helvetica Neue', Helvetica, sans-serif; text-decoration: none;">{yourdapp.dapp.bot}</a>
+                                        <a href=${dappDNS} class="button button--" style="-webkit-text-size-adjust: none; background: #007ef5; border-color: #007ef5; border-radius: 3px; border-style: solid; border-width: 10px 18px; box-shadow: 0 2px 3px rgba(0, 0, 0, 0.16); box-sizing: border-box; color: #FFF; display: inline-block; font-family: 'Helvetica Neue', Helvetica, sans-serif; text-decoration: none;">${dappDNS}</a>
                                       </td>
                                     </tr>
                                   </table>
@@ -109,5 +110,6 @@ width: 100% !important; height: 100%; margin: 0; line-height: 1.4; background-co
     </table>
   </body>
 </html>`;
+}
 
-export default dappCreatedEmail;
+export default createDappEmail;
