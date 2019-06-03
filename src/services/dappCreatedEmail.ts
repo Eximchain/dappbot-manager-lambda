@@ -61,7 +61,7 @@ width: 100% !important; height: 100%; margin: 0; line-height: 1.4; background-co
                                   <table border="0" cellspacing="0" cellpadding="0" style="box-sizing: border-box; font-family: 'Helvetica Neue', Helvetica, sans-serif;">
                                     <tr>
                                       <td style="box-sizing: border-box; font-family: 'Helvetica Neue', Helvetica, sans-serif; word-break: break-word;">
-                                        <a href=${dappDNS} class="button button--" style="-webkit-text-size-adjust: none; background: #007ef5; border-color: #007ef5; border-radius: 3px; border-style: solid; border-width: 10px 18px; box-shadow: 0 2px 3px rgba(0, 0, 0, 0.16); box-sizing: border-box; color: #FFF; display: inline-block; font-family: 'Helvetica Neue', Helvetica, sans-serif; text-decoration: none;">${dappDNS}</a>
+                                        <a href="${dappDNS}" class="button button--" style="-webkit-text-size-adjust: none; background: #007ef5; border-color: #007ef5; border-radius: 3px; border-style: solid; border-width: 10px 18px; box-shadow: 0 2px 3px rgba(0, 0, 0, 0.16); box-sizing: border-box; color: #FFF; display: inline-block; font-family: 'Helvetica Neue', Helvetica, sans-serif; text-decoration: none;">${dappDNS}</a>
                                       </td>
                                     </tr>
                                   </table>
