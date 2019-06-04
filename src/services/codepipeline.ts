@@ -1,5 +1,5 @@
 import { addAwsPromiseRetries } from '../common';
-import { AWS, codebuildId, pipelineRoleArn, artifactBucket, dappseedBucket, lambdaFxnName } from '../env';
+import { AWS, codebuildId, pipelineRoleArn, artifactBucket, dappseedBucket, servicesLambdaFxnName } from '../env';
 import { CreatePipelineInput } from 'aws-sdk/clients/codepipeline';
 
 const codepipeline = new AWS.CodePipeline();
@@ -99,7 +99,7 @@ function pipelineParams(dappName:string, pipelineName:string, destBucket:string,
                             },
                             "runOrder":2,
                             "configuration": {
-                                "FunctionName": lambdaFxnName,
+                                "FunctionName": servicesLambdaFxnName,
                                 "UserParameters": JSON.stringify({
                                     OwnerEmail: owner,
                                     DestinationBucket : destBucket,

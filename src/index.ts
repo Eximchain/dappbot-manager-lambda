@@ -1,6 +1,5 @@
 'use strict';
 import processor from './processor';
-import cleanup from './services/cleanup';
 import { SQSEvent, CodePipelineEvent, SQSRecord } from './lambda-event-types';
 import { ResponseOptions, DappOperations } from './common';
 
@@ -26,14 +25,9 @@ async function processRecord(record:SQSRecord) {
     return recordProcessor(dappName);
 }
 
-type Event = SQSEvent | CodePipelineEvent;
+type Event = SQSEvent;
 exports.handler = async (event:Event) => {
     console.log("request: " + JSON.stringify(event));
-
-    // Pass CodePipeline events straight to cleanup function
-    if ('CodePipeline.job' in event){
-        return cleanup.postPipelineCleanup(event['CodePipeline.job']);
-    }
 
     let records = event.Records;
     let processRecordsPromise = Promise.all(records.map(processRecord));
