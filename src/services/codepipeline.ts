@@ -121,6 +121,103 @@ function pocPipelineParams(dappName:string, pipelineName:string, destBucket:stri
     return pipelineParam;
 }
 
+function enterprisePipelineParams(dappName:string, pipelineName:string, owner:string) {
+    let pipelineParam:CreatePipelineInput = {
+        pipeline: {
+            name: pipelineName,
+            roleArn: pipelineRoleArn,
+            version: 1,
+            artifactStore: {
+                location: artifactBucket,
+                type: 'S3'
+            },
+            stages: [
+                {
+                    "name": "FetchDappseed",
+                    "actions": [
+                        {
+                            "name": "Source",
+                            "actionTypeId": {
+                                "category": "Source",
+                                "owner": "AWS",
+                                "version": "1",
+                                "provider": "S3"
+                            },
+                            "outputArtifacts": [
+                                {
+                                    "name": "DAPPSEED"
+                                }
+                            ],
+                            "configuration": {
+                                "S3Bucket": dappseedBucket,
+                                "S3ObjectKey": `${dappName}/dappseed.zip`
+                            },
+                            "runOrder": 1
+                        }
+                    ]
+                },
+                {
+                    "name": "BuildDapp",
+                    "actions": [
+                        {
+                            "inputArtifacts": [
+                                {
+                                    "name": "DAPPSEED"
+                                }
+                            ],
+                            "name": "Build",
+                            "actionTypeId": {
+                                "category": "Build",
+                                "owner": "AWS",
+                                "version": "1",
+                                "provider": "CodeBuild"
+                            },
+                            "outputArtifacts": [
+                                {
+                                    "name": "BUILD"
+                                }
+                            ],
+                            "configuration": {
+                                "ProjectName": codebuildId
+                            },
+                            "runOrder": 1
+                        }
+                    ]
+                },
+                {
+                    "name": "CommitToGithub",
+                    "actions": [
+                        {
+                            "inputArtifacts": [
+                                {
+                                    "name": "BUILD"
+                                }
+                            ],
+                            "name": "Commit",
+                            "actionTypeId": {
+                                "category": "Invoke",
+                                "owner": "AWS",
+                                "version": "1",
+                                "provider": "Lambda"
+                            },
+                            "runOrder":1,
+                            "configuration": {
+                                "FunctionName": servicesLambdaFxnName,
+                                "UserParameters": JSON.stringify({
+                                    Job: PipelineJobs.ENTERPRISE_GITHUB_COMMIT,
+                                    OwnerEmail: owner,
+                                    DappName : dappName
+                                })
+                            }
+                        }
+                    ]
+                }
+            ]
+        }
+    };
+    return pipelineParam;
+}
+
 function promiseCreatePipeline(params:any) {
     let maxRetries = 5;
     return addAwsPromiseRetries(() => codepipeline.createPipeline(params).promise(), maxRetries);
@@ -128,6 +225,10 @@ function promiseCreatePipeline(params:any) {
 
 function promiseCreatePocPipeline(dappName:string, pipelineName:string, destBucket:string, owner:string) {
     return promiseCreatePipeline(pocPipelineParams(dappName, pipelineName, destBucket, owner));
+}
+
+function promiseCreateEnterprisePipeline(dappName:string, pipelineName:string, owner:string) {
+    return promiseCreatePipeline(enterprisePipelineParams(dappName, pipelineName, owner));
 }
 
 function promiseRunPipeline(pipelineName:string) {
@@ -168,6 +269,7 @@ function promiseFailJob(jobId:string, err:any) {
 
 export default {
     createPocPipeline: promiseCreatePocPipeline,
+    createEnterprisePipeline: promiseCreateEnterprisePipeline,
     run: promiseRunPipeline,
     delete: promiseDeletePipeline,
     completeJob: promiseCompleteJob,
