@@ -4,7 +4,7 @@ import { CreatePipelineInput } from 'aws-sdk/clients/codepipeline';
 
 const codepipeline = new AWS.CodePipeline();
 
-function pipelineParams(dappName:string, pipelineName:string, destBucket:string, owner:string) {
+function pocPipelineParams(dappName:string, pipelineName:string, destBucket:string, owner:string) {
     let pipelineParam:CreatePipelineInput = {
         pipeline: {
             name: pipelineName,
@@ -115,10 +115,13 @@ function pipelineParams(dappName:string, pipelineName:string, destBucket:string,
     return pipelineParam;
 }
 
-function promiseCreatePipeline(dappName:string, pipelineName:string, destBucket:string, owner:string) {
+function promiseCreatePipeline(params:any) {
     let maxRetries = 5;
-    let params = pipelineParams(dappName, pipelineName, destBucket, owner);
     return addAwsPromiseRetries(() => codepipeline.createPipeline(params).promise(), maxRetries);
+}
+
+function promiseCreatePocPipeline(dappName:string, pipelineName:string, destBucket:string, owner:string) {
+    return promiseCreatePipeline(pocPipelineParams(dappName, pipelineName, destBucket, owner));
 }
 
 function promiseRunPipeline(pipelineName:string) {
@@ -158,7 +161,7 @@ function promiseFailJob(jobId:string, err:any) {
 }
 
 export default {
-    create: promiseCreatePipeline,
+    createPocPipeline: promiseCreatePocPipeline,
     run: promiseRunPipeline,
     delete: promiseDeletePipeline,
     completeJob: promiseCompleteJob,

@@ -110,7 +110,7 @@ async function createLegacyPoc(dappName:string, dappItem:AttributeMap) {
 
     await callAndLog('Put DappSeed', s3.putDappseed({ dappName, web3URL, guardianURL, abi, addr, cdnURL: cloudfrontDns }));
 
-    let createPipelinePromise = callAndLog('Create CodePipeline', codepipeline.create(dappName, pipelineName, bucketName, owner));
+    let createPipelinePromise = callAndLog('Create POC CodePipeline', codepipeline.createPocPipeline(dappName, pipelineName, bucketName, owner));
     let createDnsRecordPromise = callAndLog('Create Route 53 record', route53.createRecord(dnsName, cloudfrontDns));
     await Promise.all([createPipelinePromise, createDnsRecordPromise]);
 
