@@ -4,6 +4,11 @@ import { CreatePipelineInput } from 'aws-sdk/clients/codepipeline';
 
 const codepipeline = new AWS.CodePipeline();
 
+enum PipelineJobs {
+    POC_CLEANUP = 'POC_CLEANUP',
+    ENTERPRISE_GITHUB_COMMIT = 'ENTERPRISE_GITHUB_COMMIT'
+}
+
 function pocPipelineParams(dappName:string, pipelineName:string, destBucket:string, owner:string) {
     let pipelineParam:CreatePipelineInput = {
         pipeline: {
@@ -101,6 +106,7 @@ function pocPipelineParams(dappName:string, pipelineName:string, destBucket:stri
                             "configuration": {
                                 "FunctionName": servicesLambdaFxnName,
                                 "UserParameters": JSON.stringify({
+                                    Job: PipelineJobs.POC_CLEANUP,
                                     OwnerEmail: owner,
                                     DestinationBucket : destBucket,
                                     DappName : dappName
