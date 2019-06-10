@@ -7,6 +7,7 @@ export const tableName = process.env.DDB_TABLE as string;
 export const r53HostedZoneId = process.env.R53_HOSTED_ZONE_ID as string;
 export const dnsRoot = process.env.DNS_ROOT as string;
 export const codebuildId = process.env.CODEBUILD_ID as string;
+export const codebuildGenerateId = process.env.CODEBUILD_GENERATE_ID as string;
 export const pipelineRoleArn = process.env.PIPELINE_ROLE_ARN as string;
 export const kmsKeyName = process.env.KMS_KEY_NAME as string;
 export const artifactBucket = process.env.ARTIFACT_BUCKET as string;
