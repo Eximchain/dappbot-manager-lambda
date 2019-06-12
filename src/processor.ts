@@ -132,7 +132,7 @@ async function createEnterpriseDapp(dappName:string, dappItem:AttributeMap) {
     let guardianURL = dappItem.GuardianURL.S as string;
     let bucketName = dappItem.S3BucketName.S as string;
     let owner = dappItem.OwnerEmail.S as string;
-    let pipelineName = dappItem.PipelineName.S as string;
+    let srcPipelineName = dappItem.SrcPipelineName.S as string;
     let dnsName = dappItem.DnsName.S as string;
     let targetRepoName = dappItem.TargetRepoName.S as string;
     let targetRepoOwner = dappItem.TargetRepoOwner.S as string;
@@ -183,7 +183,7 @@ async function createEnterpriseDapp(dappName:string, dappItem:AttributeMap) {
 
     await callAndLog('Put DappSeed', s3.putDappseed({ dappName, web3URL, guardianURL, abi, addr, cdnURL: cloudfrontDns }));
 
-    let createPipelinePromise = callAndLog('Create Enterprise CodePipeline', codepipeline.createEnterprisePipeline(dappName, pipelineName, owner, targetRepoName, targetRepoOwner));
+    let createPipelinePromise = callAndLog('Create Src Enterprise CodePipeline', codepipeline.createEnterpriseSrcPipeline(dappName, srcPipelineName, owner, targetRepoName, targetRepoOwner));
     let createDnsRecordPromise = callAndLog('Create Route 53 record', route53.createRecord(dnsName, cloudfrontDns));
     await Promise.all([createPipelinePromise, createDnsRecordPromise]);
 

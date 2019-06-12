@@ -121,7 +121,7 @@ function pocPipelineParams(dappName:string, pipelineName:string, destBucket:stri
     return pipelineParam;
 }
 
-function enterprisePipelineParams(dappName:string, pipelineName:string, owner:string, targetRepoName:string, targetRepoOwner:string) {
+function enterpriseSrcPipelineParams(dappName:string, pipelineName:string, owner:string, targetRepoName:string, targetRepoOwner:string) {
     let pipelineParam:CreatePipelineInput = {
         pipeline: {
             name: pipelineName,
@@ -229,8 +229,8 @@ function promiseCreatePocPipeline(dappName:string, pipelineName:string, destBuck
     return promiseCreatePipeline(pocPipelineParams(dappName, pipelineName, destBucket, owner));
 }
 
-function promiseCreateEnterprisePipeline(dappName:string, pipelineName:string, owner:string, targetRepoName:string, targetRepoOwner:string) {
-    return promiseCreatePipeline(enterprisePipelineParams(dappName, pipelineName, owner, targetRepoName, targetRepoOwner));
+function promiseCreateEnterpriseSrcPipeline(dappName:string, pipelineName:string, owner:string, targetRepoName:string, targetRepoOwner:string) {
+    return promiseCreatePipeline(enterpriseSrcPipelineParams(dappName, pipelineName, owner, targetRepoName, targetRepoOwner));
 }
 
 function promiseRunPipeline(pipelineName:string) {
@@ -271,7 +271,7 @@ function promiseFailJob(jobId:string, err:any) {
 
 export default {
     createPocPipeline: promiseCreatePocPipeline,
-    createEnterprisePipeline: promiseCreateEnterprisePipeline,
+    createEnterpriseSrcPipeline: promiseCreateEnterpriseSrcPipeline,
     run: promiseRunPipeline,
     delete: promiseDeletePipeline,
     completeJob: promiseCompleteJob,
