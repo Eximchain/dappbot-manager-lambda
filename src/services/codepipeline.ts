@@ -121,7 +121,7 @@ function pocPipelineParams(dappName:string, pipelineName:string, destBucket:stri
     return pipelineParam;
 }
 
-function enterprisePipelineParams(dappName:string, pipelineName:string, owner:string) {
+function enterprisePipelineParams(dappName:string, pipelineName:string, owner:string, targetRepoName:string, targetRepoOwner:string) {
     let pipelineParam:CreatePipelineInput = {
         pipeline: {
             name: pipelineName,
@@ -206,7 +206,9 @@ function enterprisePipelineParams(dappName:string, pipelineName:string, owner:st
                                 "UserParameters": JSON.stringify({
                                     Job: PipelineJobs.ENTERPRISE_GITHUB_COMMIT,
                                     OwnerEmail: owner,
-                                    DappName : dappName
+                                    DappName : dappName,
+                                    TargetRepoName: targetRepoName,
+                                    TargetRepoOwner: targetRepoOwner
                                 })
                             }
                         }
@@ -227,8 +229,8 @@ function promiseCreatePocPipeline(dappName:string, pipelineName:string, destBuck
     return promiseCreatePipeline(pocPipelineParams(dappName, pipelineName, destBucket, owner));
 }
 
-function promiseCreateEnterprisePipeline(dappName:string, pipelineName:string, owner:string) {
-    return promiseCreatePipeline(enterprisePipelineParams(dappName, pipelineName, owner));
+function promiseCreateEnterprisePipeline(dappName:string, pipelineName:string, owner:string, targetRepoName:string, targetRepoOwner:string) {
+    return promiseCreatePipeline(enterprisePipelineParams(dappName, pipelineName, owner, targetRepoName, targetRepoOwner));
 }
 
 function promiseRunPipeline(pipelineName:string) {
