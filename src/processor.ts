@@ -133,6 +133,7 @@ async function createEnterpriseDapp(dappName:string, dappItem:AttributeMap) {
     let bucketName = dappItem.S3BucketName.S as string;
     let owner = dappItem.OwnerEmail.S as string;
     let srcPipelineName = dappItem.SrcPipelineName.S as string;
+    let buildPipelineName = dappItem.PipelineName.S as string;
     let dnsName = dappItem.DnsName.S as string;
     let targetRepoName = dappItem.TargetRepoName.S as string;
     let targetRepoOwner = dappItem.TargetRepoOwner.S as string;
@@ -183,9 +184,10 @@ async function createEnterpriseDapp(dappName:string, dappItem:AttributeMap) {
 
     await callAndLog('Put DappSeed', s3.putDappseed({ dappName, web3URL, guardianURL, abi, addr, cdnURL: cloudfrontDns }));
 
-    let createPipelinePromise = callAndLog('Create Src Enterprise CodePipeline', codepipeline.createEnterpriseSrcPipeline(dappName, srcPipelineName, owner, targetRepoName, targetRepoOwner));
+    let createSrcPipelinePromise = callAndLog('Create Src Enterprise CodePipeline', codepipeline.createEnterpriseSrcPipeline(dappName, srcPipelineName, owner, targetRepoName, targetRepoOwner));
+    let createBuildPipelinePromise = callAndLog('Create Build Enterprise CodePipeline', codepipeline.createEnterpriseBuildPipeline(dappName, owner, buildPipelineName, targetRepoName, targetRepoOwner, bucketName));
     let createDnsRecordPromise = callAndLog('Create Route 53 record', route53.createRecord(dnsName, cloudfrontDns));
-    await Promise.all([createPipelinePromise, createDnsRecordPromise]);
+    await Promise.all([createSrcPipelinePromise, createBuildPipelinePromise, createDnsRecordPromise]);
 
     await callAndLog('Set DynamoDB item BUILDING_DAPP', dynamoDB.setItemBuilding(dappItem, cloudfrontDistroId, cloudfrontDns));
 
@@ -340,12 +342,14 @@ async function deleteEnterpriseDapp(dappName:string, dappItem:AttributeMap) {
     let bucketName = dappItem.S3BucketName.S as string;
     let cloudfrontDistroId = dappItem.CloudfrontDistributionId.S as string;
     let cloudfrontDns = dappItem.CloudfrontDnsName.S as string;
-    let pipelineName = dappItem.PipelineName.S as string;
+    let srcPipelineName = dappItem.SrcPipelineName.S as string;
+    let buildPipelineName = dappItem.PipelineName.S as string;
     let dnsName = dappItem.DnsName.S as string;
 
     let deleteDnsRecordPromise = callAndLog('Delete Route53 Record', route53.deleteRecord(dnsName, cloudfrontDns));
-    let deletePipelinePromise = callAndLog('Delete CodePipeline', codepipeline.delete(pipelineName));
-    await Promise.all([deleteDnsRecordPromise, deletePipelinePromise]);
+    let deleteSrcPipelinePromise = callAndLog('Delete Src CodePipeline', codepipeline.delete(srcPipelineName));
+    let deleteBuildPipelinePromise = callAndLog('Delete Build CodePipeline', codepipeline.delete(buildPipelineName));
+    await Promise.all([deleteDnsRecordPromise, deleteSrcPipelinePromise, deleteBuildPipelinePromise]);
         
     try {
         await callAndLog('Disable Cloudfront distro', cloudfront.disableDistro(cloudfrontDistroId));

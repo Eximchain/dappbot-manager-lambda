@@ -1,5 +1,5 @@
 import { addAwsPromiseRetries } from '../common';
-import { AWS, codebuildId, codebuildGenerateId, pipelineRoleArn, artifactBucket, dappseedBucket, servicesLambdaFxnName } from '../env';
+import { AWS, codebuildId, codebuildGenerateId, codebuildBuildId, pipelineRoleArn, artifactBucket, dappseedBucket, servicesLambdaFxnName, githubToken } from '../env';
 import { CreatePipelineInput } from 'aws-sdk/clients/codepipeline';
 
 const codepipeline = new AWS.CodePipeline();
@@ -220,6 +220,120 @@ function enterpriseSrcPipelineParams(dappName:string, pipelineName:string, owner
     return pipelineParam;
 }
 
+function enterpriseBuildPipelineParams(dappName:string, owner:string, pipelineName:string, targetRepoName:string, targetRepoOwner:string, destBucket:string) {
+    let pipelineParam:CreatePipelineInput = {
+        pipeline: {
+            name: pipelineName,
+            roleArn: pipelineRoleArn,
+            version: 1,
+            artifactStore: {
+                location: artifactBucket,
+                type: 'S3'
+            },
+            stages: [
+                {
+                    "name": "FetchSource",
+                    "actions": [
+                        {
+                            "name": "Source",
+                            "actionTypeId": {
+                                "category": "Source",
+                                "owner": "ThirdParty",
+                                "version": "1",
+                                "provider": "GitHub"
+                            },
+                            "outputArtifacts": [
+                                {
+                                    "name": "SOURCE"
+                                }
+                            ],
+                            "configuration": {
+                                "Owner": targetRepoOwner,
+                                "Repo": targetRepoName,
+                                "Branch": "master",
+                                "OAuthToken": githubToken
+                            },
+                            "runOrder": 1
+                        }
+                    ]
+                },
+                {
+                    "name": "BuildDapp",
+                    "actions": [
+                        {
+                            "inputArtifacts": [
+                                {
+                                    "name": "SOURCE"
+                                }
+                            ],
+                            "name": "Build",
+                            "actionTypeId": {
+                                "category": "Build",
+                                "owner": "AWS",
+                                "version": "1",
+                                "provider": "CodeBuild"
+                            },
+                            "outputArtifacts": [
+                                {
+                                    "name": "BUILD"
+                                }
+                            ],
+                            "configuration": {
+                                "ProjectName": codebuildBuildId
+                            },
+                            "runOrder": 1
+                        }
+                    ]
+                },
+                {
+                    "name": "DeployToS3",
+                    "actions": [
+                        {
+                            "inputArtifacts": [
+                                {
+                                    "name": "BUILD"
+                                }
+                            ],
+                            "name": "Deploy",
+                            "actionTypeId": {
+                                "category": "Deploy",
+                                "owner": "AWS",
+                                "version": "1",
+                                "provider": "S3"
+                            },
+                            "runOrder": 1,
+                            "configuration": {
+                                "BucketName" : destBucket,
+                                "Extract": "true"
+                            }
+                        },
+                        {
+                            "name": "Cleanup",
+                            "actionTypeId": {
+                                "category": "Invoke",
+                                "owner": "AWS",
+                                "version": "1",
+                                "provider": "Lambda"
+                            },
+                            "runOrder":2,
+                            "configuration": {
+                                "FunctionName": servicesLambdaFxnName,
+                                "UserParameters": JSON.stringify({
+                                    Job: PipelineJobs.POC_CLEANUP,
+                                    OwnerEmail: owner,
+                                    DestinationBucket : destBucket,
+                                    DappName : dappName
+                                })
+                            }
+                        }
+                    ]
+                }
+            ]
+        }
+    };
+    return pipelineParam;
+}
+
 function promiseCreatePipeline(params:any) {
     let maxRetries = 5;
     return addAwsPromiseRetries(() => codepipeline.createPipeline(params).promise(), maxRetries);
@@ -231,6 +345,9 @@ function promiseCreatePocPipeline(dappName:string, pipelineName:string, destBuck
 
 function promiseCreateEnterpriseSrcPipeline(dappName:string, pipelineName:string, owner:string, targetRepoName:string, targetRepoOwner:string) {
     return promiseCreatePipeline(enterpriseSrcPipelineParams(dappName, pipelineName, owner, targetRepoName, targetRepoOwner));
+}
+function promiseCreateEnterpriseBuildPipeline(dappName:string, owner:string, pipelineName:string, targetRepoName:string, targetRepoOwner:string, destBucket:string) {
+    return promiseCreatePipeline(enterpriseBuildPipelineParams(dappName, owner, pipelineName, targetRepoName, targetRepoOwner, destBucket));
 }
 
 function promiseRunPipeline(pipelineName:string) {
@@ -272,6 +389,7 @@ function promiseFailJob(jobId:string, err:any) {
 export default {
     createPocPipeline: promiseCreatePocPipeline,
     createEnterpriseSrcPipeline: promiseCreateEnterpriseSrcPipeline,
+    createEnterpriseBuildPipeline: promiseCreateEnterpriseBuildPipeline,
     run: promiseRunPipeline,
     delete: promiseDeletePipeline,
     completeJob: promiseCompleteJob,
