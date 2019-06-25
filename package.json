@@ -1,23 +1,23 @@
 {
-  "name": "abi-clerk-lambda",
+  "name": "dappbot-manager-lambda",
   "version": "0.0.1",
   "description": "AWS Lambda function to run ABI Clerk",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "postinstall": "chmod 744 ./build-bundle.sh",
-    "build": "./build-bundle.sh abi-clerk-lambda.zip"
+    "build": "./build-bundle.sh dappbot-manager-lambda.zip"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Eximchain/abi-clerk-lambda.git"
+    "url": "git+https://github.com/Eximchain/dappbot-manager-lambda.git"
   },
   "author": "Louis Lamia",
   "license": "UNLICENSED",
   "bugs": {
-    "url": "https://github.com/Eximchain/abi-clerk-lambda/issues"
+    "url": "https://github.com/Eximchain/dappbot-manager-lambda/issues"
   },
-  "homepage": "https://github.com/Eximchain/abi-clerk-lambda#readme",
+  "homepage": "https://github.com/Eximchain/dappbot-manager-lambda#readme",
   "dependencies": {
     "@sendgrid/mail": "^6.4.0",
     "aws-sdk": "^2.424.0",
