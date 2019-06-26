@@ -1,6 +1,6 @@
 # dappbot-manager-lambda
 
-> Lambda function for the ABI Clerk.
+> Lambda function for the DappBot Manager.
 
 ## How to Build & Deploy
 To deploy a Lambda function, it must be wrapped into a zip file with all of its dependencies.  You can produce this zip file with:
@@ -14,6 +14,9 @@ This will produce a `dappbot-manager-lambda.zip` at the package root directory. 
 This Lambda function's zip will typically be manually placed in [`terraform-aws-dappbot`](https://github.com/eximchain/terraform-aws-dappbot/), where it gets deployed as part of `terraform apply`.  However, if you are iterating on the function and don't want to cycle the rest of your infrastructure, you can also manually upload the zip file on the Lambda function's AWS console page. 
 
 ## Endpoints
+
+**WARNING: This section is deprecated**
+
 - **`/create`**
   - Accepts a body with the following keys:
     - **`DappName`**: Unique name for your dapp, will be in the domain.
