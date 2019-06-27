@@ -1,6 +1,6 @@
 'use strict';
 import processor from './processor';
-import { SQSEvent, CodePipelineEvent, SQSRecord } from './lambda-event-types';
+import { SQSEvent, SQSRecord } from './lambda-event-types';
 import { ResponseOptions, DappOperations } from './common';
 
 function methodProcessor(method:DappOperations) {
@@ -25,8 +25,7 @@ async function processRecord(record:SQSRecord) {
     return recordProcessor(dappName);
 }
 
-type Event = SQSEvent;
-exports.handler = async (event:Event) => {
+exports.handler = async (event:SQSEvent) => {
     console.log("request: " + JSON.stringify(event));
 
     let records = event.Records;

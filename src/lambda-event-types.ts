@@ -68,26 +68,3 @@ export interface EncryptionKey {
   type: string;
   id: string;
 }
-
-export interface CodePipelineJob {
-  id: string;
-  accountId: string;
-  data: {
-      actionConfiguration: {
-          configuration: {
-              FunctionName: string;
-              UserParameters: string;
-          }
-      };
-      inputArtifacts: Artifact[];
-      outputArtifacts: Artifact[];
-      artifactCredentials: Credentials;
-      encryptionKey?: EncryptionKey & { type: 'KMS' };
-      continuationToken?: string;
-  };
-};
-
-export interface CodePipelineEvent {
-  "CodePipeline.job": CodePipelineJob
-};
-
