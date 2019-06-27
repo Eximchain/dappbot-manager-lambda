@@ -382,8 +382,22 @@ async function deleteEnterpriseDapp(dappName:string, dappItem:AttributeMap) {
     return {};
 }
 
+async function deadLetterFail(dappName:string) {
+    await callAndLog('Set DynamoDB Item FAILED', dynamoDB.setDappFailed(dappName));
+
+    return {};
+}
+
+async function deadLetterDepose(dappName:string) {
+    await callAndLog('Set DynamoDB Item DEPOSED', dynamoDB.setDappDeposed(dappName));
+
+    return {};
+}
+
 export default {
     create : processorCreate,
     update : processorUpdate,
-    delete : processorDelete
+    delete : processorDelete,
+    fail : deadLetterFail,
+    depose : deadLetterDepose
 }

@@ -3,10 +3,12 @@ import processor from './processor';
 import { SQSEvent, SQSRecord } from './lambda-event-types';
 import { ResponseOptions, DappOperations } from './common';
 
+// Main Queue
+
 function methodProcessor(method:DappOperations) {
     switch(method) {
-        case 'create':
-            return processor.create;
+//        case 'create':
+//            return processor.create;
         case 'update':
             return processor.update;
         case 'delete':
@@ -30,6 +32,44 @@ exports.handler = async (event:SQSEvent) => {
 
     let records = event.Records;
     let processRecordsPromise = Promise.all(records.map(processRecord));
+
+    try {
+        let result = await processRecordsPromise;
+        return successResponse(result);
+    } catch (err) {
+        throw errorResponse(err);
+    }
+};
+
+// Dead Letter Queue
+
+function deadLetterProcessor(method:DappOperations) {
+    switch(method) {
+        case 'create':
+            return processor.fail;
+        case 'update':
+            return processor.fail;
+        case 'delete':
+            return processor.depose;
+        default:
+            return (dappName:string) => Promise.reject({message: `Unrecognized method name ${method} for processing '${dappName}'`});
+    }
+}
+
+async function processDeadLetter(record:SQSRecord) {
+    let method = record.messageAttributes.Method.stringValue as DappOperations;
+    let body = JSON.parse(record.body);
+    let dappName = body.DappName;
+
+    let recordProcessor = deadLetterProcessor(method);
+    return recordProcessor(dappName);
+}
+
+exports.deadLetterHandler = async (event:SQSEvent) => {
+    console.log("dead letter: " + JSON.stringify(event));
+
+    let records = event.Records;
+    let processRecordsPromise = Promise.all(records.map(processDeadLetter));
 
     try {
         let result = await processRecordsPromise;
