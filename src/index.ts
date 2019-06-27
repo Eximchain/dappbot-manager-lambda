@@ -7,8 +7,8 @@ import { ResponseOptions, DappOperations } from './common';
 
 function methodProcessor(method:DappOperations) {
     switch(method) {
-//        case 'create':
-//            return processor.create;
+        case 'create':
+            return processor.create;
         case 'update':
             return processor.update;
         case 'delete':
