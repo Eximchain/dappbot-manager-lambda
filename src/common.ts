@@ -64,33 +64,6 @@ export function addAwsPromiseRetries<ReturnType>(promiseGenerator:()=>Promise<Re
     return p;
 }
 
-export interface ResponseOptions {
-    isErr? : boolean
-    isCreate? : boolean
-}
-
-export enum DappOperations {
-    create = 'create',
-    update = 'update',
-    delete = 'delete'
-}
-
-export enum DappStates {
-    CREATING = 'CREATING',
-    BUILDING_DAPP = 'BUILDING_DAPP',
-    AVAILABLE = 'AVAILABLE',
-    DELETING = 'DELETING',
-    FAILED = 'FAILED',
-    DEPOSED = 'DEPOSED'
-}
-
-export enum DappTiers {
-    POC = 'POC', // TODO: Remove this legacy tier
-    STANDARD = 'STANDARD',
-    PROFESSIONAL = 'PROFESSIONAL',
-    ENTERPRISE = 'ENTERPRISE'
-}
-
 export type ProcessorResponses = 'process' | 'ignore' | 'retry';
 
 export interface DappSeedArgs {
