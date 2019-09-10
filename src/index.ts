@@ -1,11 +1,12 @@
 'use strict';
+import Dapp from '@eximchain/dappbot-types/spec/dapp';
+import { successResponse, unexpectedErrorResponse } from '@eximchain/dappbot-types/spec/responses';
 import processor from './processor';
 import { SQSEvent, SQSRecord } from './lambda-event-types';
-import { ResponseOptions, DappOperations } from './common';
 
 // Main Queue
 
-function methodProcessor(method:DappOperations) {
+function methodProcessor(method:Dapp.Operations) {
     switch(method) {
         case 'create':
             return processor.create;
@@ -19,7 +20,7 @@ function methodProcessor(method:DappOperations) {
 }
 
 async function processRecord(record:SQSRecord) {
-    let method = record.messageAttributes.Method.stringValue as DappOperations;
+    let method = record.messageAttributes.Method.stringValue as Dapp.Operations;
     let body = JSON.parse(record.body);
     let dappName = body.DappName;
 
@@ -37,13 +38,13 @@ exports.handler = async (event:SQSEvent) => {
         let result = await processRecordsPromise;
         return successResponse(result);
     } catch (err) {
-        throw errorResponse(err);
+        throw unexpectedErrorResponse(err);
     }
 };
 
 // Dead Letter Queue
 
-function deadLetterProcessor(method:DappOperations) {
+function deadLetterProcessor(method:Dapp.Operations) {
     switch(method) {
         case 'create':
             return processor.fail;
@@ -57,7 +58,7 @@ function deadLetterProcessor(method:DappOperations) {
 }
 
 async function processDeadLetter(record:SQSRecord) {
-    let method = record.messageAttributes.Method.stringValue as DappOperations;
+    let method = record.messageAttributes.Method.stringValue as Dapp.Operations;
     let body = JSON.parse(record.body);
     let dappName = body.DappName;
 
@@ -75,28 +76,6 @@ exports.deadLetterHandler = async (event:SQSEvent) => {
         let result = await processRecordsPromise;
         return successResponse(result);
     } catch (err) {
-        throw errorResponse(err);
+        throw unexpectedErrorResponse(err);
     }
 };
-
-function response(result:any, opts:ResponseOptions) {
-    if (opts.isErr) {
-        console.log("Returning Error Response for result", result);
-        throw {};
-    } else {
-        console.log("Returning Success Response for result", result);
-        return {};
-    }
-}
-
-function successResponse(result:any, opts:ResponseOptions={isCreate: false}) {
-    let successOpt = {isErr: false};
-    let callOpts = {...opts, ...successOpt};
-    return response(result, callOpts);
-}
-
-function errorResponse(result:any, opts:ResponseOptions={isCreate: false}) {
-    let errorOpt = {isErr: true};
-    let callOpts = {...opts, ...errorOpt};
-    return response(result, callOpts);
-}

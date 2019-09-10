@@ -19,6 +19,7 @@
   },
   "homepage": "https://github.com/Eximchain/dappbot-manager-lambda#readme",
   "dependencies": {
+    "@eximchain/dappbot-types": "^1.1.7",
     "@sendgrid/mail": "^6.4.0",
     "aws-sdk": "^2.424.0",
     "node-zip": "^1.1.1",

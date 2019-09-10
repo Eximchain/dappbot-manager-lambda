@@ -1,6 +1,6 @@
+import Dapp from '@eximchain/dappbot-types/spec/dapp';
 import services from './services';
 import { StateValidationError, InternalProcessingError } from './errors';
-import { DappTiers } from './common';
 const { dynamoDB, route53, cloudfront, s3, codepipeline } = services;
 import validate from './validate';
 import { AttributeMap } from "aws-sdk/clients/dynamodb";
@@ -23,13 +23,11 @@ async function callAndLog<ReturnType>(stage:string, promise:Promise<ReturnType>)
 
 function createProcessorForTier(tier:string) {
     switch(tier) {
-        case DappTiers.POC:
-            return createLegacyPoc;
-        case DappTiers.STANDARD:
+        case Dapp.Tiers.Standard:
             return createStandardDapp;
-        case DappTiers.PROFESSIONAL:
+        case Dapp.Tiers.Professional:
             throw new StateValidationError("PROFESSIONAL tier not yet implemented for 'create'");
-        case DappTiers.ENTERPRISE:
+        case Dapp.Tiers.Enterprise:
             return createEnterpriseDapp;
         default:
             throw new StateValidationError(`No 'create' processor exists for invalid tier '${tier}'`);
@@ -196,13 +194,11 @@ async function createEnterpriseDapp(dappName:string, dappItem:AttributeMap) {
 
 function updateProcessorForTier(tier:string | undefined) {
     switch(tier) {
-        case DappTiers.POC:
-            return updateLegacyPoc;
-        case DappTiers.STANDARD:
+        case Dapp.Tiers.Standard:
             return updateStandardDapp;
-        case DappTiers.PROFESSIONAL:
+        case Dapp.Tiers.Professional:
             throw new StateValidationError("PROFESSIONAL tier not yet implemented for 'update'");
-        case DappTiers.ENTERPRISE:
+        case Dapp.Tiers.Enterprise:
             return updateEnterpriseDapp;
         default:
             throw new StateValidationError(`No 'update' processor exists for invalid tier '${tier}'`);
@@ -260,13 +256,11 @@ async function updateEnterpriseDapp(dappName:string, dappItem:AttributeMap) {
 
 function deleteProcessorForTier(tier:string | undefined) {
     switch(tier) {
-        case DappTiers.POC:
-            return deleteLegacyPoc;
-        case DappTiers.STANDARD:
+        case Dapp.Tiers.Standard:
             return deleteStandardDapp;
-        case DappTiers.PROFESSIONAL:
+        case Dapp.Tiers.Professional:
             throw new StateValidationError("PROFESSIONAL tier not yet implemented for 'delete'");
-        case DappTiers.ENTERPRISE:
+        case Dapp.Tiers.Enterprise:
             return deleteEnterpriseDapp;
         default:
             throw new StateValidationError(`No 'delete' processor exists for invalid tier '${tier}'`);

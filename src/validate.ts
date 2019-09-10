@@ -1,16 +1,17 @@
+import Dapp from '@eximchain/dappbot-types/spec/dapp';
 import { assertStateValid, assertPermission, throwInternalValidationError } from './errors';
-import { DappOperations as dappOps, DappStates, ProcessorResponses } from './common';
+import { ProcessorResponses } from './common';
 import cloudfront from './services/cloudfront';
 import { GetItemOutput } from 'aws-sdk/clients/dynamodb';
 import { DistributionSummary } from 'aws-sdk/clients/cloudfront';
 
 interface OperationHandlerKey {
-    [DappStates.CREATING] : { [opKey in dappOps] : ProcessorResponses }
-    [DappStates.BUILDING_DAPP] : { [opKey in dappOps] : ProcessorResponses }
-    [DappStates.AVAILABLE] : { [opKey in dappOps] : ProcessorResponses }
-    [DappStates.DELETING] : { [opKey in dappOps] : ProcessorResponses }
-    [DappStates.FAILED] : { [opKey in dappOps] : ProcessorResponses }
-    [DappStates.DEPOSED] : { [opKey in dappOps] : ProcessorResponses }
+    [Dapp.States.CREATING] : { [opKey in Dapp.Operations] : ProcessorResponses }
+    [Dapp.States.BUILDING_DAPP] : { [opKey in Dapp.Operations] : ProcessorResponses }
+    [Dapp.States.AVAILABLE] : { [opKey in Dapp.Operations] : ProcessorResponses }
+    [Dapp.States.DELETING] : { [opKey in Dapp.Operations] : ProcessorResponses }
+    [Dapp.States.FAILED] : { [opKey in Dapp.Operations] : ProcessorResponses }
+    [Dapp.States.DEPOSED] : { [opKey in Dapp.Operations] : ProcessorResponses }
 }
 const OPERATION_HANDLING_BY_STATE:OperationHandlerKey = {
     CREATING: {
@@ -50,14 +51,14 @@ const OPERATION_HANDLING_BY_STATE:OperationHandlerKey = {
 - Returns true if the operation should be processed
 - Returns false otherwise
 */
-function processOpFromState(operation:dappOps, state:DappStates) {
+function processOpFromState(operation:Dapp.Operations, state:Dapp.States) {
     let directive = OPERATION_HANDLING_BY_STATE[state][operation];
     assertPermission(directive !== 'retry', `'${operation}' operation prohibited from state '${state}'. Failing processing and retrying after visibility timeout.`);
     return directive == 'process';
 }
 
 function validateStateCreate(dbResponse:GetItemOutput) {
-    const operation = dappOps.create;
+    const operation = Dapp.Operations.CREATE;
 
     let dbItem = dbResponse.Item;
     // Use a direct check so the TS compiler understands that beyond this line,
@@ -86,12 +87,12 @@ function validateStateCreate(dbResponse:GetItemOutput) {
     assertStateValid(dbItem.State.hasOwnProperty('S'), "dbItem: required attribute 'State' has wrong shape");
     assertStateValid(dbItem.Tier.hasOwnProperty('S'), "dbItem: required attribute 'Tier' has wrong shape");
 
-    let state = dbItem.State.S as DappStates;
+    let state = dbItem.State.S as Dapp.States;
     return processOpFromState(operation, state);
 }
 
 function validateStateUpdate(dbResponse:GetItemOutput) {
-    const operation = dappOps.update;
+    const operation = Dapp.Operations.UPDATE;
 
     let dbItem = dbResponse.Item;
     if (!dbItem) throw new Error(`Dapp Not Found for ${operation} operation`)
@@ -118,12 +119,12 @@ function validateStateUpdate(dbResponse:GetItemOutput) {
     assertStateValid(dbItem.State.hasOwnProperty('S'), "dbItem: required attribute 'State' has wrong shape");
     assertStateValid(dbItem.Tier.hasOwnProperty('S'), "dbItem: required attribute 'Tier' has wrong shape");
 
-    let state = dbItem.State.S as DappStates;
+    let state = dbItem.State.S as Dapp.States;
     return processOpFromState(operation, state);
 }
 
 function validateStateDelete(dbResponse:GetItemOutput) {
-    const operation = dappOps.delete;
+    const operation = Dapp.Operations.DELETE;
 
     let dbItem = dbResponse.Item;
     if (!dbItem) throw new Error(`Dapp Not Found for ${operation} operation`)
@@ -144,7 +145,7 @@ function validateStateDelete(dbResponse:GetItemOutput) {
     assertStateValid(dbItem.State.hasOwnProperty('S'), "dbItem: required attribute 'State' has wrong shape");
     assertStateValid(dbItem.Tier.hasOwnProperty('S'), "dbItem: required attribute 'Tier' has wrong shape");
 
-    let state = dbItem.State.S as DappStates;
+    let state = dbItem.State.S as Dapp.States;
     return processOpFromState(operation, state);
 }
 
