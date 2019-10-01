@@ -35,21 +35,22 @@ function createProcessorForTier(tier:string) {
 }
 
 async function processorCreate(dappName:string) {
-    const dbItem = await callAndLog('Get DynamoDB Item', dynamoDB.getItem(dappName));
-
+    throw new StateValidationError('Intentional Failure for Testing purposes');
+//    const dbItem = await callAndLog('Get DynamoDB Item', dynamoDB.getItem(dappName));
+//
     // Check if the dbItem exists so the compiler knows the object can be referenced below
-    if (!dbItem.Item) throw new StateValidationError('Create error: Corresponding DynamoDB record could not be found.');
+//    if (!dbItem.Item) throw new StateValidationError('Create error: Corresponding DynamoDB record could not be found.');
     
-    let processOp = validate.stateCreate(dbItem);
-    if (!processOp) {
-        console.log("Ignoring operation 'create'");
-        return {};
-    }
+//    let processOp = validate.stateCreate(dbItem);
+//    if (!processOp) {
+//        console.log("Ignoring operation 'create'");
+//        return {};
+//    }
 
-    let tier = dbItem.Item.Tier.S as string;
-    let tierProcessor = createProcessorForTier(tier);
+//    let tier = dbItem.Item.Tier.S as string;
+//    let tierProcessor = createProcessorForTier(tier);
 
-    return tierProcessor(dappName, dbItem.Item);
+//    return tierProcessor(dappName, dbItem.Item);
 }
 
 async function createLegacyPoc(dappName:string, dappItem:AttributeMap) {
