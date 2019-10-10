@@ -18,6 +18,7 @@ export const cognitoUserPoolId = process.env.COGNITO_USER_POOL as string;
 export const sendgridApiKey = process.env.SENDGRID_API_KEY as string;
 export const servicesLambdaFxnName = process.env.SERVICES_LAMBDA_FUNCTION as string;
 export const githubToken = process.env.GITHUB_TOKEN as string;
+export const segmentWriteKey = process.env.SEGMENT_WRITE_KEY as string;
 
 import AWSUnconfigured from 'aws-sdk';
 export const AWS = AWSUnconfigured;
