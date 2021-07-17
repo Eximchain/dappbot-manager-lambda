@@ -1,5 +1,6 @@
 import sgMail from '@sendgrid/mail';
 import { sendgridApiKey } from '../env';
+import dappCreatedEmail from './dappCreatedEmail';
 
 let USING_SENDGRID = false;
 
@@ -16,7 +17,7 @@ function sendConfirmationMail(owner:string, dappname:string, dappDNS:string) {
     from : FROM_ADDRESS,
     to : owner,
     subject : `${dappname} generation complete!`,
-    text : `${dappname} generation has completed!  You may now view your dapp at ${dappDNS}.`
+    html : dappCreatedEmail(dappname, dappDNS)
   }
   if (USING_SENDGRID){
     return sgMail.send(confirmationParam);
